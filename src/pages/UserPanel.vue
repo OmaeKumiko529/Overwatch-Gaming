@@ -159,7 +159,7 @@
                 <span class="button-icon">🏆</span>
                 <span class="button-text">创建战队</span>
               </button>
-              <button class="action-button join-team-button" @click="goToJoinTeamPage">
+              <button class="action-button join-team-button" @click="goToJoinTeamPage"> <!--此处似乎不起作用-->
                 <span class="button-icon">➕</span>
                 <span class="button-text">浏览并加入战队</span>
               </button>
