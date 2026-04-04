@@ -2043,7 +2043,7 @@ watch(userInfo, (newUser) => {
 
 /* 帖子瀑布流样式 */
 .posts-section {
-  margin-top: 40px;
+  margin-top: 0px;
   padding: 25px;
   background-color: rgba(255, 255, 255, 0.8);
   border-radius: 12px;
