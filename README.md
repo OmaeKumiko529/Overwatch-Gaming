@@ -1,4 +1,4 @@
-# Game BBS Template Devolopment For Vue.js 3
+# Game BBS Template Development For Vue.js 3
 如您所见，这是一个用于学习vue和html的游戏论坛模板网站。  
 在这个模板网站中，你可以学习很多关于如何构建vue网站以及如何解决开发问题的知识。  
 As you can see, this is a Game BBS template website for studying of **vue** and html.  
@@ -9,11 +9,13 @@ In this template website, you can study a lot about how to build a vue website a
 ![Supabase](https://img.shields.io/badge/Backend-Supabase-blueviolet?logo=supabase)
 ![Status](https://img.shields.io/badge/Status-Development-orange)
 ![Made with Love](https://img.shields.io/badge/Made%20with-%E2%9D%A4%20Love%20and%20Vue.js-white)
+![AI Generated](https://img.shields.io/badge/AI-Contains_AI_generated_code_20%-orange?logo=openai)  
 
 ## License Notice
 该项目的源代码根据MIT获得许可。但是请注意，``public/``目录包含从第三方版权财产中提取的示例资源材料，仅供演示之用。  
 这些资源不受MIT许可证的保护。如果您打算移植、重新分发或商业使用此项目，您必须用自己的资产替换这些受版权保护的材料，以避免法律侵权。  
-详情请参阅[LICENSE](LICENSE)  
+请注意，该项目的部分代码和素材包含AI生成内容，请仔细鉴别，并自行规避相关法律风险。  
+详情请参阅[LICENSE](LICENSE)。   
 This project's source code is licensed under the MIT License. However, please note that the public/ directories contain sample resource materials extracted from third-party copyrighted properties for demonstration purposes only.  
 These resources are NOT covered by the MIT License. If you intend to port, redistribute, or use this project commercially, you MUST replace these copyrighted materials with your own assets to avoid legal infringement.  
 see the [LICENSE](LICENSE) file for details.
@@ -71,8 +73,8 @@ Overwatch-Gaming/
 
 ### 安装步骤
 1. 克隆项目：
-```bash
-git clone [https://github.com/FishMoies/Overwatch-Gaming]
+```Bash
+git clone https://github.com/FishMoies/Overwatch-Gaming.git
 ```
 
 2.安装依赖：
