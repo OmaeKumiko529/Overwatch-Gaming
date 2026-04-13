@@ -7,7 +7,7 @@ import { useRouter } from 'vue-router'
 import auth from '../services/auth.js'
 // 导入fullpage.js库，用于创建全屏滚动效果
 import fullpage from 'fullpage.js'
-
+import SupportGallery from '/src/pages/HomePages/SupportGallery.vue'//奶位嵌套
 // 使用Vue Router获取路由器实例
 const router = useRouter()
 // 响应式变量：用户登录状态
@@ -43,11 +43,38 @@ const initFullpage = () => {
     css3: true,               // 使用CSS3变换
     fitToSection: false,      // 不自动调整到章节
     fixedElements: '.navbar', // 固定元素选择器（导航栏）
+    normalScrollElements: '.info-section, .hero-gallery, .hero-grid, .hero-card', // 排除第三屏右侧内容区域
+    normalScrollElementTouchThreshold: 5, // 触摸阈值
+    touchSensitivity: 15,     // 触摸灵敏度
+    keyboardScrolling: true,  // 启用键盘滚动
+    recordHistory: false,     // 不记录历史记录
     afterLoad: function(origin, destination, direction) {
       // fullpage.js加载完成后的逻辑
       // 可以在这里添加章节切换后的回调逻辑
+    },
+    onLeave: function(origin, destination, direction) {
+      // 离开章节时的回调
+      console.log('Leaving section', origin.index, 'to', destination.index);
     }
   })
+}
+// 提前获取元素（更高效）
+let leftChar = null
+let rightChar = null
+
+//视差移动
+function handleMouseMove(e) {
+  const x = e.clientX
+  const w = window.innerWidth
+  const offset = (x / w - 0.5) * 12
+
+  if (leftChar && rightChar) {
+    leftChar.style.transform =
+      `translateX(${offset * 2}px) translateY(${offset * 1}px)`
+
+    rightChar.style.transform =
+      `translateX(${offset * 1}px) translateY(${offset * 1}px)`
+  }
 }
 
 // 组件挂载时的生命周期钩子
@@ -56,6 +83,12 @@ onMounted(() => {
   checkLoginStatus()
   // 监听storage事件，用于跨标签页同步登录状态
   window.addEventListener('storage', checkLoginStatus)
+  // 组件挂载后再获取 DOM
+  leftChar = document.querySelector('.char-left')
+  rightChar = document.querySelector('.char-right')
+
+  // 监听鼠标移动
+  window.addEventListener('mousemove', handleMouseMove)
   
   // 使用nextTick确保DOM已完全渲染
   nextTick(() => {
@@ -68,6 +101,7 @@ onMounted(() => {
 onUnmounted(() => {
   // 移除storage事件监听器
   window.removeEventListener('storage', checkLoginStatus)
+  window.removeEventListener('mousemove', handleMouseMove)// 防止内存泄漏
   
   // 如果存在fullpage实例，销毁它并置空
   if (fpInstance) {
@@ -158,14 +192,9 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <!-- 第三屏 -->
-      <div class="section blank-page">
-        <div class="content">
-          <h1 class="main-title">第三屏</h1>
-          <p class="subtitle" style="padding-left: 10px;">
-            这里是你要的第二个空白页面，可以放数据图表
-          </p>
-        </div>
+     <!-- 第三屏 -->
+      <div class="section">
+            <SupportGallery />
       </div>
 
       <!-- 第四屏 -->
@@ -398,4 +427,6 @@ onUnmounted(() => {
   font-family:'SmileySans Oblique',sans-serif;
   font-size:1.2rem;
 }
+
+
 </style>
