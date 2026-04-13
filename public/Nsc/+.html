@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>守望先锋 - 辅助英雄画廊 | 可滚动图墙</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 基础滚动允许，移除全局禁止滚动限制 */
+        body {
+            background-color: #F5F7FA;
+            overflow-x: hidden;
+            overflow-y: auto;    /* 允许页面整体滚动，移除原先禁止滚动的 overflow:hidden */
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        /* 弹性容器，内容撑开高度，左侧使用粘性定位保证视觉不变 */
+        .container {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            position: relative;
+            align-items: flex-start;   /* 左侧 sticky 生效，右侧自然从顶部开始 */
+            background: transparent;
+        }
+
+        /* 左侧区域：固定视口高度 + 粘性吸附，成像效果与原始设计完全一致（logo+角色图位置不变） */
+        .character-section {
+            width: 65%;
+            height: 100vh;            /* 固定视口高度，保证角色图片、logo位置比例不变 */
+            position: sticky;
+            top: 0;
+            align-self: flex-start;
+            overflow: hidden;
+            background: transparent;
+            flex-shrink: 0;
+            /* 确保子元素定位参照完整 */
+        }
+
+        .logo-bg {
+            position: absolute;
+            width: min(500px, 32vw);
+            height: auto;
+            aspect-ratio: 1 / 1;
+            opacity: 1;
+            z-index: 1;
+            left: 30%;
+            top: 5%;
+            pointer-events: none;
+            object-fit: contain;
+        }
+
+        .char-left, .char-right {
+            position: absolute;
+            z-index: 2;
+            transition: transform 0.1s ease-out;
+            height: 88%;
+            bottom: 0;
+            pointer-events: none;
+            object-fit: contain;
+        }
+        .char-left {
+            left: 1%;
+        }
+        .char-right {
+            left: 24%;
+        }
+
+        /* 右侧信息区域：内容完全展开，无内部滚动条，整体随页面滚动，成像效果保持不变（网格完整显示） */
+        .info-section {
+            width: 35%;
+            position: relative;
+            padding: 0 8px 0 8px;
+            margin-left: -50px;          /* 保留原设计重叠感，不破坏视觉效果 */
+            background: transparent;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            overflow-y: visible;          /* 移除内部滚动限制，内容自然撑开 */
+            z-index: 5;
+            /* 移除所有滚动条样式 */
+        }
+
+        /* 移除滚动条相关样式，因为全局滚动不需要自定义右侧滚动条 */
+        .info-section::-webkit-scrollbar {
+            display: none;
+        }
+
+        .english-title {
+            font-size: clamp(20px, 2.8vw, 38px);
+            color: #2c3e4e;
+            text-align: right;
+            margin-bottom: 5px;
+            font-weight: normal;
+            margin-top: clamp(30px, 8vh, 100px);
+            letter-spacing: 1px;
+        }
+        .english-title::before {
+            content: "★★★";
+            margin-right: 6px;
+            color: #b0c4de;
+            font-size: 0.9em;
+        }
+
+        .cn-title {
+            font-size: clamp(42px, 7vw, 80px);
+            color: #1a2a3a;
+            font-weight: 900;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        .cn-title::before {
+            content: "";
+            display: inline-block;
+            width: clamp(40px, 5vw, 65px);
+            height: clamp(40px, 5vw, 65px);
+            background-color: transparent;
+            background-image: url('./96px-职责：支援_图标.png');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            flex-shrink: 0;
+        }
+
+        .desc-text {
+            font-size: clamp(14px, 1.8vw, 22px);
+            color: #2c3e4e;
+            line-height: 1.4;
+            text-align: center;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .hero-gallery {
+            width: 100%;
+            flex-shrink: 0;
+            margin-bottom: 40px;   /* 底部留白，滚动舒适 */
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0;
+            justify-items: stretch;
+            align-items: stretch;
+            width: 100%;
+        }
+
+        .hero-card {
+            width: 100%;
+            background: none;
+            border: none;
+            border-radius: 0;
+            padding: 0;
+            margin: 0;
+            box-shadow: none;
+            transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            cursor: pointer;
+            line-height: 0;
+            will-change: transform;
+        }
+
+        /* 悬停时卡片放大 1.07 倍，成像细节不变 */
+        .hero-card:hover {
+            transform: scale(1.07);
+            z-index: 10;
+            background: none;
+            box-shadow: none;
+        }
+
+        .hero-img-wrapper {
+            width: 100%;
+            background: none;
+            border-radius: 0;
+            overflow: hidden;
+            line-height: 0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .hero-img {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: contain;
+            background: transparent;
+            transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+
+        /* 内部图片额外放大 1.03 倍，层次感保留 */
+        .hero-card:hover .hero-img {
+            transform: scale(1.03);
+        }
+
+        /* 响应式微调，保持左右比例舒适 */
+        @media (max-width: 1200px) {
+            .info-section {
+                padding: 0 4px;
+            }
+            .english-title {
+                margin-top: 20px;
+            }
+        }
+
+        @media (max-width: 1000px) {
+            .info-section {
+                margin-left: -30px;
+            }
+        }
+
+        @media (min-height: 900px) {
+            .english-title {
+                margin-top: 40px;
+            }
+        }
+
+        /* 保证容器内无意外横向滚动，但纵向完全滚动 */
+        .container, .character-section, .info-section {
+            overflow-x: hidden;
+        }
+        
+        .hero-img.error-load {
+            object-fit: contain;
+            background: rgba(0,0,0,0.05);
+        }
+
+        /* 确保右侧内容在移动端也不会被裁剪，完整展示所有英雄网格 */
+        @media (max-width: 760px) {
+            .hero-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .character-section {
+                width: 55%;
+            }
+            .info-section {
+                width: 45%;
+                margin-left: -20px;
+            }
+            .english-title {
+                margin-top: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="character-section">
+            <img src="./ow_icon.png" alt="守望先锋标志" class="logo-bg">
+            <img src="./hn.png" alt="左侧辅助角色" class="char-left">
+            <img src="./ylr.png" alt="右侧辅助角色" class="char-right">
+        </div>
+
+        <div class="info-section">
+            <div class="english-title">Supports</div>
+            <div class="cn-title">辅助</div>
+            <div class="desc-text">
+                集治疗与增益于一体的角色<br>
+                负责对友方的保护与强化
+            </div>
+            <div class="hero-gallery" id="dynamicHeroGallery"></div>
+        </div>
+    </div>
+
+    <script>
+        const supportHeroes = [
+            { name: "飞天猫", imageIndex: 1 },
+            { name: "瑞稀", imageIndex: 2 },
+            { name: "无漾", imageIndex: 3 },
+            { name: "安娜", imageIndex: 4 },
+            { name: "朱诺", imageIndex: 5 },
+            { name: "伊拉锐", imageIndex: 6 },
+            { name: "雾子", imageIndex: 7 },
+            { name: "莫伊拉", imageIndex: 8 },
+            { name: "生命之梭", imageIndex: 9 },
+            { name: "天使", imageIndex: 10 },
+            { name: "卢西奥", imageIndex: 11 },
+            { name: "禅雅塔", imageIndex: 12 },
+            { name: "布丽吉塔", imageIndex: 13 },
+            { name: "巴蒂斯特", imageIndex: 14 }
+        ];
+
+        function buildPureImageGallery() {
+            const container = document.getElementById('dynamicHeroGallery');
+            if (!container) return;
+            container.innerHTML = '';
+            const grid = document.createElement('div');
+            grid.className = 'hero-grid';
+            supportHeroes.forEach(hero => {
+                const fileName = `0w+ (${hero.imageIndex}).png`;
+                const src = encodeURI(fileName);
+                const card = document.createElement('div');
+                card.className = 'hero-card';
+                const wrapper = document.createElement('div');
+                wrapper.className = 'hero-img-wrapper';
+                const img = document.createElement('img');
+                img.className = 'hero-img';
+                img.src = src;
+                img.alt = hero.name;
+                img.title = hero.name;
+                img.loading = 'lazy';
+                img.onerror = function() {
+                    this.src = generateFallback(hero.name);
+                    this.classList.add('error-load');
+                    this.onerror = null;
+                };
+                wrapper.appendChild(img);
+                card.appendChild(wrapper);
+                card.addEventListener('click', () => console.log(`⚡ ${hero.name}`));
+                grid.appendChild(card);
+            });
+            container.appendChild(grid);
+        }
+
+        function generateFallback(name) {
+            const palettes = [
+                ["#4A90E2","#6C5CE7"], ["#FF9A8B","#FF6A88"], ["#43E97B","#38F9D7"],
+                ["#F093FB","#F5576C"], ["#FA709A","#FEE140"], ["#30CFD0","#330867"],
+                ["#A18CD1","#FBC2EB"], ["#FFB88C","#DE6262"], ["#5B86E5","#36D1DC"],
+                ["#FDC830","#F37335"], ["#6A11CB","#2575FC"], ["#11998e","#38ef7d"],
+                ["#DD5E89","#F7BB97"], ["#1F1C2C","#928DAB"]
+            ];
+            let hash = 0;
+            for (let i = 0; i < name.length; i++) hash = ((hash << 5) - hash) + name.charCodeAt(i);
+            const [start, end] = palettes[Math.abs(hash) % palettes.length];
+            const first = name.charAt(0);
+            const short = name.length > 5 ? name.substring(0,5) : name;
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 1000">
+                <defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="${start}"/><stop offset="100%" stop-color="${end}"/></linearGradient></defs>
+                <rect width="100%" height="100%" fill="url(#g)"/>
+                <circle cx="340" cy="450" r="200" fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,240,0.5)" stroke-width="8"/>
+                <text x="340" y="580" font-size="220" text-anchor="middle" fill="white" font-weight="bold" stroke="#0004" stroke-width="6" paint-order="stroke">${first}</text>
+                <text x="340" y="820" font-size="52" text-anchor="middle" fill="white" opacity="0.9">${short}</text>
+            </svg>`;
+            return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+        }
+
+        buildPureImageGallery();
+
+        // 鼠标跟随效果：保持原有生动交互，仅作用于左侧角色插画，成像效果不变
+        document.addEventListener('mousemove', (e) => {
+            const x = e.clientX, w = window.innerWidth;
+            const offset = (x / w - 0.5) * 12;
+            const left = document.querySelector('.char-left');
+            const right = document.querySelector('.char-right');
+            if (left && right) {
+                left.style.transform = `translateX(${offset * 0.8}px) translateY(${offset * 0.2}px)`;
+                right.style.transform = `translateX(${offset * 0.6}px) translateY(${offset * 0.2}px)`;
+            }
+        });
+
+        window.addEventListener('load', () => {
+            document.querySelectorAll('.hero-img').forEach(img => {
+                img.style.width = '100%';
+                img.style.height = 'auto';
+                img.style.objectFit = 'contain';
+            });
+            console.log('✅ 英雄画廊已可滚动浏览 | 左侧角色粘性固定，鼠标悬停放大效果增强 (1.07 + 内图1.03)');
+        });
+    </script>
+</body>
+</html>
