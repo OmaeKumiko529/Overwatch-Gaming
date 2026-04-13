@@ -136,7 +136,7 @@
               </div>
             </div>
             <div class="parent-post-content-preview">
-              {{ parentPost.content.substring(0, 150) }}{{ parentPost.content.length > 150 ? '...' : '' }}
+              {{ getPlainTextPreview(parentPost.content, 150) }}
             </div>
             <div class="parent-post-actions">
               <button class="parent-post-view-button" @click="goToParentPost(parentPost.id)">
@@ -200,7 +200,7 @@
                   删除
                 </button>
               </div>
-              <div class="comment-content">{{ childPost.content }}</div>
+              <div class="comment-content" v-html="formatCommentContent(childPost.content)"></div>
               <div class="comment-context" v-if="childPost.context">
                 <small>上下文: {{ childPost.context }}</small>
               </div>
@@ -301,9 +301,49 @@ const loadPostDetail = async () => {
   }
 };
 
-// 格式化帖子内容（简单处理换行）
+// 格式化帖子内容（支持富文本HTML）
 const formatPostContent = (content) => {
   if (!content) return '';
+  
+  // 如果内容已经是HTML（包含HTML标签），直接返回
+  if (content.includes('<') && content.includes('>')) {
+    return content;
+  }
+  
+  // 否则，将换行符转换为<br>标签
+  return content.replace(/\n/g, '<br>');
+};
+
+// 从HTML内容中提取纯文本预览
+const getPlainTextPreview = (htmlContent, maxLength = 150) => {
+  if (!htmlContent) return '';
+  
+  let plainText = htmlContent;
+  // 去除HTML标签
+  if (plainText.includes('<') && plainText.includes('>')) {
+    plainText = plainText.replace(/<[^>]*>/g, ' ');
+    // 合并多个空格
+    plainText = plainText.replace(/\s+/g, ' ');
+  }
+  
+  // 截断到指定长度
+  if (plainText.length > maxLength) {
+    return plainText.substring(0, maxLength) + '...';
+  }
+  
+  return plainText;
+};
+
+// 格式化评论内容（支持简单的HTML）
+const formatCommentContent = (content) => {
+  if (!content) return '';
+  
+  // 如果内容已经是HTML（包含HTML标签），直接返回
+  if (content.includes('<') && content.includes('>')) {
+    return content;
+  }
+  
+  // 否则，将换行符转换为<br>标签
   return content.replace(/\n/g, '<br>');
 };
 
@@ -768,7 +808,71 @@ onMounted(() => {
   font-size: 1.1rem;
   line-height: 1.8;
   color: #333;
-  white-space: pre-wrap;
+}
+
+/* 富文本内容样式 */
+.post-text h1,
+.post-text h2,
+.post-text h3 {
+  margin: 1em 0 0.5em 0;
+  line-height: 1.3;
+  font-weight: bold;
+}
+
+.post-text h1 {
+  font-size: 1.8em;
+}
+
+.post-text h2 {
+  font-size: 1.5em;
+}
+
+.post-text h3 {
+  font-size: 1.2em;
+}
+
+.post-text ul,
+.post-text ol {
+  padding-left: 1.5em;
+  margin: 1em 0;
+}
+
+.post-text li {
+  margin: 0.5em 0;
+}
+
+.post-text blockquote {
+  border-left: 3px solid #667eea;
+  margin: 1em 0;
+  padding-left: 1em;
+  color: #666;
+  font-style: italic;
+}
+
+.post-text hr {
+  border: none;
+  border-top: 2px solid #e9ecef;
+  margin: 2em 0;
+}
+
+.post-text p {
+  margin: 0 0 1em 0;
+}
+
+.post-text strong {
+  font-weight: bold;
+}
+
+.post-text em {
+  font-style: italic;
+}
+
+.post-text u {
+  text-decoration: underline;
+}
+
+.post-text s {
+  text-decoration: line-through;
 }
 
 .post-stats {

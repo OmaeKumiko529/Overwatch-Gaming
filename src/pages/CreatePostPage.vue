@@ -35,16 +35,12 @@
         
         <div class="form-group">
           <label for="content">帖子内容</label>
-          <textarea
-            id="content"
+          <RichTextEditor
             v-model="formData.content"
-            required
-            placeholder="请输入帖子内容..."
-            class="form-textarea"
-            rows="10"
-            maxlength="5000"
-          ></textarea>
-          <div class="char-count">{{ formData.content.length }}/5000</div>
+            :placeholder="'请输入帖子内容...'"
+            :max-length="5000"
+            class="rich-text-editor-wrapper"
+          />
         </div>
         
         <div class="form-actions">
@@ -65,6 +61,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import RichTextEditor from '../components/RichTextEditor.vue'
 
 const router = useRouter()
 import auth from '../services/auth.js'
@@ -324,6 +321,11 @@ const goBack = () => {
   background: #f8d7da;
   color: #721c24;
   border: 1px solid #f5c6cb;
+}
+
+/* 富文本编辑器样式 */
+.rich-text-editor-wrapper {
+  margin-top: 8px;
 }
 
 /* 响应式设计 */

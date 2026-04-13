@@ -251,10 +251,20 @@ export const postService = {
     const posts = this.getAllPosts();
     const lowerQuery = query.toLowerCase();
     
-    return posts.filter(post => 
-      post.title.toLowerCase().includes(lowerQuery) ||
-      post.content.toLowerCase().includes(lowerQuery)
-    );
+    return posts.filter(post => {
+      // 搜索标题
+      const titleMatch = post.title.toLowerCase().includes(lowerQuery);
+      
+      // 搜索内容（去除HTML标签后搜索纯文本）
+      let contentText = post.content;
+      // 简单去除HTML标签
+      if (contentText.includes('<') && contentText.includes('>')) {
+        contentText = contentText.replace(/<[^>]*>/g, ' ');
+      }
+      const contentMatch = contentText.toLowerCase().includes(lowerQuery);
+      
+      return titleMatch || contentMatch;
+    });
   },
 
   // 获取热门帖子（按点赞数排序）
