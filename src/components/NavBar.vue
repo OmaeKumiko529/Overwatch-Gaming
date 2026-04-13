@@ -16,6 +16,10 @@
     
     <!-- 导航栏操作区域 -->
     <div class="nav-actions">
+      <!-- 通知按钮 -->
+      <router-link to="/notifications" class="notification-button" title="通知">
+        🔔
+      </router-link>
       <!-- 搜索输入组件 -->
       <SearchInput />
     </div>
@@ -126,6 +130,27 @@ onUnmounted(() => {
   display: flex;                    /* 使用Flexbox布局 */
   align-items: center;              /* 垂直居中对齐 */
   gap: 10px;                        /* 子元素间距：10px */
+}
+
+/* 通知按钮样式 */
+.notification-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 20px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.notification-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
 }
 
 /* 导航按钮通用样式（可能用于未来的登录/注册按钮） */

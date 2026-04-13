@@ -1,5 +1,14 @@
 <template>
   <div class="login-page page-enter-active">
+    <!-- 视频背景 -->
+    <div class="video-background">
+      <video autoplay muted loop playsinline class="background-video">
+        <source src="/Amiya2.mp4" type="video/mp4">
+        您的浏览器不支持视频标签。
+      </video>
+      <div class="video-overlay"></div>
+    </div>
+    
     <div class="form-container">
       <h1 class="page-title">登录账号</h1>
       <form @submit.prevent="handleLogin" class="login-form">
@@ -156,8 +165,40 @@ checkExistingLogin()
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.video-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.background-video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  transform: translate(-50%, -50%);
+  object-fit: cover;
+}
+
+.video-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
 }
 
 .form-container {
@@ -168,6 +209,7 @@ checkExistingLogin()
   max-width: 480px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   position: relative;
+  z-index: 1;
 }
 
 .page-title {

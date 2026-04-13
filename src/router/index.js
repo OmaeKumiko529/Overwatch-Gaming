@@ -12,6 +12,7 @@ import JoinTeamPage from '../pages/JoinTeamPage.vue'
 import CreatePostPage from '../pages/CreatePostPage.vue'
 import PostDetailPage from '../pages/PostDetailPage.vue'
 import SearchPage from '../pages/SearchPage.vue'
+import NotificationPage from '../pages/NotificationPage.vue'
 // 导入认证工具
 import auth from '../utils/auth.js'
 
@@ -92,6 +93,12 @@ const routes = [
     name: 'Search',
     component: SearchPage
   },
+  // 通知页面路由
+  {
+    path: '/notifications',
+    name: 'Notifications',
+    component: NotificationPage
+  },
   // 重定向旧hash路由到新路由（兼容旧版本URL）
   // 例如：/#register -> /register
   {
@@ -113,6 +120,7 @@ const routes = [
         case 'createpost': return '/createpost'
         case 'about': return '/about'
         case 'search': return '/search'
+        case 'notifications': return '/notifications'
         default: return '/'  // 未知hash重定向到首页
       }
     }
