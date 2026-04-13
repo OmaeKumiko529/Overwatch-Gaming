@@ -19,50 +19,90 @@ This project's source code is licensed under the MIT License. However, please no
 These resources are NOT covered by the MIT License. If you intend to port, redistribute, or use this project commercially, you MUST replace these copyrighted materials with your own assets to avoid legal infringement.  
 see the [LICENSE](LICENSE) file for details.
 
-## File Structure
-以下是文件结构  
-Overwatch-Gaming/  
-├── .vscode/                # IDE 配置文件  
-├── dist/                   # 编译后的静态资源  
-├── node_modules/           # 项目依赖  
-├── public/                 # 公共资源文件  
-├── src/                    # 源码目录  
-│   ├── component/          # 首页组件  
-│   │   ├── NavBar.vue      # 导航栏组件  
-│   │   └── SearchInput.vue   # 搜索输入框组件  
-│   ├── pages/              # 页面级组件  
-│   │   ├── CreatePostPage.vue # 发帖页面  
-│   │   ├── HomePage.vue       # 首页  
-│   │   ├── JoinTeamPage.vue   # 组队/搜索队伍页面  
-│   │   ├── LoginPage.vue      # 登录页面  
-│   │   ├── PostDetailPage.vue # 帖子详情模版页  
-│   │   ├── RegisterPage.vue   # 注册页面  
-│   │   ├── SearchPage.vue     # 全局搜索页面  
-│   │   └── UserPanel.vue      # 用户详情与面板  
-│   ├── router/  
-│   │   └── index.js        # 路由逻辑配置  
-│   ├── services/           # 业务逻辑与接口调用  
-│   │   ├── auth.js         # 用户认证服务  
-│   │   ├── avatarService.js # 头像系统服务  
-│   │   ├── post.js         # 帖子信息服务  
-│   │   ├── team.js         # 队伍相关服务  
-│   │   └── user.js         # 用户信息服务  
-│   ├── types/  
-│   │   └── fullpage.d.ts   # fullpage.js 类型定义/配置  
-│   ├── utils/  
-│   │   └── auth.js         # 旧版存储系统工具  
-│   ├── App.vue             # 根组件  
-│   ├── main.js             # 项目入口文件  
-│   └── supabaseClient.js   # Supabase 客户端配置文件  
-├── .gitattributes          # Git 属性配置  
-├── .gitignore              # Git 忽略文件  
-├── index.html              # 入口 HTML  
-└── readme.md               # 项目自述文件   
+## 项目文件结构 (Project File Structure)
 
-## External NPM Components Used
-以下是项目中引用的，由他人分发或制作的额外的NPM资源。  
-*** fullPage.js *** [Official Website](https://alvarotrigo.com/fullPage/) | [In GitHub](https://github.com/alvarotrigo/fullpage.js)  
-*** Vue Router *** [Official Website](https://router.vuejs.org/) | [In GitHub](https://github.com/vuejs/router)
+```
+Overwatch-Gaming/
+├── .vscode/                # VS Code 配置文件
+├── dist/                   # 编译后的静态资源（构建时生成）
+├── node_modules/           # 项目依赖包
+├── public/                 # 公共静态资源文件
+│   ├── favicon.ico         # 网站图标
+│   ├── *.png, *.webp       # 图片资源
+│   ├── *.ttf               # 字体文件
+│   └── Nsc/                # 设计素材目录
+├── src/                    # 源代码目录
+│   ├── components/         # 可复用组件
+│   │   ├── NavBar.vue      # 导航栏组件
+│   │   ├── RichTextEditor.vue # 富文本编辑器组件
+│   │   └── SearchInput.vue # 搜索输入框组件
+│   ├── pages/              # 页面级组件
+│   │   ├── CreatePostPage.vue # 创建帖子页面
+│   │   ├── HomePage.vue    # 首页
+│   │   ├── JoinTeamPage.vue # 加入/搜索队伍页面
+│   │   ├── LoginPage.vue   # 登录页面
+│   │   ├── NotificationPage.vue # 通知页面
+│   │   ├── PostDetailPage.vue # 帖子详情页面
+│   │   ├── RegisterPage.vue # 注册页面
+│   │   ├── SearchPage.vue  # 全局搜索页面
+│   │   ├── UserPanel.vue   # 用户面板页面
+│   │   └── HomePages/      # 首页相关子页面
+│   │       └── SupportGallery.vue # 支援英雄展示页面
+│   ├── router/             # 路由配置
+│   │   └── index.js        # 路由逻辑配置
+│   ├── services/           # 业务逻辑服务层
+│   │   ├── auth.js         # 用户认证服务
+│   │   ├── avatarService.js # 头像系统服务
+│   │   ├── post.js         # 帖子管理服务
+│   │   ├── team.js         # 队伍管理服务
+│   │   └── user.js         # 用户信息服务
+│   ├── types/              # TypeScript 类型定义
+│   │   └── fullpage.d.ts   # fullpage.js 类型定义
+│   ├── utils/              # 工具函数
+│   │   └── auth.js         # 认证相关工具函数
+│   ├── App.vue             # 根组件
+│   ├── main.js             # 应用入口文件
+│   └── supabaseClient.js   # Supabase 客户端配置
+├── .gitattributes          # Git 属性配置
+├── .gitignore              # Git 忽略文件配置
+├── index.html              # 应用入口 HTML
+├── package.json            # 项目依赖和脚本配置
+├── package-lock.json       # 依赖锁文件
+├── vite.config.js          # Vite 构建配置
+├── jsconfig.json           # JavaScript 配置
+├── LICENSE                 # 开源许可证
+└── README.md               # 项目说明文档
+```
+
+### 关键目录说明
+- **`src/components/`**: 包含可复用的UI组件，遵循单一职责原则
+- **`src/pages/`**: 每个文件对应一个完整的页面视图，通过路由访问
+- **`src/services/`**: 封装所有业务逻辑和API调用，保持组件纯净
+- **`src/router/`**: 管理应用的路由配置和导航逻辑
+- **`public/`**: 存放静态资源，如图片、字体等，不会被构建工具处理
+
+## 外部NPM组件与依赖 (External NPM Components & Dependencies)
+
+以下是项目中使用的主要第三方NPM资源：
+
+### 核心框架 (Core Frameworks)
+- **Vue 3** - 渐进式JavaScript框架 [官方文档](https://vuejs.org/) | [GitHub](https://github.com/vuejs/core)
+- **Vue Router 4** - Vue.js官方路由管理器 [官方文档](https://router.vuejs.org/) | [GitHub](https://github.com/vuejs/router)
+
+### UI与交互组件 (UI & Interaction Components)
+- **fullPage.js** - 创建全屏滚动网站 [官方网站](https://alvarotrigo.com/fullPage/) | [GitHub](https://github.com/alvarotrigo/fullpage.js)
+- **TipTap** - 无头富文本编辑器框架
+  - `@tiptap/starter-kit` - 核心编辑器功能
+  - `@tiptap/vue-3` - Vue 3集成
+  - `@tiptap/extension-mention` - @提及功能扩展
+  - [官方网站](https://tiptap.dev/) | [GitHub](https://github.com/ueberdosis/tiptap)
+
+### 后端与数据层 (Backend & Data Layer)
+- **Supabase JS** - Supabase客户端库 [官方文档](https://supabase.com/docs/reference/javascript) | [GitHub](https://github.com/supabase/supabase-js)
+
+### 开发工具 (Development Tools)
+- **Vite** - 下一代前端构建工具 [官方文档](https://vitejs.dev/) | [GitHub](https://github.com/vitejs/vite)
+- **Vue DevTools** - Vue.js开发者工具 [GitHub](https://github.com/vuejs/devtools)
 
 ## Setup & Installation
 
@@ -98,18 +138,73 @@ VITE_SUPABASE_URL=...
 VITE_SUPABASE_ANON_KEY=...
 ```
 
+## 项目特性 (Project Features)
+
+### 🎮 游戏社区功能
+- **用户系统**: 注册、登录、个人资料管理
+- **帖子系统**: 创建、编辑、查看游戏相关帖子
+- **富文本编辑器**: 支持@提及、格式化的内容创作
+- **队伍系统**: 寻找队友、创建/加入游戏队伍
+- **通知系统**: 实时接收社区互动通知
+
+### 🎨 用户体验
+- **全屏滚动**: 沉浸式的页面浏览体验
+- **响应式设计**: 适配桌面和移动设备
+- **现代化UI**: 基于Vue 3的组件化界面
+- **实时交互**: 基于Supabase的实时数据更新
+
+### 🔧 技术特性
+- **模块化架构**: 清晰的代码分层和职责分离
+- **类型安全**: TypeScript类型定义支持
+- **现代化工具链**: Vite构建、热重载、开发工具集成
+- **安全认证**: 基于Supabase的JWT认证和授权
+
+### 📱 多平台支持
+- **Web应用**: 完整的浏览器端SPA应用
+- **PWA支持**: 可安装为渐进式Web应用
+- **API驱动**: 前后端分离，易于扩展
+
 ## 技术实现要点 (Technical Highlights)
 
 ### 1. 模块化服务架构 (Modular Service Layer)
-项目将 API 调用与组件逻辑分离。所有与本地服务器的交互均封装在 `src/services/` 下。  
-组件只负责 UI 渲染，逻辑更易于维护和测试。  
+项目采用清晰的分层架构，将业务逻辑与UI组件分离：
+- **服务层** (`src/services/`): 封装所有API调用和业务逻辑，包括用户认证、帖子管理、队伍操作等
+- **组件层** (`src/components/`): 专注于UI渲染和用户交互
+- **页面层** (`src/pages/`): 组织完整的页面视图
+这种架构提高了代码的可维护性、可测试性和复用性。
 
 ### 2. 响应式与全屏滚动集成 (Fullpage Integration)
-利用 `fullPage.js` 结合 Vue 3 的生命周期钩子，实现了沉浸式的社区展示效果。  
-处理路由切换时销毁与重新初始化 fullPage 实例的逻辑。
+利用 `fullPage.js` 结合 Vue 3 的生命周期钩子，实现了沉浸式的社区展示效果：
+- 处理路由切换时销毁与重新初始化 fullPage 实例的逻辑
+- 支持垂直全屏滚动与水平幻灯片切换
+- 与Vue响应式系统深度集成，确保状态同步
 
-### 3. 基于 Supabase 的实时认证
-利用 Supabase 的 `onAuthStateChange` 钩子，实现了全局用户状态的自动同步。
+### 3. 基于 Supabase 的实时数据层
+- **实时认证**: 利用 Supabase 的 `onAuthStateChange` 钩子，实现全局用户状态的自动同步
+- **数据存储**: 使用 Supabase PostgreSQL 数据库存储用户、帖子、队伍等结构化数据
+- **实时订阅**: 通过 Supabase 的实时功能实现帖子更新、通知推送等实时交互
+
+### 4. 富文本编辑器集成 (TipTap Editor)
+- 集成 TipTap 无头富文本编辑器，提供强大的内容编辑功能
+- 支持 @提及功能，增强社区互动体验
+- 自定义工具栏和编辑器样式，与项目设计语言保持一致
+- 实现内容的安全存储和渲染，防止XSS攻击
+
+### 5. 现代化构建工具链 (Vite)
+- 使用 Vite 作为构建工具，提供极快的开发服务器启动和热模块替换
+- 支持 Vue 3 单文件组件 (SFC) 的即时编译
+- 生产环境构建优化，包括代码分割、Tree Shaking 和资源压缩
+- 集成 Vue DevTools 插件，便于开发和调试
+
+### 6. 响应式设计与移动端适配
+- 采用移动优先的设计理念，确保在各种设备上的良好体验
+- 使用 CSS Flexbox 和 Grid 实现灵活的布局系统
+- 媒体查询和视口单位确保在不同屏幕尺寸下的可用性
+
+### 7. 路由与状态管理
+- Vue Router 4 实现客户端路由，支持动态路由和嵌套路由
+- 利用 Vue 3 的组合式 API 管理组件状态，避免过度复杂的状态管理库
+- 路由守卫保护需要认证的页面，确保安全性
 
 ## Contributing
 欢迎提交 Issue 或 Pull Request 来完善这个学习模板
