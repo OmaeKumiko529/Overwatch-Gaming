@@ -33,6 +33,7 @@ Overwatch-Gaming/
 │   └── Nsc/                # 设计素材目录
 ├── src/                    # 源代码目录
 │   ├── components/         # 可复用组件
+│   │   ├── MentionExtension.js # TipTap提及功能扩展
 │   │   ├── NavBar.vue      # 导航栏组件
 │   │   ├── RichTextEditor.vue # 富文本编辑器组件
 │   │   └── SearchInput.vue # 搜索输入框组件
@@ -59,7 +60,8 @@ Overwatch-Gaming/
 │   ├── types/              # TypeScript 类型定义
 │   │   └── fullpage.d.ts   # fullpage.js 类型定义
 │   ├── utils/              # 工具函数
-│   │   └── auth.js         # 认证相关工具函数
+│   │   ├── auth.js         # 认证相关工具函数
+│   │   └── mentionParser.js # @提及内容解析工具
 │   ├── App.vue             # 根组件
 │   ├── main.js             # 应用入口文件
 │   └── supabaseClient.js   # Supabase 客户端配置
@@ -187,6 +189,10 @@ VITE_SUPABASE_ANON_KEY=...
 ### 4. 富文本编辑器集成 (TipTap Editor)
 - 集成 TipTap 无头富文本编辑器，提供强大的内容编辑功能
 - 支持 @提及功能，增强社区互动体验
+  - 使用 `@tiptap/extension-mention` 扩展实现用户提及
+  - 自定义 `MentionExtension.js` 处理提及逻辑和样式
+  - 集成 `mentionParser.js` 工具解析和提取提及内容
+  - 在创建帖子和帖子详情页面中完整集成提及功能
 - 自定义工具栏和编辑器样式，与项目设计语言保持一致
 - 实现内容的安全存储和渲染，防止XSS攻击
 
