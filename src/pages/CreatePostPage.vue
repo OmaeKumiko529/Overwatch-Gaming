@@ -40,7 +40,20 @@
             :placeholder="'请输入帖子内容...'"
             :max-length="5000"
             class="rich-text-editor-wrapper"
+            :enable-mention="true"
+            @mention="handleMention"
           />
+        </div>
+        
+        <!-- 提及用户显示 -->
+        <div v-if="mentionedUsers.length > 0" class="mentioned-users">
+          <h3 class="mentioned-users-title">提及的用户</h3>
+          <div class="mentioned-users-list">
+            <div v-for="user in mentionedUsers" :key="user.id" class="mentioned-user-item">
+              <img :src="user.avatar" :alt="user.username" class="mentioned-user-avatar" />
+              <span class="mentioned-user-name">@{{ user.username }}</span>
+            </div>
+          </div>
         </div>
         
         <div class="form-actions">
@@ -59,9 +72,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import RichTextEditor from '../components/RichTextEditor.vue'
+import { extractMentionsFromHTML } from '../utils/mentionParser.js'
+import userService from '../services/user.js'
 
 const router = useRouter()
 import auth from '../services/auth.js'
@@ -76,6 +91,7 @@ const formData = reactive({
 const message = ref('')
 const isError = ref(false)
 const isSubmitting = ref(false)
+const mentionedUsers = ref([])
 
 // 检查用户是否已登录
 onMounted(() => {
@@ -87,6 +103,58 @@ onMounted(() => {
     router.push({ name: 'Login' })
   }
 })
+
+// 监听内容变化，更新提及用户列表
+watch(() => formData.content, (newContent) => {
+  updateMentionedUsers(newContent)
+})
+
+// 处理提及事件
+const handleMention = (user) => {
+  // 添加用户到提及列表（避免重复）
+  if (!mentionedUsers.value.some(u => u.id === user.id)) {
+    mentionedUsers.value.push({
+      id: user.id,
+      username: user.username,
+      avatar: user.avatar || '/Head.png'
+    })
+    
+    // 显示提示消息
+    message.value = `已提及用户 @${user.username}`
+    isError.value = false
+    
+    // 3秒后清除消息
+    setTimeout(() => {
+      if (message.value === `已提及用户 @${user.username}`) {
+        message.value = ''
+      }
+    }, 3000)
+  }
+}
+
+// 从内容中更新提及用户列表
+const updateMentionedUsers = (htmlContent) => {
+  if (!htmlContent) {
+    mentionedUsers.value = []
+    return
+  }
+  
+  // 从HTML中提取提及
+  const mentions = extractMentionsFromHTML(htmlContent)
+  
+  // 获取完整的用户信息
+  const updatedMentions = mentions.map(mention => {
+    const user = userService.getUserById(mention.id)
+    return {
+      id: mention.id,
+      username: mention.username,
+      avatar: user?.avatar || '/Head.png'
+    }
+  }).filter(user => user.id) // 过滤掉无效的用户
+  
+  // 更新提及用户列表
+  mentionedUsers.value = updatedMentions
+}
 
 const handleCreatePost = async () => {
   // 验证表单
@@ -126,19 +194,27 @@ const handleCreatePost = async () => {
       return
     }
     
-    const result = postService.createPost({
+    // 创建帖子数据，包含提及用户信息
+    const postData = {
       title: formData.title.trim(),
       category: formData.category,
-      content: formData.content.trim()
-    }, currentUser.id, currentUser.username)
+      content: formData.content.trim(),
+      mentions: mentionedUsers.value.map(user => ({
+        userId: user.id,
+        username: user.username
+      }))
+    }
+    
+    const result = postService.createPost(postData, currentUser.id, currentUser.username)
     
     if (result.success) {
       message.value = '帖子发布成功！正在跳转到用户面板...'
       isError.value = false
       
-      // 清空表单
+      // 清空表单和提及列表
       formData.title = ''
       formData.content = ''
+      mentionedUsers.value = []
       
       // 立即跳转到用户面板
       router.push({ name: 'User' })
@@ -328,6 +404,67 @@ const goBack = () => {
   margin-top: 8px;
 }
 
+/* 提及用户样式 */
+.mentioned-users {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  border: 1px solid #e9ecef;
+}
+
+.mentioned-users-title {
+  font-family: 'SmileySans Oblique', sans-serif;
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mentioned-users-title::before {
+  content: '@';
+  font-size: 1.2rem;
+  color: #4facfe;
+}
+
+.mentioned-users-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.mentioned-user-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background-color: white;
+  border-radius: 20px;
+  border: 1px solid #dee2e6;
+  transition: all 0.2s ease;
+}
+
+.mentioned-user-item:hover {
+  background-color: #e9ecef;
+  transform: translateY(-2px);
+}
+
+.mentioned-user-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.mentioned-user-name {
+  font-family: 'SmileySans Oblique', sans-serif;
+  font-size: 0.9rem;
+  color: #495057;
+  font-weight: 500;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .form-container {
@@ -341,6 +478,14 @@ const goBack = () => {
   
   .form-actions {
     flex-direction: column;
+  }
+  
+  .mentioned-users-list {
+    gap: 8px;
+  }
+  
+  .mentioned-user-item {
+    padding: 4px 10px;
   }
 }
 </style>

@@ -50,6 +50,7 @@ export const postService = {
       comments: [],
       context: postData.parentId ? `${postData.parentId}/#` : '#', // 添加上下文属性
       parentId: postData.parentId || null, // 父帖子ID，如果是子帖子
+      mentions: postData.mentions || [], // 提及的用户列表
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };

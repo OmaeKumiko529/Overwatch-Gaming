@@ -105,6 +105,16 @@
       >
         <span class="toolbar-icon">↷</span>
       </button>
+      <!-- 提及按钮 -->
+      <div class="toolbar-divider"></div>
+      <button
+        type="button"
+        @click="insertMention"
+        title="提及用户"
+        class="mention-button"
+      >
+        <span class="toolbar-icon">@</span>
+      </button>
     </div>
 
     <!-- 编辑器内容区域 -->
@@ -121,6 +131,8 @@
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { Editor } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
+import { UserMention, createSimpleMentionSuggestion } from './MentionExtension.js'
+import userService from '../services/user.js'
 
 const props = defineProps({
   modelValue: {
@@ -146,10 +158,14 @@ const props = defineProps({
   editable: {
     type: Boolean,
     default: true
+  },
+  enableMention: {
+    type: Boolean,
+    default: true
   }
 })
 
-const emit = defineEmits(['update:modelValue', 'change'])
+const emit = defineEmits(['update:modelValue', 'change', 'mention'])
 
 const editorRef = ref(null)
 const editor = ref(null)
@@ -160,19 +176,50 @@ const charCount = computed(() => {
   return editor.value.getText().length
 })
 
+const searchUsers = (query) => {
+  //允许 @ 时直接显示推荐用户
+  if (!query || query.trim() === '') {
+    return userService.getAllUsers().slice(0, 5)
+  }
+
+  return userService.searchUsers(query)
+}
+
+// 用户选择处理
+const handleUserSelect = (user) => {
+  emit('mention', user)
+}
+
+// 创建提及建议配置
+const mentionSuggestion = createSimpleMentionSuggestion(searchUsers)
+
 // 初始化编辑器
 const initEditor = () => {
   if (!editorRef.value) return
 
+  const extensions = [
+    StarterKit.configure({
+      heading: {
+        levels: [1, 2, 3]
+      }
+    })
+  ]
+
+  // 如果启用提及功能，添加提及扩展
+  if (props.enableMention) {
+    extensions.push(
+      UserMention.configure({
+        HTMLAttributes: {
+          class: 'user-mention',
+        },
+        suggestion: mentionSuggestion
+      })
+    )
+  }
+
   editor.value = new Editor({
     element: editorRef.value,
-    extensions: [
-      StarterKit.configure({
-        heading: {
-          levels: [1, 2, 3]
-        }
-      })
-    ],
+    extensions: extensions,
     content: props.modelValue,
     editable: props.editable,
     autofocus: false,
@@ -190,6 +237,14 @@ const initEditor = () => {
   })
 }
 
+// 插入提及
+const insertMention = () => {
+  if (!editor.value) return
+  
+  // 在光标位置插入@符号，这会自动触发提及建议
+  editor.value.chain().focus().insertContent('@').run()
+}
+
 // 监听modelValue变化
 watch(() => props.modelValue, (newValue) => {
   if (editor.value && editor.value.getHTML() !== newValue) {
@@ -201,6 +256,15 @@ watch(() => props.modelValue, (newValue) => {
 watch(() => props.editable, (newValue) => {
   if (editor.value) {
     editor.value.setEditable(newValue)
+  }
+})
+
+// 监听enableMention变化
+watch(() => props.enableMention, (newValue) => {
+  if (editor.value) {
+    // 重新初始化编辑器以更新扩展
+    editor.value.destroy()
+    initEditor()
   }
 })
 
@@ -222,11 +286,20 @@ defineExpose({
   getHTML: () => editor.value?.getHTML(),
   getText: () => editor.value?.getText(),
   clear: () => editor.value?.commands.clearContent(),
-  focus: () => editor.value?.commands.focus()
+  focus: () => editor.value?.commands.focus(),
+  insertMention: (user) => {
+    if (editor.value && user) {
+      editor.value.chain().focus().insertMention({
+        id: user.id,
+        label: user.username,
+        username: user.username
+      }).run()
+    }
+  }
 })
 </script>
 
-<style scoped>
+<style>
 .rich-text-editor {
   border: 2px solid #ddd;
   border-radius: 10px;
@@ -277,6 +350,12 @@ defineExpose({
   border-color: #667eea;
 }
 
+.editor-toolbar .mention-button:hover {
+  background: #4facfe;
+  color: white;
+  border-color: #4facfe;
+}
+
 .toolbar-divider {
   width: 1px;
   height: 24px;
@@ -306,48 +385,48 @@ defineExpose({
 }
 
 /* TipTap编辑器内部样式 */
-:deep(.tiptap-editor) {
+.tiptap-editor {
   outline: none;
   min-height: 150px;
 }
 
-:deep(.tiptap-editor p) {
+.tiptap-editor p {
   margin: 0 0 1em 0;
   line-height: 1.6;
 }
 
-:deep(.tiptap-editor h1) {
+.tiptap-editor h1 {
   font-size: 2em;
   font-weight: bold;
   margin: 1em 0 0.5em 0;
   line-height: 1.2;
 }
 
-:deep(.tiptap-editor h2) {
+.tiptap-editor h2 {
   font-size: 1.5em;
   font-weight: bold;
   margin: 1em 0 0.5em 0;
   line-height: 1.3;
 }
 
-:deep(.tiptap-editor h3) {
+.tiptap-editor h3 {
   font-size: 1.17em;
   font-weight: bold;
   margin: 1em 0 0.5em 0;
   line-height: 1.4;
 }
 
-:deep(.tiptap-editor ul),
-:deep(.tiptap-editor ol) {
+.tiptap-editor ul,
+.tiptap-editor ol {
   padding-left: 1.5em;
   margin: 1em 0;
 }
 
-:deep(.tiptap-editor li) {
+.tiptap-editor li {
   margin: 0.5em 0;
 }
 
-:deep(.tiptap-editor blockquote) {
+.tiptap-editor blockquote {
   border-left: 3px solid #667eea;
   margin: 1em 0;
   padding-left: 1em;
@@ -355,18 +434,95 @@ defineExpose({
   font-style: italic;
 }
 
-:deep(.tiptap-editor hr) {
+.tiptap-editor hr {
   border: none;
   border-top: 2px solid #e9ecef;
   margin: 2em 0;
 }
 
-:deep(.tiptap-editor .is-empty::before) {
+.tiptap-editor .is-empty::before {
   content: attr(data-placeholder);
   color: #adb5bd;
   float: left;
   height: 0;
   pointer-events: none;
+}
+
+/* 用户提及样式 */
+.user-mention {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.user-mention:hover {
+  background-color: #bbdefb;
+  text-decoration: underline;
+}
+
+/* 覆盖 tippy 默认宽度限制（如果Tiptap使用tippy） */
+.tippy-box {
+  max-width: none !important;   /* ❗必须干掉默认350px限制 */
+}
+
+/* 提及建议弹出框样式 */
+.mention-suggestion-popup {
+  display: inline-block;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 4px 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  width: max-content;   /* 🔥 比 fit-content 更稳 */
+  min-width: 160px;
+  max-width: 400px;
+}
+
+.mention-suggestion-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.mention-suggestion-item {
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  cursor: pointer;
+  gap: 8px;
+  width: max-content;
+  white-space: nowrap;   /* ❗关键 */
+}
+
+.mention-suggestion-item:hover {
+  background: #f5f5f5;
+}
+
+.mention-suggestion-avatar {
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.mention-suggestion-username {
+  font-size: 14px;
+  color: #333;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mention-suggestion-userid {
+  margin-left: auto;
+  font-size: 12px;
+  color: #999;
+  flex-shrink: 0;
 }
 
 /* 响应式设计 */
@@ -385,6 +541,11 @@ defineExpose({
   .editor-content {
     padding: 12px;
     min-height: 150px;
+  }
+  
+  .mention-suggestion-popup {
+    min-width: 200px;
+    max-width: 90vw;
   }
 }
 </style>
