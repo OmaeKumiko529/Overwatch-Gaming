@@ -234,9 +234,7 @@
               
               <h3 class="post-title">{{ post.title }}</h3>
               
-              <div class="post-content">
-                {{ truncateContent(post.content, 150) }}
-              </div>
+              <div class="post-content" v-html="renderRichTextPreview(post.content, 150)"></div>
               
               <div class="post-footer">
                 <div class="post-stats">
@@ -1176,12 +1174,102 @@ const getPostCategoryClass = (category) => {
   return `post-category-${category}`;
 };
 
-// 截断内容
+// 从HTML内容中提取纯文本并截断
 const truncateContent = (content, maxLength) => {
-  if (content.length <= maxLength) {
-    return content;
+  if (!content) return '';
+  
+  // 如果内容包含HTML标签，先提取纯文本
+  let plainText = content;
+  if (content.includes('<') && content.includes('>')) {
+    // 去除HTML标签
+    plainText = content.replace(/<[^>]*>/g, ' ');
+    // 合并多个空格
+    plainText = plainText.replace(/\s+/g, ' ');
+    // 去除首尾空格
+    plainText = plainText.trim();
   }
-  return content.substring(0, maxLength) + '...';
+  
+  if (plainText.length <= maxLength) {
+    return plainText;
+  }
+  return plainText.substring(0, maxLength) + '...';
+};
+
+// 安全渲染富文本内容（预览用）- 简化版本
+const renderRichTextPreview = (htmlContent, maxLength = 150) => {
+  if (!htmlContent) return '';
+  
+  // 如果内容不是HTML，直接返回截断的纯文本
+  if (!htmlContent.includes('<') || !htmlContent.includes('>')) {
+    return htmlContent.length > maxLength ? htmlContent.substring(0, maxLength) + '...' : htmlContent;
+  }
+  
+  // 简单但安全的HTML处理：只允许基本的格式化标签
+  // 使用正则表达式移除危险的标签和属性
+  let safeHtml = htmlContent
+    // 移除<script>标签及其内容
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    // 移除on事件属性
+    .replace(/ on\w+="[^"]*"/gi, '')
+    .replace(/ on\w+='[^']*'/gi, '')
+    .replace(/ on\w+=\w+/gi, '')
+    // 只允许安全的标签
+    .replace(/<(?!\/?(p|strong|b|em|i|u|s|strike|h[1-6]|ul|ol|li|blockquote|hr|br)(\s[^>]*)?>)[^>]+>/gi, '');
+  
+  // 提取纯文本用于长度计算
+  const textContent = safeHtml.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  
+  // 如果纯文本长度小于等于最大长度，直接返回安全的HTML
+  if (textContent.length <= maxLength) {
+    return safeHtml;
+  }
+  
+  // 需要截断：使用简单的方法截断HTML
+  // 这个方法不完美，但对于预览足够了
+  let result = '';
+  let inTag = false;
+  let tagBuffer = '';
+  let charCount = 0;
+  let i = 0;
+  
+  while (i < safeHtml.length && charCount < maxLength) {
+    const char = safeHtml[i];
+    
+    if (char === '<') {
+      inTag = true;
+      tagBuffer = char;
+      i++;
+      continue;
+    } else if (char === '>') {
+      inTag = false;
+      tagBuffer += char;
+      result += tagBuffer;
+      tagBuffer = '';
+      i++;
+      continue;
+    }
+    
+    if (inTag) {
+      tagBuffer += char;
+    } else {
+      result += char;
+      charCount++;
+    }
+    
+    i++;
+  }
+  
+  // 添加省略号
+  if (i < safeHtml.length) {
+    result += '...';
+  }
+  
+  // 如果还在标签中，需要关闭标签
+  if (inTag && tagBuffer) {
+    result += tagBuffer + '>';
+  }
+  
+  return result;
 };
 
 // 计算是否是查看自己的资料

@@ -66,7 +66,33 @@
         <div class="post-body">
           <div class="post-text" v-html="formatPostContent(post.content)"></div>
         </div>
-
+        
+        <!-- 提及用户显示 -->
+        <div v-if="post.mentions && post.mentions.length > 0" class="post-mentions">
+          <h3 class="post-mentions-title">
+            <span class="post-mentions-icon">@</span>
+            提及的用户
+          </h3>
+          <div class="post-mentions-list">
+            <div v-for="mention in post.mentions" :key="mention.userId" class="post-mention-item">
+              <img
+                :src="getUserAvatar(mention.userId)"
+                :alt="mention.username"
+                class="post-mention-avatar"
+                @error="handleAvatarError"
+              />
+              <span class="post-mention-name">@{{ mention.username }}</span>
+              <button
+                class="post-mention-profile-button"
+                @click="viewUserProfile(mention.userId)"
+                title="查看用户资料"
+              >
+                查看资料
+              </button>
+            </div>
+          </div>
+        </div>
+        
         <!-- 帖子统计 -->
         <div class="post-stats">
           <div class="stat-item">
@@ -78,6 +104,11 @@
             <span class="stat-icon">💬</span>
             <span class="stat-value">{{ post.comments.length }}</span>
             <span class="stat-label">评论</span>
+          </div>
+          <div v-if="post.mentions && post.mentions.length > 0" class="stat-item">
+            <span class="stat-icon">@</span>
+            <span class="stat-value">{{ post.mentions.length }}</span>
+            <span class="stat-label">提及</span>
           </div>
         </div>
 
@@ -1126,6 +1157,86 @@ onMounted(() => {
   background-color: #f8d7da;
   color: #721c24;
   border: 1px solid #f5c6cb;
+}
+
+/* 提及用户样式 */
+.post-mentions {
+  margin: 25px 0;
+  padding: 20px;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e3f2fd 100%);
+  border-radius: 12px;
+  border: 1px solid #bbdefb;
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.1);
+}
+
+.post-mentions-title {
+  font-family: 'SmileySans Oblique', sans-serif;
+  font-size: 1.2rem;
+  color: #1976d2;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.post-mentions-icon {
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+.post-mentions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.post-mention-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background-color: white;
+  border-radius: 25px;
+  border: 1px solid #bbdefb;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.post-mention-item:hover {
+  background-color: #e3f2fd;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.15);
+}
+
+.post-mention-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #bbdefb;
+}
+
+.post-mention-name {
+  font-family: 'SmileySans Oblique', sans-serif;
+  font-size: 0.95rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.post-mention-profile-button {
+  padding: 4px 12px;
+  background-color: #4facfe;
+  color: white;
+  border: none;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-family: 'SmileySans Oblique', sans-serif;
+}
+
+.post-mention-profile-button:hover {
+  background-color: #3a9bf7;
 }
 
 /* 瀑布流布局 */
