@@ -14,7 +14,7 @@
     "@tiptap/extension-mention": "^3.22.3",
     "@tiptap/starter-kit": "^3.22.3",
     "@tiptap/vue-3": "^3.22.3",
-    "fullpage.js": "^4.0.41",
+    "pinia": "^3.0.4",
     "vue": "^3.5.29",
     "vue-router": "^4.6.4"
   },

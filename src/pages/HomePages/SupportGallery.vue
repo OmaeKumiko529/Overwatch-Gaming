@@ -4,7 +4,7 @@
 
       <!-- 左侧角色插图区域（不动） -->
       <div class="character-section">
-        <img src="/public/ow_icon.svg" alt="守望先锋标志" class="logo-bg">
+        <img src="/ow_icon.svg" alt="守望先锋标志" class="logo-bg">
         <img src="/Nsc/hn.png" alt="左侧辅助角色" class="char-left">
         <img src="/Nsc/ylr.png" alt="右侧辅助角色" class="char-right">
       </div>
@@ -120,6 +120,7 @@ function handleImageError(e) {
 /* 右侧 */
 .info-section {
   width: 55%;
+  height: calc(100vh - 60px);
   padding: 40px;
   margin-right: 80px;
   box-sizing: border-box;
@@ -127,12 +128,6 @@ function handleImageError(e) {
 }
 
 /*字体*/
-@font-face {
-  font-family: "SmileySans-Oblique";
-  src: url("/public/SmileySans-Oblique.ttf") format("truetype");
-  font-weight: normal;
-  font-style: normal;
-}
 
 /* 标题 */
 .english-title {

@@ -7,9 +7,9 @@
     <!-- 导航链接列表 -->
     <ul class="nav-links">
       <!-- 仅登录用户可见：发帖链接 -->
-      <li v-if="isLoggedIn"><router-link to="/createpost">发帖</router-link></li>
+      <li v-if="auth.isLoggedIn"><router-link to="/createpost">发帖</router-link></li>
       <!-- 仅登录用户可见：用户面板链接 -->
-      <li v-if="isLoggedIn"><router-link to="/user">用户面板</router-link></li>
+      <li v-if="auth.isLoggedIn"><router-link to="/user">用户面板</router-link></li>
       <!-- 外部链接：熔火工坊（新标签页打开） -->
       <li><a href="https://www.owmod.net/" target="_blank" rel="noopener noreferrer">熔火工坊</a></li>
     </ul>
@@ -28,53 +28,22 @@
 
 <script setup>
 // 导入Vue Composition API
-import { ref, onMounted, onUnmounted } from 'vue';
-// 导入Vue Router相关函数
-import { useRouter } from 'vue-router';
-// 导入认证服务
-import auth from '../services/auth.js';
+import { onMounted, onUnmounted } from 'vue';
+// 导入认证 Store
+import { useAuthStore } from '../stores/auth.js';
 // 导入搜索输入组件
 import SearchInput from './SearchInput.vue';
 
-// 使用Vue Router获取路由器实例
-const router = useRouter();
-// 响应式变量：用户登录状态
-const isLoggedIn = ref(false);
+const auth = useAuthStore();
 
-// 检查登录状态函数
-const checkLoginStatus = () => {
-  // 调用认证服务检查用户是否已登录
-  isLoggedIn.value = auth.isLoggedIn();
-};
-
-// 组件挂载时的生命周期钩子
+// 组件挂载时，初始加载会话
 onMounted(() => {
-  // 初始检查登录状态
-  checkLoginStatus();
-  
-  // 监听storage事件，用于跨标签页同步登录状态
-  // 当其他标签页修改了localStorage时触发
-  window.addEventListener('storage', checkLoginStatus);
-  
-  // 定期检查登录状态（每5秒）
-  // 用于处理token过期或其他状态变化
-  const intervalId = setInterval(checkLoginStatus, 5000);
-  
-  // 保存intervalId到全局对象，以便在组件卸载时清理
-  window.__navBarIntervalId = intervalId;
+  auth.loadSession();
+  window.addEventListener('storage', auth.loadSession);
 });
 
-// 组件卸载时的生命周期钩子
 onUnmounted(() => {
-  // 移除storage事件监听器
-  window.removeEventListener('storage', checkLoginStatus);
-  
-  // 清理定时器
-  if (window.__navBarIntervalId) {
-    clearInterval(window.__navBarIntervalId);
-    // 删除全局变量
-    delete window.__navBarIntervalId;
-  }
+  window.removeEventListener('storage', auth.loadSession);
 });
 </script>
 

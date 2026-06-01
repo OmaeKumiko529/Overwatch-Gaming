@@ -1,97 +1,84 @@
-// Vue Router配置文件
-import { createRouter, createWebHashHistory } from 'vue-router'  // 改这里
-import HomePage from '../pages/HomePage.vue'
-import RegisterPage from '../pages/RegisterPage.vue'
-import LoginPage from '../pages/LoginPage.vue'
-import UserPanel from '../pages/UserPanel.vue'
-import JoinTeamPage from '../pages/JoinTeamPage.vue'
-import CreatePostPage from '../pages/CreatePostPage.vue'
-import PostDetailPage from '../pages/PostDetailPage.vue'
-import SearchPage from '../pages/SearchPage.vue'
-import NotificationPage from '../pages/NotificationPage.vue'
-import auth from '../utils/auth.js'
+// Vue Router配置文件（含路由懒加载）
+import { createRouter, createWebHashHistory } from 'vue-router'
 
 const routes = [
   {
     path: '/',
     name: 'Home',
-    component: HomePage,
-    meta: { requiresFullpage: true }
+    component: () => import('../pages/HomePage.vue')
   },
   {
     path: '/about',
     name: 'About',
-    component: HomePage,
-    meta: { requiresFullpage: true, targetSection: 2 }
+    component: () => import('../pages/HomePage.vue'),
+    meta: { targetSection: 2 }
   },
   {
     path: '/register',
     name: 'Register',
-    component: RegisterPage
+    component: () => import('../pages/RegisterPage.vue')
   },
   {
     path: '/login',
     name: 'Login',
-    component: LoginPage
+    component: () => import('../pages/LoginPage.vue')
   },
   {
     path: '/user/:uid',
     name: 'UserProfile',
-    component: UserPanel,
+    component: () => import('../pages/UserPanel.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/user',
     name: 'User',
     redirect: to => {
-      const currentUser = auth.getCurrentUser();
-      if (currentUser) {
-        return { name: 'UserProfile', params: { uid: currentUser.id } };
-      } else {
-        return '/login';
-      }
+      // 使用懒加载方式获取登录状态
+      try {
+        const sessionJson = sessionStorage.getItem('currentUser') || localStorage.getItem('currentUser');
+        if (sessionJson) {
+          const user = JSON.parse(sessionJson);
+          return { name: 'UserProfile', params: { uid: user.id } };
+        }
+      } catch {}
+      return '/login';
     }
   },
   {
     path: '/jointeam',
     name: 'JoinTeam',
-    component: JoinTeamPage,
+    component: () => import('../pages/JoinTeamPage.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/createpost',
     name: 'CreatePost',
-    component: CreatePostPage,
+    component: () => import('../pages/CreatePostPage.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/post/:id',
     name: 'PostDetail',
-    component: PostDetailPage
+    component: () => import('../pages/PostDetailPage.vue')
   },
   {
     path: '/search',
     name: 'Search',
-    component: SearchPage
+    component: () => import('../pages/SearchPage.vue')
   },
   {
     path: '/notifications',
     name: 'Notifications',
-    component: NotificationPage
-  },
-  // 这个重定向规则在 hash 模式下可以移除，因为 hash 模式会自动处理
-  {
-    path: '/:pathMatch(.*)*',
-    redirect: '/'
+    component: () => import('../pages/NotificationPage.vue')
   }
 ]
 
 const router = createRouter({
-  history: createWebHashHistory(),  // 改这里
+  history: createWebHashHistory(),
   routes,
   scrollBehavior(to, from, savedPosition) {
     if (to.meta.targetSection) {
-      return { selector: `#section-${to.meta.targetSection}`, behavior: 'smooth' }
+      return { selector: `.home-section:nth-child(${to.meta.targetSection})`, behavior: 'smooth' }
     }
     if (savedPosition) {
       return savedPosition
@@ -103,7 +90,13 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   if (to.meta.requiresAuth) {
-    if (!auth.isLoggedIn()) {
+    try {
+      const sessionJson = sessionStorage.getItem('currentUser') || localStorage.getItem('currentUser');
+      if (!sessionJson) {
+        next('/login')
+        return
+      }
+    } catch {
       next('/login')
       return
     }
