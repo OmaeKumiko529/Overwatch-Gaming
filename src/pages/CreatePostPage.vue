@@ -74,13 +74,14 @@
 <script setup>
 import { ref, reactive, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth.js'
 import RichTextEditor from '../components/RichTextEditor.vue'
 import { extractMentionsFromHTML } from '../utils/mentionParser.js'
-import userService from '../services/user.js'
+import { authApi } from '../services/api.js'
+import postService from '../services/post.js'
 
 const router = useRouter()
-import auth from '../services/auth.js'
-import postService from '../services/post.js'
+const auth = useAuthStore()
 
 const formData = reactive({
   title: '',
@@ -92,17 +93,27 @@ const message = ref('')
 const isError = ref(false)
 const isSubmitting = ref(false)
 const mentionedUsers = ref([])
+const allUsers = ref([])
 
 // 检查用户是否已登录
 onMounted(() => {
-  const currentUser = auth.getCurrentUser()
-  if (!currentUser) {
+  if (!auth.isLoggedIn) {
     message.value = '请先登录后再发帖'
     isError.value = true
-    // 立即跳转到登录页面
     router.push({ name: 'Login' })
   }
+  // 加载用户列表用于提及
+  loadUsers()
 })
+
+async function loadUsers() {
+  try {
+    const res = await authApi.getAllUsers()
+    if (res.success) {
+      allUsers.value = res.users
+    }
+  } catch {}
+}
 
 // 监听内容变化，更新提及用户列表
 watch(() => formData.content, (newContent) => {
@@ -111,7 +122,6 @@ watch(() => formData.content, (newContent) => {
 
 // 处理提及事件
 const handleMention = (user) => {
-  // 添加用户到提及列表（避免重复）
   if (!mentionedUsers.value.some(u => u.id === user.id)) {
     mentionedUsers.value.push({
       id: user.id,
@@ -119,11 +129,9 @@ const handleMention = (user) => {
       avatar: user.avatar || '/Head.png'
     })
     
-    // 显示提示消息
     message.value = `已提及用户 @${user.username}`
     isError.value = false
     
-    // 3秒后清除消息
     setTimeout(() => {
       if (message.value === `已提及用户 @${user.username}`) {
         message.value = ''
@@ -139,25 +147,21 @@ const updateMentionedUsers = (htmlContent) => {
     return
   }
   
-  // 从HTML中提取提及
   const mentions = extractMentionsFromHTML(htmlContent)
   
-  // 获取完整的用户信息
   const updatedMentions = mentions.map(mention => {
-    const user = userService.getUserById(mention.id)
+    const user = allUsers.value.find(u => String(u.id) === mention.id)
     return {
       id: mention.id,
       username: mention.username,
       avatar: user?.avatar || '/Head.png'
     }
-  }).filter(user => user.id) // 过滤掉无效的用户
+  }).filter(user => user.id)
   
-  // 更新提及用户列表
   mentionedUsers.value = updatedMentions
 }
 
 const handleCreatePost = async () => {
-  // 验证表单
   if (!formData.title.trim()) {
     message.value = '请输入帖子标题'
     isError.value = true
@@ -186,7 +190,7 @@ const handleCreatePost = async () => {
   message.value = ''
   
   try {
-    const currentUser = auth.getCurrentUser()
+    const currentUser = auth.currentUser
     if (!currentUser) {
       message.value = '请先登录后再发帖'
       isError.value = true
@@ -194,7 +198,6 @@ const handleCreatePost = async () => {
       return
     }
     
-    // 创建帖子数据，包含提及用户信息
     const postData = {
       title: formData.title.trim(),
       category: formData.category,
@@ -205,19 +208,17 @@ const handleCreatePost = async () => {
       }))
     }
     
-    const result = postService.createPost(postData, currentUser.id, currentUser.username)
+    const result = await postService.createPost(postData, currentUser.id, currentUser.username)
     
     if (result.success) {
-      message.value = '帖子发布成功！正在跳转到用户面板...'
+      message.value = '帖子发布成功！正在跳转...'
       isError.value = false
       
-      // 清空表单和提及列表
       formData.title = ''
       formData.content = ''
       mentionedUsers.value = []
       
-      // 立即跳转到用户面板
-      router.push({ name: 'User' })
+      setTimeout(() => router.push({ name: 'User' }), 500)
     } else {
       message.value = result.message || '发布失败，请重试'
       isError.value = true
@@ -270,14 +271,12 @@ const goBack = () => {
 }
 
 .page-title {
-  text-align: center;
-  color: #333;
-  margin-bottom: 28px;
-  font-size: 1.8rem;
-  font-weight: 700;
   font-family: 'SmileySans Oblique', sans-serif;
-  padding-bottom: 12px;
-  border-bottom: 2px solid #4facfe;
+  font-size: 1.8rem;
+  color: #333;
+  text-align: center;
+  margin-bottom: 32px;
+  font-weight: bold;
 }
 
 .create-post-form {
@@ -289,151 +288,58 @@ const goBack = () => {
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  position: relative;
 }
 
 .form-group label {
-  font-weight: 600;
-  color: #495057;
-  font-size: 0.95rem;
   font-family: 'SmileySans Oblique', sans-serif;
+  font-size: 1rem;
+  color: #495057;
+  font-weight: 600;
 }
 
 .form-input,
 .form-select {
-  padding: 10px 14px;
+  padding: 12px 16px;
   border: 2px solid #dee2e6;
-  border-radius: 10px;
-  font-size: 0.95rem;
+  border-radius: 8px;
+  font-size: 1rem;
   font-family: 'SmileySans Oblique', sans-serif;
-  transition: all 0.3s ease;
+  transition: border-color 0.2s;
   background: white;
-  color: #333;
 }
 
 .form-input:focus,
 .form-select:focus {
   outline: none;
   border-color: #4facfe;
-  box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
-}
-
-.form-input::placeholder {
-  color: #adb5bd;
-}
-
-.form-select {
-  cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='%236c757d' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 14px center;
-  background-size: 14px;
-  padding-right: 40px;
 }
 
 .char-count {
-  text-align: right;
-  font-size: 0.82rem;
+  position: absolute;
+  right: 12px;
+  bottom: -22px;
+  font-size: 0.8rem;
   color: #adb5bd;
-  margin-top: 2px;
 }
 
-.form-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 8px;
-}
-
-.submit-button,
-.back-button {
-  flex: 1;
-  padding: 12px 20px;
-  border: none;
-  border-radius: 10px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-family: 'SmileySans Oblique', sans-serif;
-}
-
-.submit-button {
-  background: linear-gradient(135deg, #4facfe 0%, #667eea 100%);
-  color: white;
-}
-
-.submit-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(79, 172, 254, 0.3);
-}
-
-.submit-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.back-button {
-  background: #f8f9fa;
-  color: #6c757d;
-  border: 1px solid #dee2e6;
-}
-
-.back-button:hover {
-  background: #e9ecef;
-  transform: translateY(-2px);
-}
-
-.message {
-  margin-top: 8px;
-  padding: 10px 16px;
-  border-radius: 10px;
-  text-align: center;
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.message.success {
-  background: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-}
-
-.message.error {
-  background: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
-}
-
-/* 富文本编辑器样式 */
 .rich-text-editor-wrapper {
-  margin-top: 4px;
+  min-height: 250px;
 }
 
-/* 提及用户样式 */
 .mentioned-users {
-  margin-top: 4px;
-  padding: 16px;
-  background-color: #f8f9fa;
+  background: #f8f9fa;
   border-radius: 10px;
-  border: 1px solid #e9ecef;
+  padding: 16px;
+  margin-top: 8px;
 }
 
 .mentioned-users-title {
-  font-family: 'SmileySans Oblique', sans-serif;
   font-size: 0.95rem;
   font-weight: 600;
   color: #495057;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.mentioned-users-title::before {
-  content: '@';
-  font-size: 1.1rem;
-  color: #4facfe;
+  margin: 0 0 12px 0;
 }
 
 .mentioned-users-list {
@@ -446,45 +352,90 @@ const goBack = () => {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 12px;
-  background-color: white;
+  background: #e9ecef;
+  padding: 4px 10px;
   border-radius: 20px;
-  border: 1px solid #dee2e6;
-  transition: all 0.2s ease;
-}
-
-.mentioned-user-item:hover {
-  background-color: #e9ecef;
-  transform: translateY(-1px);
+  font-size: 0.85rem;
 }
 
 .mentioned-user-avatar {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   object-fit: cover;
 }
 
 .mentioned-user-name {
-  font-family: 'SmileySans Oblique', sans-serif;
-  font-size: 0.85rem;
-  color: #495057;
+  color: #4facfe;
   font-weight: 500;
 }
 
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .form-container {
-    padding: 24px 20px;
-    margin: 0;
-  }
+.form-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+}
 
-  .page-title {
-    font-size: 1.5rem;
-  }
+.submit-button {
+  flex: 1;
+  padding: 14px;
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-family: 'SmileySans Oblique', sans-serif;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
 
-  .form-actions {
-    flex-direction: column;
-  }
+.submit-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(79, 172, 254, 0.4);
+}
+
+.submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.back-button {
+  flex: 1;
+  background-color: #f1f1f1;
+  color: #333;
+  border: 2px solid #ddd;
+  padding: 14px;
+  border-radius: 10px;
+  font-family: 'SmileySans Oblique', sans-serif;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.back-button:hover {
+  background-color: #e0e0e0;
+}
+
+.message {
+  margin-top: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  text-align: center;
+  font-family: 'SmileySans Oblique', sans-serif;
+  font-size: 1rem;
+}
+
+.message.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
 }
 </style>

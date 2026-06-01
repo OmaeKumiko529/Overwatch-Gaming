@@ -62,7 +62,6 @@
               <div class="post-footer">
                 <span class="post-author">作者: {{ post.author }}</span>
                 <span class="post-date">{{ post.date }}</span>
-                <!--<button class="view-detail-button" @click.stop="viewPostDetail(post.id)">查看详情</button> 这一条用来显示详细按钮，但现在直接点击也能进入详细所以已废弃-->
               </div>
             </div>
           </div>
@@ -92,9 +91,8 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import auth from '../services/auth.js'
 import postService from '../services/post.js'
-import userService from '../services/user.js'
+import { authApi } from '../services/api.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -106,55 +104,47 @@ const posts = ref([])
 const users = ref([])
 const searchInput = ref(null)
 
-// 从路由参数获取搜索词
 onMounted(() => {
   if (route.query.q) {
     searchQuery.value = route.query.q
     performSearch()
   }
   
-  // 聚焦搜索输入框
   if (searchInput.value) {
     searchInput.value.focus()
   }
 })
 
-// 监听搜索词变化
 watch(searchQuery, (newQuery) => {
   if (newQuery.trim() !== '') {
     updateUrl()
   }
 })
 
-// 更新URL
 const updateUrl = () => {
   const query = { ...route.query, q: searchQuery.value }
   router.replace({ query })
 }
 
-// 执行搜索
-const performSearch = () => {
+const performSearch = async () => {
   if (searchQuery.value.trim() === '') return
   
   loading.value = true
   updateUrl()
   
-  // 使用setTimeout模拟网络延迟，但使用真实数据
-  setTimeout(() => {
-    const query = searchQuery.value.toLowerCase().trim()
-    
+  const query = searchQuery.value.toLowerCase().trim()
+  
+  try {
     if (activeTab.value === 'posts') {
-      // 搜索帖子 - 过滤掉回复和评论（parentId为null或undefined的才是主帖子）
-      const allPosts = postService.getAllPosts()
+      // 通过 API 搜索帖子
+      const allPosts = await postService.getAllPosts()
       posts.value = allPosts.filter(post => {
-        // 只显示主帖子（parentId为null或undefined）
         const isMainPost = post.parentId === null || post.parentId === undefined
-        
         return isMainPost && (
           post.id.toString().includes(query) ||
-          post.title.toLowerCase().includes(query) ||
-          post.username.toLowerCase().includes(query) ||
-          post.content.toLowerCase().includes(query)
+          (post.title && post.title.toLowerCase().includes(query)) ||
+          (post.username && post.username.toLowerCase().includes(query)) ||
+          (post.content && post.content.toLowerCase().includes(query))
         )
       }).map(post => ({
         id: post.id,
@@ -164,8 +154,9 @@ const performSearch = () => {
         date: new Date(post.createdAt).toLocaleDateString('zh-CN')
       }))
     } else {
-      // 搜索用户
-      const allUsers = userService.getAllUsers()
+      // 通过 API 搜索用户
+      const res = await authApi.getAllUsers()
+      const allUsers = res.success ? res.users : []
       users.value = allUsers.filter(user => {
         return (
           user.id.toString().includes(query) ||
@@ -178,22 +169,23 @@ const performSearch = () => {
         bio: '守望先锋玩家'
       }))
     }
-    
+  } catch (err) {
+    console.error('搜索失败:', err)
+    posts.value = []
+    users.value = []
+  } finally {
     loading.value = false
-  }, 300)
+  }
 }
 
-// 查看用户资料
 const viewProfile = (uid) => {
   router.push({ name: 'UserProfile', params: { uid } })
 }
 
-// 查看帖子详情
 const viewPostDetail = (postId) => {
   router.push({ name: 'PostDetail', params: { id: postId } })
 }
 
-// 监听标签切换
 watch(activeTab, () => {
   if (searchQuery.value.trim() !== '') {
     performSearch()
@@ -203,223 +195,186 @@ watch(activeTab, () => {
 
 <style scoped>
 .search-page {
-  padding: 80px 20px 40px;
   min-height: 100vh;
-  background-color: #f5f5f5;
+  padding-top: 80px;
+  background: #f0f2f5;
 }
 
 .search-container {
   max-width: 800px;
   margin: 0 auto;
-  background-color: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  padding: 30px;
-}
-
-.search-header {
-  margin-bottom: 30px;
+  padding: 20px;
 }
 
 .search-header h1 {
-  margin: 0 0 20px 0;
+  font-size: 1.8rem;
   color: #333;
-  font-size: 2em;
+  margin-bottom: 20px;
 }
 
 .search-input-wrapper {
-  position: relative;
   display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
 .search-input {
   flex: 1;
-  padding: 12px 50px 12px 20px;
-  border: 2px solid #ddd;
-  border-radius: 25px;
-  font-size: 16px;
-  outline: none;
+  padding: 12px 16px;
+  border: 2px solid #dee2e6;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-family: 'SmileySans Oblique', sans-serif;
   transition: border-color 0.3s;
 }
 
 .search-input:focus {
-  border-color: #667eea;
+  outline: none;
+  border-color: #4facfe;
 }
 
 .search-button {
-  position: absolute;
-  right: 5px;
-  top: 50%;
-  transform: translateY(-50%);
-  background-color: #667eea;
+  padding: 12px 20px;
+  background: #4facfe;
   color: white;
   border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  border-radius: 10px;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background 0.3s;
 }
 
 .search-button:hover {
-  background-color: #5a67d8;
+  background: #3d8bda;
 }
 
 .search-tabs {
   display: flex;
-  border-bottom: 2px solid #eee;
+  gap: 0;
   margin-bottom: 20px;
+  border-bottom: 2px solid #dee2e6;
 }
 
 .tab-button {
-  padding: 12px 24px;
-  background: none;
+  padding: 10px 24px;
   border: none;
-  font-size: 16px;
+  background: none;
+  font-family: 'SmileySans Oblique', sans-serif;
+  font-size: 1rem;
+  color: #6c757d;
   cursor: pointer;
-  position: relative;
-  color: #666;
-  transition: color 0.3s;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.3s;
 }
 
 .tab-button.active {
-  color: #667eea;
-  font-weight: bold;
+  color: #4facfe;
+  border-bottom-color: #4facfe;
+  font-weight: 600;
 }
 
-.tab-button.active::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background-color: #667eea;
-}
-
-.tab-button:hover:not(.active) {
+.tab-button:hover {
   color: #333;
 }
 
 .search-results {
-  min-height: 300px;
+  min-height: 200px;
 }
 
-.loading, .empty-state {
+.loading {
   text-align: center;
   padding: 60px 20px;
-  color: #666;
-  font-size: 18px;
+  color: #6c757d;
+  font-size: 1.1rem;
 }
 
-.posts-results, .users-results {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6c757d;
+  font-size: 1.1rem;
 }
 
 .post-card {
-  border: 1px solid #eee;
-  border-radius: 8px;
-  padding: 16px;
-  transition: all 0.3s;
+  background: white;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   cursor: pointer;
-  position: relative;
-  background-color: white;
+  transition: all 0.3s;
+  border: 1px solid #e9ecef;
 }
 
 .post-card:hover {
-  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.15);
-  transform: translateY(-3px);
-  border-color: #667eea;
-  background-color: #f9fafc;
-}
-
-.post-card:active {
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(102, 126, 234, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .post-header {
   display: flex;
-  align-items: center;
+  gap: 12px;
   margin-bottom: 8px;
 }
 
 .post-id {
-  background-color: #f0f0f0;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  margin-right: 10px;
-  color: #666;
+  font-size: 0.85rem;
+  color: #adb5bd;
+  font-weight: 600;
 }
 
 .post-title {
-  font-weight: bold;
-  font-size: 18px;
+  font-weight: 600;
   color: #333;
 }
 
 .post-content {
-  color: #666;
-  margin-bottom: 12px;
-  line-height: 1.5;
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin-bottom: 8px;
 }
 
 .post-footer {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 14px;
-  color: #999;
-}
-
-.view-detail-button {
-  background-color: #667eea;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 6px 12px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.view-detail-button:hover {
-  background-color: #5a67d8;
+  gap: 16px;
+  font-size: 0.82rem;
+  color: #adb5bd;
 }
 
 .user-card {
+  background: white;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   display: flex;
   align-items: center;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  padding: 16px;
-  transition: box-shadow 0.3s;
+  gap: 16px;
+  border: 1px solid #e9ecef;
+  transition: all 0.3s;
 }
 
 .user-card:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .user-avatar {
-  margin-right: 16px;
+  flex-shrink: 0;
 }
 
 .avatar-placeholder {
-  width: 50px;
-  height: 50px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  background-color: #667eea;
+  background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 1.2rem;
   font-weight: bold;
 }
 
@@ -428,34 +383,35 @@ watch(activeTab, () => {
 }
 
 .user-name {
-  font-weight: bold;
-  font-size: 18px;
+  font-weight: 600;
   color: #333;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .user-uid {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 4px;
+  font-size: 0.82rem;
+  color: #adb5bd;
+  margin-bottom: 2px;
 }
 
 .user-bio {
-  font-size: 14px;
-  color: #999;
+  font-size: 0.85rem;
+  color: #6c757d;
 }
 
 .view-profile-button {
-  background-color: #667eea;
+  padding: 8px 16px;
+  background: #667eea;
   color: white;
   border: none;
-  border-radius: 20px;
-  padding: 8px 16px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  font-family: 'SmileySans Oblique', sans-serif;
+  font-size: 0.85rem;
+  transition: background 0.3s;
 }
 
 .view-profile-button:hover {
-  background-color: #5a67d8;
+  background: #5a6fd6;
 }
 </style>

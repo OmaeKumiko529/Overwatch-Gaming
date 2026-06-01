@@ -1,10 +1,10 @@
 <script setup>
 import { ref, reactive, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import auth from '../services/auth.js';
-import userService from '../services/user.js';
+import { useAuthStore } from '../stores/auth.js';
+import { authApi } from '../services/api.js';
 import postService from '../services/post.js';
-import teamService from '../services/team.js';
+import { useTeamStore } from '../stores/team.js';
 
 import ProfileHeader from './UserPanel/ProfileHeader.vue';
 import OverviewTab from './UserPanel/OverviewTab.vue';
@@ -21,6 +21,8 @@ import ModalChangeRole from './UserPanel/ModalChangeRole.vue';
 
 const route = useRoute();
 const router = useRouter();
+const auth = useAuthStore();
+const teamStore = useTeamStore();
 const uid = computed(() => route.params.uid);
 
 const activeTab = ref('overview');
@@ -29,8 +31,6 @@ const userTeam = ref(null);
 const teamMembers = ref([]);
 const userPosts = ref([]);
 const loadingPosts = ref(false);
-const currentUser = ref(null);
-
 const message = ref('');
 const isError = ref(false);
 
@@ -62,7 +62,7 @@ const tabs = computed(() => {
 })
 
 const isViewingOwnProfile = computed(() => {
-  return currentUser.value && currentUser.value.id === userInfo.value.id
+  return auth.currentUser && userInfo.value.id && Number(auth.currentUser.id) === Number(userInfo.value.id)
 })
 
 const totalLikes = computed(() => {
@@ -70,46 +70,54 @@ const totalLikes = computed(() => {
 })
 
 // Load data
-function loadUserInfo() {
+async function loadUserInfo() {
   const targetUid = uid.value
   if (targetUid) {
-    const user = userService.getUserById(targetUid)
-    if (user) {
-      userInfo.value = user
-    } else {
-      message.value = '用户不存在'
+    try {
+      const res = await authApi.getUserById(targetUid)
+      if (res.success && res.user) {
+        userInfo.value = res.user
+      } else {
+        message.value = '用户不存在'
+        isError.value = true
+      }
+    } catch {
+      message.value = '加载用户信息失败'
       isError.value = true
     }
   } else {
-    const cu = auth.getCurrentUser()
-    if (cu) {
-      userInfo.value = cu
+    if (auth.currentUser) {
+      userInfo.value = auth.currentUser
     } else {
       router.push({ name: 'Login' })
     }
   }
 }
 
-function loadTeamInfo() {
-  const targetUserId = userInfo.value?.id || auth.getCurrentUser()?.id
+async function loadTeamInfo() {
+  const targetUserId = userInfo.value?.id
   if (!targetUserId) return
-  const team = teamService.getUserTeam(targetUserId)
-  userTeam.value = team
-  if (team) {
-    const members = teamService.getTeamMembers(team.id)
-    const allUsers = userService.getAllUsers()
-    teamMembers.value = allUsers.filter(user => members.includes(user.id))
-  } else {
+  try {
+    const team = await teamStore.getUserTeam(targetUserId)
+    userTeam.value = team
+    if (team) {
+      const members = await teamStore.getTeamMembers(team.id)
+      teamMembers.value = members || []
+    } else {
+      teamMembers.value = []
+    }
+  } catch {
+    userTeam.value = null
     teamMembers.value = []
   }
 }
 
-function loadUserPosts() {
+async function loadUserPosts() {
   const targetUserId = userInfo.value?.id
   if (!targetUserId) return
   loadingPosts.value = true
   try {
-    userPosts.value = postService.getUserMainPosts(targetUserId)
+    userPosts.value = await postService.getUserMainPosts(targetUserId)
   } catch (e) {
     console.error('加载帖子失败:', e)
   } finally {
@@ -119,99 +127,121 @@ function loadUserPosts() {
 
 // Actions
 function handleLogout() {
-  if (auth.logout()) {
-    router.push({ name: 'Home' })
-  }
+  auth.logout()
+  router.push({ name: 'Home' })
 }
 
-function handleChangePassword(data) {
-  const cu = auth.getCurrentUser()
-  if (!cu) return
-  const users = userService.getAllUsers()
-  const idx = users.findIndex(u => u.id === cu.id)
-  if (idx === -1) return
-  if (users[idx].password !== data.currentPassword) {
-    message.value = '当前密码错误'
-    isError.value = true
-    return
-  }
-  users[idx].password = data.newPassword
-  users[idx].updatedAt = new Date().toISOString()
-  if (userService.saveAllUsers(users)) {
-    message.value = '密码修改成功'
-    isError.value = false
-  }
-}
-
-function handleDeleteAccount(password) {
-  const cu = auth.getCurrentUser()
-  if (!cu) return
-  const users = userService.getAllUsers()
-  const user = users.find(u => u.id === cu.id)
-  if (!user || user.password !== password) {
-    message.value = '密码错误'
-    isError.value = true
-    return
-  }
-  const result = userService.deleteUser(cu.id)
-  if (result.success) {
-    router.push({ name: 'Home' })
-  }
-}
-
-function handleCreateTeam(name) {
-  const cu = auth.getCurrentUser()
-  if (!cu) return
-  const result = teamService.createTeam(name, cu.id)
-  if (result.success) {
-    loadTeamInfo()
-    message.value = '战队创建成功'
-    isError.value = false
-  } else {
-    message.value = result.message || '创建失败'
+async function handleChangePassword(data) {
+  if (!auth.currentUser) return
+  try {
+    const res = await authApi.changePassword(data.currentPassword, data.newPassword)
+    if (res.success) {
+      message.value = '密码修改成功'
+      isError.value = false
+      showChangePassword.value = false
+    } else {
+      message.value = res.message || '修改失败'
+      isError.value = true
+    }
+  } catch {
+    message.value = '修改失败，请检查网络'
     isError.value = true
   }
 }
 
-function handleJoinTeam(name) {
-  const cu = auth.getCurrentUser()
-  if (!cu) return
-  const result = teamService.joinTeam(name, cu.id)
-  if (result.success) {
-    loadTeamInfo()
-    message.value = '成功加入战队'
-    isError.value = false
-  } else {
-    message.value = result.message || '加入失败'
+async function handleDeleteAccount(password) {
+  if (!auth.currentUser) return
+  try {
+    const res = await authApi.changePassword(password, '__verify__')
+    if (!res.success) {
+      message.value = '密码错误'
+      isError.value = true
+      return
+    }
+    const delRes = await authApi.deleteUser()
+    if (delRes.success) {
+      auth.logout()
+      router.push({ name: 'Home' })
+    }
+  } catch {
+    message.value = '删除失败'
     isError.value = true
   }
 }
 
-function handleLeaveTeam() {
-  const cu = auth.getCurrentUser()
-  if (!cu) return
-  const result = teamService.leaveTeam(cu.id)
-  if (result.success) {
-    loadTeamInfo()
-    message.value = result.teamDeleted ? '已退出战队，战队已解散' : '已成功退出战队'
-    isError.value = false
-  } else {
-    message.value = result.message || '退出失败'
+async function handleCreateTeam(name) {
+  if (!auth.currentUser) return
+  try {
+    const result = await teamStore.createTeam(name, auth.currentUser.id)
+    if (result.success) {
+      await loadTeamInfo()
+      message.value = '战队创建成功'
+      isError.value = false
+      showCreateTeam.value = false
+    } else {
+      message.value = result.message || '创建失败'
+      isError.value = true
+    }
+  } catch {
+    message.value = '创建失败，请检查网络'
     isError.value = true
   }
 }
 
-function handleChangeRole(roles) {
-  const cu = auth.getCurrentUser()
-  if (!cu) return
-  const result = userService.updateUserRoles(cu.id, roles)
-  if (result.success) {
-    loadUserInfo()
-    loadTeamInfo()
-    message.value = '职责更新成功'
-    isError.value = false
-  } else {
-    message.value = result.message || '更新失败'
+async function handleJoinTeam(name) {
+  if (!auth.currentUser) return
+  try {
+    const result = await teamStore.joinTeam(name, auth.currentUser.id)
+    if (result.success) {
+      await loadTeamInfo()
+      message.value = '成功加入战队'
+      isError.value = false
+      showJoinTeam.value = false
+    } else {
+      message.value = result.message || '加入失败'
+      isError.value = true
+    }
+  } catch {
+    message.value = '加入失败，请检查网络'
+    isError.value = true
+  }
+}
+
+async function handleLeaveTeam() {
+  if (!auth.currentUser) return
+  try {
+    const result = await teamStore.leaveTeam(auth.currentUser.id)
+    if (result.success) {
+      await loadTeamInfo()
+      message.value = result.teamDeleted ? '已退出战队，战队已解散' : '已成功退出战队'
+      isError.value = false
+      showLeaveConfirm.value = false
+    } else {
+      message.value = result.message || '退出失败'
+      isError.value = true
+    }
+  } catch {
+    message.value = '退出失败，请检查网络'
+    isError.value = true
+  }
+}
+
+async function handleChangeRole(roles) {
+  if (!auth.currentUser) return
+  try {
+    const result = await auth.updateUserRole(auth.currentUser.id, roles)
+    if (result.success) {
+      loadUserInfo()
+      loadTeamInfo()
+      message.value = '职责更新成功'
+      isError.value = false
+      showChangeRole.value = false
+    } else {
+      message.value = result.message || '更新失败'
+      isError.value = true
+    }
+  } catch {
+    message.value = '更新失败'
     isError.value = true
   }
 }
@@ -220,10 +250,9 @@ function viewPost(id) {
   router.push({ name: 'PostDetail', params: { id } })
 }
 
-function deletePost(id) {
+async function deletePost(id) {
   if (!confirm('确定删除这篇帖子吗？')) return
-  const cu = auth.getCurrentUser()
-  const result = postService.deletePost(id, cu?.id)
+  const result = await postService.deletePost(id, auth.currentUser?.id)
   if (result.success) {
     userPosts.value = userPosts.value.filter(p => p.id !== id)
     message.value = '帖子删除成功'
@@ -240,7 +269,6 @@ function handleMemberClick(id) {
 
 // Lifecycle
 onMounted(() => {
-  currentUser.value = auth.getCurrentUser()
   loadUserInfo()
 })
 
@@ -294,7 +322,7 @@ watch(userInfo, (newVal) => {
         v-if="activeTab === 'team'"
         :team="userTeam"
         :members="teamMembers"
-        :current-user-id="currentUser?.id || ''"
+        :current-user-id="auth.currentUser?.id || ''"
         :is-owner="isViewingOwnProfile"
         @leave-team="showLeaveConfirm = true"
         @create-team="showCreateTeam = true"
@@ -343,7 +371,6 @@ watch(userInfo, (newVal) => {
   font-family: 'SmileySans Oblique', sans-serif;
 }
 
-/* Tab Bar */
 .tab-bar {
   background: white;
   border-bottom: 1px solid #e9ecef;
@@ -397,7 +424,6 @@ watch(userInfo, (newVal) => {
   padding: 0 20px 40px;
 }
 
-/* Global Message */
 .global-msg {
   position: fixed;
   top: 20px;
@@ -425,7 +451,6 @@ watch(userInfo, (newVal) => {
   to { transform: translateX(0); opacity: 1; }
 }
 
-/* Responsive */
 @media (max-width: 640px) {
   .tab-nav {
     overflow-x: auto;

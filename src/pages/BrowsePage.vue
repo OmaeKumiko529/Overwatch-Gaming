@@ -104,10 +104,10 @@ const hasMore = computed(() => {
   return displayLimit.value < filteredPosts.value.length
 })
 
-function loadData() {
+async function loadData() {
   // 只取主帖子 (parentId === null)
-  allPosts.value = postService
-    .getAllPosts()
+  const posts = await postService.getAllPosts()
+  allPosts.value = posts
     .filter(p => p.parentId === null || p.parentId === undefined)
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 

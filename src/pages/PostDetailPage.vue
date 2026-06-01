@@ -102,7 +102,7 @@
           </div>
           <div class="stat-item">
             <span class="stat-icon">💬</span>
-            <span class="stat-value">{{ post.comments.length }}</span>
+            <span class="stat-value">{{ childPosts.length }}</span>
             <span class="stat-label">评论</span>
           </div>
           <div v-if="post.mentions && post.mentions.length > 0" class="stat-item">
@@ -253,71 +253,93 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import auth from '../services/auth.js';
+import { useAuthStore } from '../stores/auth.js';
 import postService from '../services/post.js';
-import userService from '../services/user.js';
+import { authApi } from '../services/api.js';
 
 const route = useRoute();
 const router = useRouter();
+const auth = useAuthStore();
 
 const postId = computed(() => route.params.id);
 const post = ref(null);
-const parentPost = ref(null); // 存储父帖子（如果当前帖子是评论/回复）
-const childPosts = ref([]); // 存储子帖子（评论）
+const parentPost = ref(null);
+const childPosts = ref([]);
 const loading = ref(true);
 const message = ref('');
 const isError = ref(false);
 const newComment = ref('');
 const isLiked = ref(false);
 
+// 缓存用户头像
+const avatarCache = ref({});
+
 // 获取用户头像
 const getUserAvatar = (userId) => {
   if (!userId) return '/Head.png';
-  const user = userService.getUserById(userId);
-  return user?.avatar || '/Head.png';
+  if (avatarCache.value[userId]) return avatarCache.value[userId];
+  return '/Head.png';
 };
 
-// 处理头像加载错误
+// 预加载用户头像
+const loadUserAvatar = async (userId) => {
+  if (!userId || avatarCache.value[userId]) return;
+  try {
+    const res = await authApi.getUserById(userId);
+    if (res.success && res.user?.avatar) {
+      avatarCache.value[userId] = res.user.avatar;
+    }
+  } catch {}
+};
+
 const handleAvatarError = (event) => {
-  // 如果头像加载失败，使用默认头像
   event.target.src = '/Head.png';
 };
 
-// 检查当前帖子是否为评论/回复
 const isComment = computed(() => {
   return post.value && post.value.parentId !== null && post.value.parentId !== undefined;
 });
 
-// 检查当前用户是否是帖子作者
 const isPostAuthor = computed(() => {
-  const currentUser = auth.getCurrentUser();
-  return currentUser && post.value && currentUser.id === post.value.userId;
+  return auth.currentUser && post.value && Number(auth.currentUser.id) === Number(post.value.userId);
 });
 
-// 加载帖子详情
 const loadPostDetail = async () => {
   loading.value = true;
   message.value = '';
-  parentPost.value = null; // 重置父帖子
+  parentPost.value = null;
   
   try {
-    // 使用postService的getPostById函数获取帖子详情
-    const foundPost = postService.getPostById(postId.value);
+    const foundPost = await postService.getPostById(postId.value);
     
     if (foundPost) {
       post.value = foundPost;
-      // 检查当前用户是否已点赞（这里需要扩展auth.js功能）
-      // 暂时设为false
       isLiked.value = false;
       
-      // 获取帖子的所有子帖子（评论）
-      childPosts.value = postService.getChildPosts(postId.value);
+      // 加载作者头像
+      if (foundPost.userId) {
+        loadUserAvatar(foundPost.userId);
+      }
+      
+      // 加载提及用户头像
+      if (foundPost.mentions && foundPost.mentions.length > 0) {
+        foundPost.mentions.forEach(m => loadUserAvatar(m.userId));
+      }
+      
+      // 获取子帖子（评论）
+      childPosts.value = await postService.getChildPosts(postId.value);
+      
+      // 加载评论作者头像
+      childPosts.value.forEach(c => {
+        if (c.userId) loadUserAvatar(c.userId);
+      });
       
       // 如果当前帖子是评论/回复，获取父帖子
       if (foundPost.parentId) {
-        parentPost.value = postService.getPostById(foundPost.parentId);
+        parentPost.value = await postService.getPostById(foundPost.parentId);
+        if (parentPost.value?.userId) loadUserAvatar(parentPost.value.userId);
       }
     } else {
       post.value = null;
@@ -332,53 +354,35 @@ const loadPostDetail = async () => {
   }
 };
 
-// 格式化帖子内容（支持富文本HTML）
 const formatPostContent = (content) => {
   if (!content) return '';
-  
-  // 如果内容已经是HTML（包含HTML标签），直接返回
   if (content.includes('<') && content.includes('>')) {
     return content;
   }
-  
-  // 否则，将换行符转换为<br>标签
   return content.replace(/\n/g, '<br>');
 };
 
-// 从HTML内容中提取纯文本预览
 const getPlainTextPreview = (htmlContent, maxLength = 150) => {
   if (!htmlContent) return '';
-  
   let plainText = htmlContent;
-  // 去除HTML标签
   if (plainText.includes('<') && plainText.includes('>')) {
     plainText = plainText.replace(/<[^>]*>/g, ' ');
-    // 合并多个空格
     plainText = plainText.replace(/\s+/g, ' ');
   }
-  
-  // 截断到指定长度
   if (plainText.length > maxLength) {
     return plainText.substring(0, maxLength) + '...';
   }
-  
   return plainText;
 };
 
-// 格式化评论内容（支持简单的HTML）
 const formatCommentContent = (content) => {
   if (!content) return '';
-  
-  // 如果内容已经是HTML（包含HTML标签），直接返回
   if (content.includes('<') && content.includes('>')) {
     return content;
   }
-  
-  // 否则，将换行符转换为<br>标签
   return content.replace(/\n/g, '<br>');
 };
 
-// 获取分类显示名称
 const getCategoryDisplayName = (category) => {
   const categoryMap = {
     'general': '一般讨论',
@@ -391,12 +395,10 @@ const getCategoryDisplayName = (category) => {
   return categoryMap[category] || '其他';
 };
 
-// 获取帖子分类CSS类
 const getPostCategoryClass = (category) => {
   return `post-category-${category}`;
 };
 
-// 格式化日期
 const formatDate = (dateString) => {
   if (!dateString) return '未知';
   try {
@@ -407,10 +409,8 @@ const formatDate = (dateString) => {
   }
 };
 
-// 格式化相对时间
 const formatRelativeTime = (dateString) => {
   if (!dateString) return '未知';
-  
   try {
     const date = new Date(dateString);
     const now = new Date();
@@ -431,50 +431,47 @@ const formatRelativeTime = (dateString) => {
   }
 };
 
-// 返回上一页
 const goBack = () => {
   router.go(-1);
 };
 
-// 返回首页
 const goHome = () => {
   router.push({ name: 'Home' });
 };
 
-// 查看用户资料
 const viewUserProfile = (userId) => {
   router.push({ name: 'UserProfile', params: { uid: userId } });
 };
 
-// 点赞/取消点赞
-const toggleLike = () => {
-  if (!auth.isLoggedIn()) {
+const toggleLike = async () => {
+  if (!auth.isLoggedIn) {
     message.value = '请先登录';
     isError.value = true;
     return;
   }
   
-  // 这里应该调用API进行点赞操作
-  // 暂时模拟切换状态
   isLiked.value = !isLiked.value;
   
   if (isLiked.value) {
-    post.value.likes += 1;
-    message.value = '点赞成功';
-    isError.value = false;
+    const result = await postService.likePost(postId.value);
+    if (result.success) {
+      post.value.likes = result.likes;
+      message.value = '点赞成功';
+      isError.value = false;
+    } else {
+      isLiked.value = false;
+      message.value = result.message || '点赞失败';
+      isError.value = true;
+    }
   } else {
     post.value.likes -= 1;
     message.value = '已取消点赞';
     isError.value = false;
   }
-  
-  // 这里应该保存到数据库
-  // 暂时只更新本地状态
 };
 
-// 聚焦评论输入框
 const focusCommentInput = () => {
-  if (!auth.isLoggedIn()) {
+  if (!auth.isLoggedIn) {
     message.value = '请先登录';
     isError.value = true;
     return;
@@ -486,9 +483,8 @@ const focusCommentInput = () => {
   }
 };
 
-// 添加评论
 const addComment = async () => {
-  if (!auth.isLoggedIn()) {
+  if (!auth.isLoggedIn) {
     message.value = '请先登录';
     isError.value = true;
     return;
@@ -500,25 +496,18 @@ const addComment = async () => {
     return;
   }
   
-  const currentUser = auth.getCurrentUser();
-  if (!currentUser) {
+  if (!auth.currentUser) {
     message.value = '用户信息获取失败';
     isError.value = true;
     return;
   }
   
   try {
-    // 使用postService的addComment函数创建子帖子
-    const currentUser = auth.getCurrentUser();
-    const result = postService.addComment(postId.value, newComment.value.trim(), currentUser.id, currentUser.username);
+    const result = await postService.addComment(postId.value, newComment.value.trim(), auth.currentUser.id, auth.currentUser.username);
     
     if (result.success) {
-      // 将新创建的子帖子添加到子帖子列表的开头
       childPosts.value.unshift(result.comment);
-      
-      // 清空输入框
       newComment.value = '';
-      
       message.value = '评论发布成功';
       isError.value = false;
     } else {
@@ -532,30 +521,23 @@ const addComment = async () => {
   }
 };
 
-// 检查是否是评论作者
 const isCommentAuthor = (comment) => {
-  const currentUser = auth.getCurrentUser();
-  return currentUser && comment.userId === currentUser.id;
+  return auth.currentUser && Number(comment.userId) === Number(auth.currentUser.id);
 };
 
-// 删除评论（子帖子）
 const deleteComment = async (commentId) => {
   if (!confirm('确定要删除这条评论吗？')) {
     return;
   }
   
   try {
-    // 调用postService的deleteComment函数
-    const currentUser = auth.getCurrentUser();
-    const result = postService.deleteComment(commentId, currentUser.id);
+    const result = await postService.deleteComment(commentId, auth.currentUser?.id);
     
     if (result.success) {
-      // 从子帖子列表中移除
       const commentIndex = childPosts.value.findIndex(c => c.id === commentId);
       if (commentIndex !== -1) {
         childPosts.value.splice(commentIndex, 1);
       }
-      
       message.value = '评论删除成功';
       isError.value = false;
     } else {
@@ -569,21 +551,17 @@ const deleteComment = async (commentId) => {
   }
 };
 
-// 删除帖子
-const deletePost = () => {
+const deletePost = async () => {
   if (!confirm('确定要删除这篇帖子吗？此操作不可撤销。')) {
     return;
   }
   
-  // 这里应该调用API删除帖子
-  const currentUser = auth.getCurrentUser();
-  const result = postService.deletePost(post.value.id, currentUser.id);
+  const result = await postService.deletePost(post.value.id, auth.currentUser?.id);
   
   if (result.success) {
     message.value = '帖子删除成功';
     isError.value = false;
     
-    // 延迟跳转回首页
     setTimeout(() => {
       router.push({ name: 'Home' });
     }, 1500);
@@ -593,12 +571,10 @@ const deletePost = () => {
   }
 };
 
-// 跳转到父帖子
 const goToParentPost = (parentId) => {
   router.push({ name: 'PostDetail', params: { id: parentId } });
 };
 
-// 组件挂载时加载帖子详情
 onMounted(() => {
   loadPostDetail();
 });
@@ -770,7 +746,7 @@ onMounted(() => {
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
-  background-color: #f0f2f5; /* 加载时的背景色 */
+  background-color: #f0f2f5;
 }
 
 .avatar-image-small {
@@ -841,7 +817,6 @@ onMounted(() => {
   color: #333;
 }
 
-/* 富文本内容样式 */
 .post-text h1,
 .post-text h2,
 .post-text h3 {
@@ -888,22 +863,6 @@ onMounted(() => {
 
 .post-text p {
   margin: 0 0 1em 0;
-}
-
-.post-text strong {
-  font-weight: bold;
-}
-
-.post-text em {
-  font-style: italic;
-}
-
-.post-text u {
-  text-decoration: underline;
-}
-
-.post-text s {
-  text-decoration: line-through;
 }
 
 .post-stats {
@@ -997,435 +956,5 @@ onMounted(() => {
 .delete-button:hover {
   background-color: #dc3545;
   color: white;
-}
-
-.comments-section {
-  margin-top: 40px;
-  padding-top: 30px;
-  border-top: 2px solid #e9ecef;
-}
-
-.comments-title {
-  font-family: 'SmileySans Oblique', sans-serif;
-  font-size: 1.5rem;
-  color: #333;
-  margin-bottom: 20px;
-}
-
-.add-comment {
-  margin-bottom: 30px;
-}
-
-.comment-input {
-  width: 100%;
-  padding: 15px;
-  border: 2px solid #dee2e6;
-  border-radius: 8px;
-  font-family: 'SmileySans Oblique', sans-serif;
-  font-size: 1rem;
-  resize: vertical;
-  transition: border-color 0.3s;
-}
-
-.comment-input:focus {
-  outline: none;
-  border-color: #4facfe;
-}
-
-.comment-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 10px;
-}
-
-.submit-comment-button {
-  padding: 10px 24px;
-  background-color: #28a745;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-family: 'SmileySans Oblique', sans-serif;
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.submit-comment-button:hover:not(:disabled) {
-  background-color: #218838;
-}
-
-.submit-comment-button:disabled {
-  background-color: #6c757d;
-  cursor: not-allowed;
-}
-
-.comments-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.comment-item {
-  padding: 20px;
-  background-color: #f8f9fa;
-  border-radius: 12px;
-  border: 1px solid #e9ecef;
-}
-
-.comment-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
-.comment-author {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.comment-avatar {
-  width: 36px;
-  height: 36px;
-  /* 作为头像图片容器 */
-}
-
-.comment-author-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.comment-author-name {
-  font-family: 'SmileySans Oblique', sans-serif;
-  font-weight: 600;
-  color: #333;
-}
-
-.comment-time {
-  font-size: 0.8rem;
-  color: #6c757d;
-}
-
-.delete-comment-button {
-  padding: 4px 12px;
-  background-color: #f8f9fa;
-  color: #dc3545;
-  border: 1px solid #dc3545;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.delete-comment-button:hover {
-  background-color: #dc3545;
-  color: white;
-}
-
-.comment-content {
-  font-size: 1rem;
-  line-height: 1.6;
-  color: #333;
-  white-space: pre-wrap;
-}
-
-.no-comments {
-  text-align: center;
-  padding: 40px;
-  color: #6c757d;
-  font-style: italic;
-}
-
-.message {
-  padding: 15px;
-  border-radius: 8px;
-  margin-top: 20px;
-  text-align: center;
-  font-family: 'SmileySans Oblique', sans-serif;
-  font-weight: 500;
-}
-
-.message:not(.error) {
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-}
-
-.message.error {
-  background-color: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
-}
-
-/* 提及用户样式 */
-.post-mentions {
-  margin: 25px 0;
-  padding: 20px;
-  background: linear-gradient(135deg, #f0f7ff 0%, #e3f2fd 100%);
-  border-radius: 12px;
-  border: 1px solid #bbdefb;
-  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.1);
-}
-
-.post-mentions-title {
-  font-family: 'SmileySans Oblique', sans-serif;
-  font-size: 1.2rem;
-  color: #1976d2;
-  margin-bottom: 15px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.post-mentions-icon {
-  font-size: 1.4rem;
-  font-weight: bold;
-}
-
-.post-mentions-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.post-mention-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
-  background-color: white;
-  border-radius: 25px;
-  border: 1px solid #bbdefb;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-}
-
-.post-mention-item:hover {
-  background-color: #e3f2fd;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.15);
-}
-
-.post-mention-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #bbdefb;
-}
-
-.post-mention-name {
-  font-family: 'SmileySans Oblique', sans-serif;
-  font-size: 0.95rem;
-  color: #333;
-  font-weight: 500;
-}
-
-.post-mention-profile-button {
-  padding: 4px 12px;
-  background-color: #4facfe;
-  color: white;
-  border: none;
-  border-radius: 15px;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  font-family: 'SmileySans Oblique', sans-serif;
-}
-
-.post-mention-profile-button:hover {
-  background-color: #3a9bf7;
-}
-
-/* 瀑布流布局 */
-.waterfall-layout {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
-}
-
-.waterfall-item {
-  break-inside: avoid;
-  page-break-inside: avoid;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-radius: 12px;
-  padding: 20px;
-  border: 1px solid #dee2e6;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.waterfall-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-}
-
-.comment-context {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px dashed #ced4da;
-  font-size: 0.8rem;
-  color: #6c757d;
-}
-
-.comment-context small {
-  font-family: 'SmileySans Oblique', sans-serif;
-}
-
-/* 父帖子区域样式 */
-.parent-post-section {
-  margin: 40px 0;
-  padding: 25px;
-  background: linear-gradient(135deg, #fff9e6 0%, #ffeaa7 100%);
-  border-radius: 16px;
-  border: 2px solid #ffd166;
-  box-shadow: 0 8px 25px rgba(255, 209, 102, 0.3);
-}
-
-.parent-post-title {
-  font-family: 'SmileySans Oblique', sans-serif;
-  font-size: 1.4rem;
-  color: #e17055;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.parent-post-icon {
-  font-size: 1.6rem;
-}
-
-.parent-post-card {
-  background-color: white;
-  border-radius: 12px;
-  padding: 20px;
-  border: 1px solid #fdcb6e;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.parent-post-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #f1f2f6;
-}
-
-.parent-post-category {
-  font-family: 'SmileySans Oblique', sans-serif;
-  font-size: 0.8rem;
-  font-weight: 600;
-  padding: 4px 12px;
-  border-radius: 20px;
-  background-color: #f8f9fa;
-  color: #495057;
-}
-
-.parent-post-date {
-  font-size: 0.8rem;
-  color: #6c757d;
-}
-
-.parent-post-title-text {
-  font-family: 'SmileySans Oblique', sans-serif;
-  font-size: 1.3rem;
-  color: #333;
-  margin-bottom: 15px;
-  line-height: 1.4;
-}
-
-.parent-post-author {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-
-.parent-post-avatar {
-  width: 36px;
-  height: 36px;
-  /* 作为头像图片容器 */
-}
-
-.parent-post-author-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.parent-post-author-name {
-  font-family: 'SmileySans Oblique', sans-serif;
-  font-weight: 600;
-  color: #333;
-  font-size: 0.9rem;
-}
-
-.parent-post-time {
-  font-size: 0.8rem;
-  color: #6c757d;
-}
-
-.parent-post-content-preview {
-  font-size: 0.95rem;
-  line-height: 1.6;
-  color: #555;
-  margin-bottom: 20px;
-  padding: 15px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  border-left: 4px solid #74b9ff;
-}
-
-.parent-post-actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.parent-post-view-button {
-  padding: 8px 20px;
-  background-color: #74b9ff;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-family: 'SmileySans Oblique', sans-serif;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.parent-post-view-button:hover {
-  background-color: #0984e3;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(116, 185, 255, 0.3);
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .post-detail-container {
-    padding: 20px;
-  }
-  
-  .post-title {
-    font-size: 1.8rem;
-  }
-  
-  .post-actions {
-    flex-wrap: wrap;
-  }
-  
-  .waterfall-layout {
-    grid-template-columns: 1fr;
-  }
-  
-  .action-button {
-    flex: 1;
-    min-width: 120px;
-    justify-content: center;
-  }
 }
 </style>
