@@ -1,31 +1,31 @@
 <template>
-  <div class="support-gallery">
+  <div class="tank-gallery">
     <div class="container">
 
       <!-- 左侧角色插图区域（不动） -->
       <div class="character-section">
-        <img src="/ow_icon.svg" alt="守望先锋标志" class="logo-bg">
-        <img src="/Nsc/hn.png" alt="左侧辅助角色" class="char-left">
-        <img src="/Nsc/ylr.png" alt="右侧辅助角色" class="char-right">
+        <img src="/public/ow_icon.svg" alt="守望先锋标志" class="logo-bg">
+        <img src="/t/dc.png" alt="左侧重装角色" class="char-left">
+        <img src="/t/lb.png" alt="右侧重装角色" class="char-right">
       </div>
 
       <!-- 右侧信息区域（重写） -->
       <div class="info-section">
 
         <div class="english-title">
-             <img src="/Nsc/96px-职责：支援_图标.png">
-             <span>Supports</span>
+             <img src="/t/96px-职责：重装_图标.png">
+             <span>Tanks</span>
         </div>
-        <div class="cn-title">辅助</div>
+        <div class="cn-title">重装</div>
         <div class="desc-text">
-          集治疗与增益于一体的角色<br>
-          负责对友方的保护与强化
+          集防御与推进于一体的角色<br>
+          负责对敌方的压制与战线维持
         </div>
 
         <!-- 英雄网格 -->
         <div class="hero-grid">
           <div 
-            v-for="hero in supportHeroes"
+            v-for="hero in tankHeroes"
             :key="hero.name"
             class="hero-item"
           >
@@ -44,9 +44,10 @@
 </template>
 
 <script setup>
+import { onMounted, onUnmounted } from 'vue'
 
 // ✅ 完全沿用你的数据
-const supportHeroes = [
+const tankHeroes = [
   { name: "飞天猫", imageIndex: 1 },
   { name: "瑞稀", imageIndex: 2 },
   { name: "无漾", imageIndex: 3 },
@@ -65,18 +66,45 @@ const supportHeroes = [
 
 // ✅ 完全沿用你的路径规则
 function getHeroImage(hero) {
-  const fileName = `0w+ (${hero.imageIndex}).png`
-  return `/Nsc/${encodeURI(fileName)}`
+  const fileName = `0wt (${hero.imageIndex}).png`
+  return `/t/${encodeURI(fileName)}`
 }
 
 // 简单兜底（避免破图）
 function handleImageError(e) {
   e.target.style.opacity = 0.3
 }
+
+// 视差移动
+let leftChar = null
+let rightChar = null
+
+function handleMouseMove(e) {
+  const x = e.clientX
+  const w = window.innerWidth
+  const offset = (x / w - 0.5) * 12
+
+  if (leftChar && rightChar) {
+    leftChar.style.transform =
+      `translateX(${offset * 2}px) translateY(${offset * 1}px)`
+    rightChar.style.transform =
+      `translateX(${offset * 1 + 50}px) translateY(${offset * 1}px)`
+  }
+}
+
+onMounted(() => {
+  leftChar = document.querySelector('.tank-gallery .char-left')
+  rightChar = document.querySelector('.tank-gallery .char-right')
+  window.addEventListener('mousemove', handleMouseMove)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('mousemove', handleMouseMove)
+})
 </script>
 
 <style scoped>
-.support-gallery {
+.tank-gallery {
   height: 100vh;
   background: #ffffff;
   color: rgb(0, 0, 0);
@@ -106,21 +134,20 @@ function handleImageError(e) {
 .char-left {
   position: absolute;
   bottom: 0;
-  left: 0;
-  height: 95%;
+  left: -10%;
+  height: 90%;
 }
 
 .char-right {
   position: absolute;
   bottom: 0;
-  right: 10%;
-  height: 80%;
+  right: 1%;
+  height: 75%;
 }
 
 /* 右侧 */
 .info-section {
   width: 55%;
-  height: calc(100vh - 60px);
   padding: 40px;
   margin-right: 80px;
   box-sizing: border-box;
@@ -128,6 +155,12 @@ function handleImageError(e) {
 }
 
 /*字体*/
+@font-face {
+  font-family: "SmileySans-Oblique";
+  src: url("/public/SmileySans-Oblique.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
 
 /* 标题 */
 .english-title {
