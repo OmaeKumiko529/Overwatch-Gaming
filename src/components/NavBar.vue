@@ -6,6 +6,8 @@
     
     <!-- 导航链接列表 -->
     <ul class="nav-links">
+      <!-- 浏览帖子链接 -->
+      <li><router-link to="/browse">浏览</router-link></li>
       <!-- 仅登录用户可见：发帖链接 -->
       <li v-if="auth.isLoggedIn"><router-link to="/createpost">发帖</router-link></li>
       <!-- 仅登录用户可见：用户面板链接 -->

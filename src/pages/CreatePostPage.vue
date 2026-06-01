@@ -238,27 +238,30 @@ const goBack = () => {
 <style scoped>
 .create-post-page {
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
+  padding-top: 80px;
+  background: #f0f2f5;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-bottom: 40px;
+  box-sizing: border-box;
 }
 
 .form-container {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  padding: 40px;
+  background: white;
+  border-radius: 16px;
+  padding: 36px;
   width: 100%;
-  max-width: 600px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  animation: slideUp 0.5s ease;
+  max-width: 680px;
+  margin: 0 auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e9ecef;
+  animation: slideUp 0.4s ease;
 }
 
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -269,99 +272,100 @@ const goBack = () => {
 .page-title {
   text-align: center;
   color: #333;
-  margin-bottom: 30px;
-  font-size: 2.5em;
-  font-weight: bold;
+  margin-bottom: 28px;
+  font-size: 1.8rem;
+  font-weight: 700;
   font-family: 'SmileySans Oblique', sans-serif;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #4facfe;
 }
 
 .create-post-form {
   display: flex;
   flex-direction: column;
-  gap: 25px;
+  gap: 20px;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .form-group label {
-  font-weight: bold;
-  color: #555;
-  font-size: 1.1em;
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.95rem;
+  font-family: 'SmileySans Oblique', sans-serif;
 }
 
 .form-input,
-.form-select,
-.form-textarea {
-  padding: 12px 16px;
-  border: 2px solid #ddd;
+.form-select {
+  padding: 10px 14px;
+  border: 2px solid #dee2e6;
   border-radius: 10px;
-  font-size: 1em;
+  font-size: 0.95rem;
+  font-family: 'SmileySans Oblique', sans-serif;
   transition: all 0.3s ease;
   background: white;
+  color: #333;
 }
 
 .form-input:focus,
-.form-select:focus,
-.form-textarea:focus {
+.form-select:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #4facfe;
+  box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
 }
 
-.form-textarea {
-  resize: vertical;
-  min-height: 150px;
-  font-family: inherit;
+.form-input::placeholder {
+  color: #adb5bd;
 }
 
 .form-select {
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='%236c757d' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 16px center;
-  background-size: 16px;
+  background-position: right 14px center;
+  background-size: 14px;
   padding-right: 40px;
 }
 
 .char-count {
   text-align: right;
-  font-size: 0.9em;
-  color: #888;
-  margin-top: 4px;
+  font-size: 0.82rem;
+  color: #adb5bd;
+  margin-top: 2px;
 }
 
 .form-actions {
   display: flex;
-  gap: 15px;
-  margin-top: 20px;
+  gap: 12px;
+  margin-top: 8px;
 }
 
 .submit-button,
 .back-button {
   flex: 1;
-  padding: 14px;
+  padding: 12px 20px;
   border: none;
   border-radius: 10px;
-  font-size: 1.1em;
-  font-weight: bold;
+  font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   font-family: 'SmileySans Oblique', sans-serif;
 }
 
 .submit-button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4facfe 0%, #667eea 100%);
   color: white;
 }
 
 .submit-button:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 6px 16px rgba(79, 172, 254, 0.3);
 }
 
 .submit-button:disabled {
@@ -370,21 +374,23 @@ const goBack = () => {
 }
 
 .back-button {
-  background: #f0f0f0;
-  color: #666;
+  background: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #dee2e6;
 }
 
 .back-button:hover {
-  background: #e0e0e0;
+  background: #e9ecef;
   transform: translateY(-2px);
 }
 
 .message {
-  margin-top: 20px;
-  padding: 12px 16px;
+  margin-top: 8px;
+  padding: 10px 16px;
   border-radius: 10px;
   text-align: center;
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 0.9rem;
 }
 
 .message.success {
@@ -401,13 +407,13 @@ const goBack = () => {
 
 /* 富文本编辑器样式 */
 .rich-text-editor-wrapper {
-  margin-top: 8px;
+  margin-top: 4px;
 }
 
 /* 提及用户样式 */
 .mentioned-users {
-  margin-top: 20px;
-  padding: 15px;
+  margin-top: 4px;
+  padding: 16px;
   background-color: #f8f9fa;
   border-radius: 10px;
   border: 1px solid #e9ecef;
@@ -415,31 +421,32 @@ const goBack = () => {
 
 .mentioned-users-title {
   font-family: 'SmileySans Oblique', sans-serif;
-  font-size: 1.1rem;
-  color: #333;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #495057;
   margin-bottom: 10px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .mentioned-users-title::before {
   content: '@';
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   color: #4facfe;
 }
 
 .mentioned-users-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .mentioned-user-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
+  gap: 6px;
+  padding: 4px 12px;
   background-color: white;
   border-radius: 20px;
   border: 1px solid #dee2e6;
@@ -448,19 +455,19 @@ const goBack = () => {
 
 .mentioned-user-item:hover {
   background-color: #e9ecef;
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 .mentioned-user-avatar {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   object-fit: cover;
 }
 
 .mentioned-user-name {
   font-family: 'SmileySans Oblique', sans-serif;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: #495057;
   font-weight: 500;
 }
@@ -468,24 +475,16 @@ const goBack = () => {
 /* 响应式设计 */
 @media (max-width: 768px) {
   .form-container {
-    padding: 30px 20px;
-    margin: 20px;
+    padding: 24px 20px;
+    margin: 0;
   }
-  
+
   .page-title {
-    font-size: 2em;
+    font-size: 1.5rem;
   }
-  
+
   .form-actions {
     flex-direction: column;
-  }
-  
-  .mentioned-users-list {
-    gap: 8px;
-  }
-  
-  .mentioned-user-item {
-    padding: 4px 10px;
   }
 }
 </style>

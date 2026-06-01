@@ -62,6 +62,11 @@ const routes = [
     component: () => import('../pages/PostDetailPage.vue')
   },
   {
+    path: '/browse',
+    name: 'Browse',
+    component: () => import('../pages/BrowsePage.vue')
+  },
+  {
     path: '/search',
     name: 'Search',
     component: () => import('../pages/SearchPage.vue')
