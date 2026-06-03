@@ -119,7 +119,7 @@ const navigateTo = (routeName) => {
   border: 2px solid white;
   color: white;
   padding: 10px 24px;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   border-radius: 64px;
   cursor: pointer;
   transition: 0.3s;

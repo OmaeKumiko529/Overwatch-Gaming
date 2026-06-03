@@ -228,7 +228,7 @@ const goToHome = () => {
 }
 
 .form-group label {
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   font-size: 1.1rem;
   color: #555;
   font-weight: 500;
@@ -239,7 +239,7 @@ const goToHome = () => {
   border: 2px solid #ddd;
   border-radius: 10px;
   font-size: 1rem;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   transition: border-color 0.3s;
 }
 
@@ -261,7 +261,7 @@ const goToHome = () => {
   border: none;
   padding: 16px;
   border-radius: 10px;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   font-size: 1.2rem;
   font-weight: bold;
   cursor: pointer;
@@ -285,7 +285,7 @@ const goToHome = () => {
   border: 2px solid #ddd;
   padding: 16px;
   border-radius: 10px;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   font-size: 1.2rem;
   font-weight: bold;
   cursor: pointer;
@@ -304,7 +304,7 @@ const goToHome = () => {
 }
 
 .form-footer p {
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   color: #666;
   font-size: 1rem;
 }
@@ -324,7 +324,7 @@ const goToHome = () => {
   padding: 12px 16px;
   border-radius: 8px;
   text-align: center;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   font-size: 1rem;
 }
 

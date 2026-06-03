@@ -127,7 +127,7 @@ onUnmounted(() => {
   border-radius: 20px;
   font-weight: bold;
   transition: all 0.3s ease;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
 }
 .register-nav {
   background-color: rgba(102, 126, 234, 0.2);

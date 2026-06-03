@@ -33,6 +33,12 @@ onMounted(() => {
   src: url('/SmileySans-Oblique.ttf') format('truetype');
 }
 
+/* 自定义字体声明：导入MapleMono CN等宽字体 */
+@font-face {
+  font-family: 'MapleMono CN Regular';
+  src: url('/MapleMono-CN-Regular.ttf') format('truetype');
+}
+
 /* 应用根容器样式 */
 .app-container{
   width:100%;          /* 宽度占满父容器 */

@@ -293,7 +293,7 @@ const goBack = () => {
 }
 
 .form-group label {
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   font-size: 1rem;
   color: #495057;
   font-weight: 600;
@@ -305,7 +305,7 @@ const goBack = () => {
   border: 2px solid #dee2e6;
   border-radius: 8px;
   font-size: 1rem;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   transition: border-color 0.2s;
   background: white;
 }
@@ -383,7 +383,7 @@ const goBack = () => {
   color: white;
   border: none;
   border-radius: 10px;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   font-size: 1.1rem;
   font-weight: bold;
   cursor: pointer;
@@ -407,7 +407,7 @@ const goBack = () => {
   border: 2px solid #ddd;
   padding: 14px;
   border-radius: 10px;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   font-size: 1.1rem;
   font-weight: bold;
   cursor: pointer;
@@ -423,7 +423,7 @@ const goBack = () => {
   padding: 12px 16px;
   border-radius: 8px;
   text-align: center;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   font-size: 1rem;
 }
 

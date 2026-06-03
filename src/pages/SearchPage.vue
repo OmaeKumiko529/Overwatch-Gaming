@@ -224,7 +224,7 @@ watch(activeTab, () => {
   border: 2px solid #dee2e6;
   border-radius: 10px;
   font-size: 1rem;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   transition: border-color 0.3s;
 }
 
@@ -260,7 +260,7 @@ watch(activeTab, () => {
   padding: 10px 24px;
   border: none;
   background: none;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   font-size: 1rem;
   color: #6c757d;
   cursor: pointer;
@@ -406,7 +406,7 @@ watch(activeTab, () => {
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   font-size: 0.85rem;
   transition: background 0.3s;
 }

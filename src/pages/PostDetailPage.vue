@@ -608,7 +608,7 @@ onMounted(() => {
   background-color: #f8f9fa;
   border: 1px solid #dee2e6;
   border-radius: 8px;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   font-size: 0.9rem;
   cursor: pointer;
   display: flex;
@@ -667,7 +667,7 @@ onMounted(() => {
   color: white;
   border: none;
   border-radius: 8px;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   font-weight: 600;
   font-size: 1rem;
   cursor: pointer;
@@ -696,7 +696,7 @@ onMounted(() => {
 }
 
 .post-category {
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   font-size: 0.9rem;
   font-weight: 600;
   padding: 6px 16px;
@@ -886,7 +886,7 @@ onMounted(() => {
 }
 
 .stat-value {
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   font-size: 1.3rem;
   font-weight: 600;
   color: #333;
@@ -907,7 +907,7 @@ onMounted(() => {
   padding: 12px 24px;
   border: none;
   border-radius: 8px;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   font-weight: 600;
   font-size: 1rem;
   cursor: pointer;

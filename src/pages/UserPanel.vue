@@ -368,7 +368,7 @@ watch(userInfo, (newVal) => {
   min-height: 100vh;
   padding-top: 60px;
   background: #f0f2f5;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
 }
 
 .tab-bar {
@@ -394,7 +394,7 @@ watch(userInfo, (newVal) => {
   padding: 14px 24px;
   border: none;
   background: transparent;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   font-size: 1rem;
   font-weight: 600;
   color: #6c757d;

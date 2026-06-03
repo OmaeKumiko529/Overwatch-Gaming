@@ -143,7 +143,7 @@ onMounted(() => {
   border-radius: 8px;
   background: white;
   color: #4facfe;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
