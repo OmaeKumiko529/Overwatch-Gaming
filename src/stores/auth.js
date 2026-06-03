@@ -74,8 +74,10 @@ export const useAuthStore = defineStore('auth', () => {
               currentUser.value = merged
               persistLoginSession(merged)
             } else {
-              // token 失效，清除会话但不影响当前使用
+              // token 失效，清除会话
               console.warn('会话已过期，请重新登录')
+              clearLoginSession()
+              currentUser.value = null
             }
           }).catch(() => {})
           return session
@@ -191,6 +193,17 @@ export const useAuthStore = defineStore('auth', () => {
 
   function initTestData() {
     console.log('测试数据由后端管理')
+  }
+
+  // 监听 auth:unauthorized 事件（来自 api.js 的 401 拦截），自动登出
+  if (typeof window !== 'undefined') {
+    window.addEventListener('auth:unauthorized', () => {
+      if (currentUser.value) {
+        clearLoginSession()
+        currentUser.value = null
+        console.warn('认证已过期，已自动登出')
+      }
+    })
   }
 
   // 初始化时加载会话

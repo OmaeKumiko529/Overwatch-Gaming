@@ -112,7 +112,7 @@ function initSchema() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       type TEXT NOT NULL,
       author TEXT,
-      root INTEGER,
+      root TEXT,
       to_user INTEGER NOT NULL,
       is_read INTEGER NOT NULL DEFAULT 0,
       title TEXT,

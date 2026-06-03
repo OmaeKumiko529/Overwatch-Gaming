@@ -29,21 +29,23 @@ function mapPost(p) {
   }
 }
 
-// 获取当前用户 userrank（用于权限判断）
-function getUserrank(req) {
-  if (req.user && req.user.id) {
-    const u = getOne('SELECT userrank FROM users WHERE id = ?', [req.user.id])
-    return u ? Number(u.userrank) : 0
+// 获取分类列表（必须放在 :pid 路由之前，防止 categories 被捕获为 pid）
+router.get('/categories/list', (req, res) => {
+  try {
+    const rows = getAll('SELECT DISTINCT category FROM posts WHERE parent_id IS NULL AND category IS NOT NULL')
+    res.json({ success: true, categories: rows.map(r => r.category) })
+  } catch (error) {
+    console.error('获取分类失败:', error)
+    res.status(500).json({ success: false, message: '获取分类失败' })
   }
-  return 0
-}
+})
 
 // 获取帖子列表
 router.get('/', optionalAuth, (req, res) => {
   try {
     const { search, category, postrank, popular, limit } = req.query
     const maxLimit = Math.min(Number(limit) || 20, 100)
-    const userrank = getUserrank(req)
+    const userrank = req.user ? Number(req.user.userrank) : 0
 
     let sql = 'SELECT * FROM posts WHERE parent_id IS NULL'
     const params = []
@@ -86,7 +88,7 @@ router.get('/', optionalAuth, (req, res) => {
 router.get('/:pid', optionalAuth, (req, res) => {
   try {
     const pid = req.params.pid
-    const userrank = getUserrank(req)
+    const userrank = req.user ? Number(req.user.userrank) : 0
 
     const post = getOne('SELECT * FROM posts WHERE pid = ?', [pid])
     if (!post) return res.json({ success: false, message: '帖子不存在' })
@@ -408,17 +410,6 @@ router.post('/:pid/comment', authMiddleware, (req, res) => {
   } catch (error) {
     console.error('评论失败:', error)
     res.status(500).json({ success: false, message: '评论失败' })
-  }
-})
-
-// 获取分类列表（保留以向后兼容）
-router.get('/categories/list', (req, res) => {
-  try {
-    const rows = getAll('SELECT DISTINCT category FROM posts WHERE parent_id IS NULL AND category IS NOT NULL')
-    res.json({ success: true, categories: rows.map(r => r.category) })
-  } catch (error) {
-    console.error('获取分类失败:', error)
-    res.status(500).json({ success: false, message: '获取分类失败' })
   }
 })
 

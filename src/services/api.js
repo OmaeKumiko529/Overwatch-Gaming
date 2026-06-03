@@ -63,6 +63,15 @@ async function request(endpoint, options = {}) {
       body: body ? JSON.stringify(body) : undefined
     })
 
+    // 统一处理 401 未授权：清除本地会话
+    if (res.status === 401) {
+      clearLoginSession()
+      // 如果 window 和 auth store 存在，尝试清除 currentUser
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('auth:unauthorized'))
+      }
+    }
+
     const data = await res.json()
     return data
   } catch (error) {

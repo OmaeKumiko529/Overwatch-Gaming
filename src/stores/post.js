@@ -2,7 +2,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { postsApi } from '../services/api.js'
-import { useNotificationStore } from './notification.js'
 
 export const usePostStore = defineStore('post', () => {
   const posts = ref([])
@@ -27,20 +26,6 @@ export const usePostStore = defineStore('post', () => {
     })
 
     if (res.success) {
-      // 通知被@的用户
-      if (postData.mentions && postData.mentions.length > 0) {
-        const notifStore = useNotificationStore()
-        postData.mentions.forEach(m => {
-          if (String(m.userId) !== String(userId)) {
-            notifStore.push({
-              type: 'mention',
-              Author: String(userId),
-              Root: res.post.pid,
-              To: String(m.userId)
-            })
-          }
-        })
-      }
       posts.value.unshift(res.post)
       return { success: true, post: res.post }
     }
@@ -101,20 +86,9 @@ export const usePostStore = defineStore('post', () => {
   async function likePost(pid) {
     const res = await postsApi.likePost(pid)
     if (res.success) {
-      // 通知帖主
       const post = posts.value.find(p => p.pid === pid)
       if (post) {
         post.likes = res.likes
-        const posterId = post.userId
-        const notifStore = useNotificationStore()
-        if (String(posterId) !== String(notifStore.currentUid)) {
-          notifStore.push({
-            type: 'like',
-            Author: String(notifStore.currentUid || ''),
-            Root: pid,
-            To: String(posterId)
-          })
-        }
       }
       return { success: true, likes: res.likes }
     }
@@ -126,14 +100,6 @@ export const usePostStore = defineStore('post', () => {
 
     const res = await postsApi.addComment(pid, commentText)
     if (res.success) {
-      // 通知帖主
-      const notifStore = useNotificationStore()
-      notifStore.push({
-        type: 'comment',
-        Author: String(userId),
-        Root: pid,
-        To: String(notifStore.currentUid)
-      })
       return { success: true, comment: res.comment }
     }
     return { success: false, message: res.message || '评论失败' }

@@ -52,7 +52,7 @@ router.post('/register', async (req, res) => {
       return res.json({ success: false, message: '用户名或邮箱已存在' })
     }
 
-    const passwordHash = bcrypt.hashSync(password, 10)
+    const passwordHash = await bcrypt.hash(password, 10)
 
     // 生成本地时间字符串用于 UID
     const now = new Date()
@@ -99,7 +99,7 @@ router.post('/login', async (req, res) => {
       return res.json({ success: false, message: '用户不存在' })
     }
 
-    if (!bcrypt.compareSync(password, user.password_hash)) {
+    if (!await bcrypt.compare(password, user.password_hash)) {
       return res.json({ success: false, message: '密码错误' })
     }
 
@@ -332,7 +332,7 @@ router.put('/password', authMiddleware, async (req, res) => {
     const { currentPassword, newPassword } = req.body
 
     const user = getOne('SELECT * FROM users WHERE id = ?', [userId])
-    if (!bcrypt.compareSync(currentPassword, user.password_hash)) {
+    if (!await bcrypt.compare(currentPassword, user.password_hash)) {
       return res.json({ success: false, message: '当前密码错误' })
     }
 
@@ -340,7 +340,7 @@ router.put('/password', authMiddleware, async (req, res) => {
       return res.json({ success: false, message: '密码长度至少为6位' })
     }
 
-    const passwordHash = bcrypt.hashSync(newPassword, 10)
+    const passwordHash = await bcrypt.hash(newPassword, 10)
     run("UPDATE users SET password_hash = ?, updated_at = datetime('now', 'localtime') WHERE id = ?", [passwordHash, userId])
 
     res.json({ success: true })

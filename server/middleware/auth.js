@@ -4,7 +4,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'owgaming-dev-secret-key-change-in-
 
 export function generateToken(user) {
   return jwt.sign(
-    { uid: user.uid, id: user.id, username: user.username },
+    { uid: user.uid, id: user.id, username: user.username, userrank: Number(user.userrank || 0) },
     JWT_SECRET,
     { expiresIn: '30d' }
   )

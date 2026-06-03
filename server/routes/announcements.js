@@ -41,9 +41,9 @@ router.get('/:id', (req, res) => {
 // 创建公告（仅管理员）
 router.post('/', authMiddleware, (req, res) => {
   try {
-    // 检查是否为管理员
-    const user = getOne('SELECT is_admin FROM users WHERE id = ?', [req.user.id])
-    if (!user || !user.is_admin) {
+    // 检查是否为管理员 (userrank >= 3)
+    const user = getOne('SELECT userrank FROM users WHERE id = ?', [req.user.id])
+    if (!user || Number(user.userrank) < 3) {
       return res.json({ success: false, message: '无权发布公告' })
     }
 
@@ -75,8 +75,8 @@ router.post('/', authMiddleware, (req, res) => {
 // 删除公告（仅管理员）
 router.delete('/:id', authMiddleware, (req, res) => {
   try {
-    const user = getOne('SELECT is_admin FROM users WHERE id = ?', [req.user.id])
-    if (!user || !user.is_admin) {
+    const user = getOne('SELECT userrank FROM users WHERE id = ?', [req.user.id])
+    if (!user || Number(user.userrank) < 3) {
       return res.json({ success: false, message: '无权删除公告' })
     }
 
