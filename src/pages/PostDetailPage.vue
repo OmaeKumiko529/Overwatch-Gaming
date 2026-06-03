@@ -322,8 +322,8 @@ const rankOptions = {
 // 从 context 提取根帖 PID
 function extractRootPid(context) {
   if (!context) return null
-  const match = context.match(/p\/\?=\d+/)
-  return match ? match[0].replace(/\\//g, '/') : null
+  const match = context.match(/p-\d{8}-\d{4}-\d{2}/)
+  return match ? match[0] : null
 }
 
 // 从 context 提取父帖 context

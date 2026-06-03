@@ -179,7 +179,7 @@ function ensureAdminUser() {
   const existing = getOne('SELECT id FROM users WHERE username = ?', ['Admin'])
   if (!existing) {
     const passwordHash = bcrypt.hashSync('HsbXsy2626', 10)
-    const uid = 'u/?=202601010000'
+    const uid = 'u-20260101-0000'
     insert(
       'INSERT INTO users (username, email, password_hash, is_admin, uid, userrank) VALUES (?, ?, ?, ?, ?, ?)',
       ['Admin', 'admin@omaekumiko.com', passwordHash, 1, uid, 3]
@@ -187,7 +187,7 @@ function ensureAdminUser() {
     console.log('👑 Admin 用户已创建')
   } else if (!existing.uid) {
     // 兼容旧数据：为 Admin 补充 uid 和 userrank（如果迁移脚本未覆盖）
-    const uid = 'u/?=202601010000'
+    const uid = 'u-20260101-0000'
     run("UPDATE users SET uid = ?, userrank = ? WHERE username = 'Admin'", [uid, 3])
   }
 }

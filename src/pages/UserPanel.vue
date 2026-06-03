@@ -250,11 +250,11 @@ function viewPost(id) {
   router.push({ name: 'PostDetail', params: { id } })
 }
 
-async function deletePost(id) {
+async function deletePost(pid) {
   if (!confirm('确定删除这篇帖子吗？')) return
-  const result = await postService.deletePost(id, auth.currentUser?.id)
+  const result = await postService.deletePost(pid, auth.currentUser?.id)
   if (result.success) {
-    userPosts.value = userPosts.value.filter(p => p.id !== id)
+    userPosts.value = userPosts.value.filter(p => p.pid !== pid)
     message.value = '帖子删除成功'
     isError.value = false
   } else {
@@ -338,7 +338,7 @@ watch(userInfo, (newVal) => {
         :total-likes="totalLikes"
         @create-post="router.push({ name: 'CreatePost' })"
         @view-post="viewPost"
-        @delete-post="deletePost"
+        @delete-post="(id) => deletePost(id)"
       />
       <SettingsTab
         v-if="activeTab === 'settings' && isViewingOwnProfile"

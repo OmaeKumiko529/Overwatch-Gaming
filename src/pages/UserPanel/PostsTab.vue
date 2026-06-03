@@ -49,8 +49,8 @@
             <span class="stat">💬 {{ post.comments?.length || 0 }}</span>
           </div>
           <div class="post-actions">
-            <button class="view-btn" @click="$emit('view-post', post.id)">查看详情</button>
-            <button v-if="isOwner" class="del-btn" @click="$emit('delete-post', post.id)">删除</button>
+            <button class="view-btn" @click="$emit('view-post', post.pid || post.id)">查看详情</button>
+            <button v-if="isOwner" class="del-btn" @click="$emit('delete-post', post.pid || post.id)">删除</button>
           </div>
         </div>
       </div>
