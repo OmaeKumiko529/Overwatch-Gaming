@@ -128,7 +128,7 @@ function renderPreview(html, max = 150) {
 
 <style scoped>
 .posts-tab {
-  padding: 20px 0;
+  padding: 24px 0;
 }
 
 .posts-header {
@@ -143,7 +143,7 @@ function renderPreview(html, max = 150) {
 .posts-title {
   font-size: 1.4rem;
   font-weight: 700;
-  color: #333;
+  color: #667eea;
   margin: 0;
 }
 
@@ -158,11 +158,11 @@ function renderPreview(html, max = 150) {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 20px;
+  padding: 10px 22px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-family: 'SmileySans Oblique', sans-serif;
   font-weight: 600;
   font-size: 0.95rem;
@@ -191,8 +191,8 @@ function renderPreview(html, max = 150) {
 .spinner {
   width: 36px;
   height: 36px;
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #4facfe;
+  border: 3px solid #e9ecef;
+  border-top: 3px solid #667eea;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 12px;
@@ -210,10 +210,10 @@ function renderPreview(html, max = 150) {
 
 .create-btn-empty {
   padding: 10px 24px;
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-family: 'SmileySans Oblique', sans-serif;
   font-weight: 600;
   font-size: 0.95rem;
@@ -226,7 +226,7 @@ function renderPreview(html, max = 150) {
 
 .create-btn-empty:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(79,172,254,0.3);
+  box-shadow: 0 6px 16px rgba(102,126,234,0.3);
 }
 
 .posts-waterfall {
@@ -236,17 +236,18 @@ function renderPreview(html, max = 150) {
 }
 
 .post-card {
-  background: white;
-  border-radius: 12px;
+  background: #fff;
+  border-radius: 14px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e9ecef;
   transition: all 0.3s ease;
   border-left: 4px solid #4facfe;
 }
 
 .post-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
 .post-category-general { border-left-color: #6c757d; }
@@ -264,12 +265,12 @@ function renderPreview(html, max = 150) {
 }
 
 .post-category {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  padding: 3px 10px;
+  padding: 4px 12px;
   border-radius: 20px;
-  background: #f8f9fa;
-  color: #495057;
+  background: #f0f0ff;
+  color: #667eea;
 }
 
 .post-date {
@@ -316,9 +317,9 @@ function renderPreview(html, max = 150) {
 }
 
 .view-btn, .del-btn {
-  padding: 5px 12px;
+  padding: 6px 14px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   font-family: 'SmileySans Oblique', sans-serif;
   font-size: 0.82rem;
   cursor: pointer;
@@ -326,16 +327,19 @@ function renderPreview(html, max = 150) {
 }
 
 .view-btn {
-  background: #4facfe;
+  background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
 }
 
-.view-btn:hover { background: #3a9bf7; }
+.view-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+}
 
 .del-btn {
-  background: #f8f9fa;
+  background: rgba(220,53,69,0.08);
   color: #dc3545;
-  border: 1px solid #dc3545;
+  border: 1.5px solid #dc3545;
 }
 
 .del-btn:hover {

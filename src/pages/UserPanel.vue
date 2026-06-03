@@ -372,7 +372,7 @@ watch(userInfo, (newVal) => {
 }
 
 .tab-bar {
-  background: white;
+  background: #fff;
   border-bottom: 1px solid #e9ecef;
   position: sticky;
   top: 60px;
@@ -410,8 +410,8 @@ watch(userInfo, (newVal) => {
 }
 
 .tab-btn.active {
-  color: #4facfe;
-  border-bottom-color: #4facfe;
+  color: #667eea;
+  border-bottom-color: #667eea;
 }
 
 .tab-icon {
@@ -429,10 +429,10 @@ watch(userInfo, (newVal) => {
   top: 20px;
   right: 20px;
   padding: 12px 24px;
-  border-radius: 8px;
+  border-radius: 10px;
   font-weight: 600;
   z-index: 2000;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
   animation: slideIn 0.3s ease;
 }
 

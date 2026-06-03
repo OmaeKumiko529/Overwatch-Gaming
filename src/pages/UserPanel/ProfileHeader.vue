@@ -1,6 +1,6 @@
 <template>
   <div class="profile-cover">
-    <div class="cover-image"></div>
+    <div class="cover-bg"></div>
     <div class="cover-overlay">
       <div class="profile-header-content">
         <div class="profile-avatar">
@@ -12,7 +12,10 @@
           />
         </div>
         <div class="profile-header-info">
-          <h1 class="profile-name">{{ user.username }}</h1>
+          <div class="profile-name-row">
+            <userrankBadge :userId="user.id" />
+            <h1 class="profile-name">{{ user.username }}</h1>
+          </div>
           <div class="profile-stats">
             <div class="stat-item">
               <span class="stat-value">{{ postCount }}</span>
@@ -42,8 +45,6 @@ const props = defineProps({
   memberCount: { type: Number, default: 0 }
 })
 
-const emit = defineEmits(['update:avatar'])
-
 function handleAvatarError(e) {
   e.target.src = '/Head.png'
 }
@@ -52,16 +53,40 @@ function handleAvatarError(e) {
 <style scoped>
 .profile-cover {
   position: relative;
-  height: 160px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  height: 240px;
   overflow: hidden;
 }
 
-.cover-image {
+.cover-bg {
   width: 100%;
   height: 100%;
-  background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5)),
-              url('/public/Heading.png') center/cover no-repeat;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 70%, #e94560 100%);
+  position: relative;
+}
+
+.cover-bg::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: 
+    radial-gradient(ellipse at 20% 80%, rgba(233, 69, 96, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(79, 172, 254, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(102, 126, 234, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.cover-bg::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 40px,
+    rgba(255, 255, 255, 0.015) 40px,
+    rgba(255, 255, 255, 0.015) 41px
+  );
+  pointer-events: none;
 }
 
 .cover-overlay {
@@ -70,18 +95,17 @@ function handleAvatarError(e) {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.4));
-  padding: 20px;
+  background: linear-gradient(to bottom, transparent 40%, rgba(0, 0, 0, 0.6) 100%);
+  padding: 24px 32px;
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
 }
 
 .profile-header-content {
   display: flex;
   align-items: flex-end;
-  flex: 1;
-  gap: 24px;
-  padding-bottom: 0;
+  gap: 28px;
 }
 
 .profile-avatar {
@@ -89,46 +113,69 @@ function handleAvatarError(e) {
 }
 
 .avatar-image {
-  width: 88px;
-  height: 88px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid white;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  border: 4px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), 0 0 0 2px rgba(255, 255, 255, 0.1);
   background-color: #f0f2f5;
+  transition: transform 0.3s ease;
+}
+
+.avatar-image:hover {
+  transform: scale(1.05);
 }
 
 .profile-header-info {
   flex: 1;
   color: white;
+  padding-bottom: 4px;
+}
+
+.profile-name-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 
 .profile-name {
-  font-size: 1.8rem;
-  font-weight: bold;
-  margin-bottom: 8px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  font-size: 2rem;
+  font-weight: 700;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  letter-spacing: 1px;
+  margin: 0;
 }
 
 .profile-stats {
   display: flex;
-  gap: 24px;
+  gap: 28px;
 }
 
 .stat-item {
   display: flex;
   flex-direction: column;
   align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 6px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  min-width: 70px;
 }
 
 .stat-value {
-  font-size: 1.4rem;
-  font-weight: bold;
-  margin-bottom: 2px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
 .stat-label {
-  font-size: 0.8rem;
-  opacity: 0.9;
+  font-size: 0.75rem;
+  opacity: 0.8;
+  letter-spacing: 0.5px;
 }
 </style>

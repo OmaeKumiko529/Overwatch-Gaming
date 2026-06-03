@@ -48,10 +48,8 @@
           </div>
           <div class="author-details">
             <div class="author-name">
+              <userrankBadge :userId="post.userId" />
               <span class="author-username">{{ post.username }}</span>
-              <span class="author-rank" :style="{ color: authorRankInfo.color }">
-                {{ authorRankInfo.icon }} {{ authorRankInfo.cn }}
-              </span>
               <button
                 v-if="post.userId"
                 class="view-profile-button"
@@ -292,7 +290,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth.js';
 import { usePostStore } from '../stores/post.js';
-import { getPostRankInfo, getUserRankInfo, canViewPostContent, canCommentOnPost } from '../constants/rankMap.js';
+import { getPostRankInfo, canViewPostContent, canCommentOnPost } from '../constants/rankMap.js';
 import postService from '../services/post.js';
 import { authApi } from '../services/api.js';
 import { decodeParam, encodePid, buildRouterLinkUser, buildRouterLinkPost } from '../utils/encode.js';
@@ -335,13 +333,6 @@ function extractParentContext(context) {
   if (idx <= 1) return null
   return context.substring(0, idx)
 }
-
-// 获取作者等级信息
-const authorRankInfo = computed(() => {
-  if (!post.value) return getUserRankInfo(0)
-  // 如果 post.userrank 存在则用，否则默认 player
-  return getUserRankInfo(post.value.userrank !== undefined ? post.value.userrank : 1)
-})
 
 // 帖子标记信息
 const postRankInfo = computed(() => {

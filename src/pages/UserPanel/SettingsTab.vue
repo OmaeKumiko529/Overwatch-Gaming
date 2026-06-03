@@ -28,14 +28,14 @@ defineEmits(['logout', 'change-password', 'delete-account'])
 .settings-tab {
   max-width: 600px;
   margin: 0 auto;
-  padding: 20px 0;
+  padding: 24px 0;
 }
 
 .settings-card {
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  background: #fff;
+  border-radius: 14px;
+  padding: 28px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   border: 1px solid #e9ecef;
 }
 
@@ -44,8 +44,8 @@ defineEmits(['logout', 'change-password', 'delete-account'])
   font-weight: 600;
   color: #333;
   margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid #4facfe;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #667eea;
 }
 
 .action-grid {
@@ -57,10 +57,10 @@ defineEmits(['logout', 'change-password', 'delete-account'])
 .action-btn {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   padding: 16px 20px;
   border: 2px solid transparent;
-  border-radius: 10px;
+  border-radius: 12px;
   font-family: 'SmileySans Oblique', sans-serif;
   font-size: 1rem;
   font-weight: 600;
@@ -70,36 +70,42 @@ defineEmits(['logout', 'change-password', 'delete-account'])
 }
 
 .btn-icon {
-  font-size: 1.4rem;
+  font-size: 1.5rem;
 }
 
 .logout-btn {
-  background: rgba(255, 193, 7, 0.1);
+  background: rgba(255, 193, 7, 0.08);
   border-color: #ffc107;
   color: #856404;
 }
 .logout-btn:hover {
-  background: #ffc107;
+  background: linear-gradient(135deg, #ffc107, #e0a800);
   color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 193, 7, 0.3);
 }
 
 .password-btn {
-  background: rgba(0, 123, 255, 0.1);
-  border-color: #007bff;
-  color: #004085;
+  background: rgba(102, 126, 234, 0.08);
+  border-color: #667eea;
+  color: #667eea;
 }
 .password-btn:hover {
-  background: #007bff;
+  background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3);
 }
 
 .delete-btn {
-  background: rgba(220, 53, 69, 0.1);
+  background: rgba(220, 53, 69, 0.08);
   border-color: #dc3545;
-  color: #721c24;
+  color: #dc3545;
 }
 .delete-btn:hover {
   background: #dc3545;
   color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(220, 53, 69, 0.3);
 }
 </style>
