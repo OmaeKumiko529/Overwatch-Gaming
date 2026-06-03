@@ -34,50 +34,50 @@ export const postService = {
     return res.success ? res.posts : []
   },
 
-  async getChildPosts(postId) {
-    const res = await postsApi.getPostById(postId)
+  async getChildPosts(pid) {
+    const res = await postsApi.getPostByPid(pid)
     if (res.success && res.post.childPosts) {
       return res.post.childPosts
     }
     return []
   },
 
-  async getPostWithChildren(postId) {
-    const res = await postsApi.getPostById(postId)
+  async getPostWithChildren(pid) {
+    const res = await postsApi.getPostByPid(pid)
     return res.success ? res.post : null
   },
 
-  async getPostById(postId) {
-    const res = await postsApi.getPostById(postId)
+  async getPostByPid(pid) {
+    const res = await postsApi.getPostByPid(pid)
     return res.success ? res.post : null
   },
 
-  async deletePost(postId, userId) {
+  async deletePost(pid, userId) {
     if (!userId) return { success: false, message: '请先登录' }
 
-    const res = await postsApi.deletePost(postId)
+    const res = await postsApi.deletePost(pid)
     if (res.success) return { success: true }
     return { success: false, message: res.message || '删除失败' }
   },
 
-  async likePost(postId, userId) {
-    const res = await postsApi.likePost(postId)
+  async likePost(pid, userId) {
+    const res = await postsApi.likePost(pid)
     if (res.success) return { success: true, likes: res.likes }
     return { success: false, message: res.message || '点赞失败' }
   },
 
-  async addComment(postId, commentText, userId, username) {
+  async addComment(pid, commentText, userId, username) {
     if (!userId) return { success: false, message: '请先登录' }
 
-    const res = await postsApi.addComment(postId, commentText)
+    const res = await postsApi.addComment(pid, commentText)
     if (res.success) return { success: true, comment: res.comment }
     return { success: false, message: res.message || '评论失败' }
   },
 
-  async deleteComment(commentId, userId) {
+  async deleteComment(commentPid, userId) {
     if (!userId) return { success: false, message: '请先登录' }
 
-    const res = await postsApi.deletePost(commentId)
+    const res = await postsApi.deletePost(commentPid)
     if (res.success) return { success: true }
     return { success: false, message: res.message || '删除失败' }
   },
@@ -107,12 +107,22 @@ export const postService = {
     return res.success ? res.posts : []
   },
 
-  async updatePost(postId, updates, userId) {
+  async getPostsByPostrank(postrank, limit = 20) {
+    const res = await postsApi.getPosts({ postrank, limit })
+    return res.success ? res.posts : []
+  },
+
+  async updatePost(pid, updates, userId) {
     if (!userId) return { success: false, message: '请先登录' }
 
-    const res = await postsApi.updatePost(postId, updates)
+    const res = await postsApi.updatePost(pid, updates)
     if (res.success) return { success: true, post: res.post }
     return { success: false, message: res.message || '更新失败' }
+  },
+
+  async setPostRank(pid, postrank) {
+    const res = await postsApi.setPostRank(pid, postrank)
+    return res
   }
 }
 

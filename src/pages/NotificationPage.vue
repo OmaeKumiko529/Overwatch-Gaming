@@ -91,9 +91,9 @@ function handleClick(notif) {
   if (!notif.IsRead) {
     notifStore.markRead(notif.id)
   }
-  // 跳转到关联内容
+  // 跳转到关联内容（Root 现为 PID 字符串）
   if (notif.Root) {
-    router.push({ name: 'PostDetail', params: { id: notif.Root } })
+    router.push('/post/' + encodeURIComponent(notif.Root))
   }
 }
 

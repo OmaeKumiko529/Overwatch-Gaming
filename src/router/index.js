@@ -33,12 +33,13 @@ const routes = [
     path: '/user',
     name: 'User',
     redirect: to => {
-      // 使用懒加载方式获取登录状态
       try {
         const sessionJson = sessionStorage.getItem('currentUser') || localStorage.getItem('currentUser');
         if (sessionJson) {
           const user = JSON.parse(sessionJson);
-          return { name: 'UserProfile', params: { uid: user.id } };
+          // 重定向使用 uid（注意 URL 编码）
+          const encodedUid = encodeURIComponent(user.uid || user.id);
+          return '/user/' + encodedUid;
         }
       } catch {}
       return '/login';
@@ -57,7 +58,7 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/post/:id',
+    path: '/post/:pid',
     name: 'PostDetail',
     component: () => import('../pages/PostDetailPage.vue')
   },

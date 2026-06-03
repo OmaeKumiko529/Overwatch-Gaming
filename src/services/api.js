@@ -88,7 +88,7 @@ export const authApi = {
   },
 
   getUserById(id) {
-    return request(`/auth/users/${id}`)
+    return request(`/auth/users/${encodeURIComponent(id)}`)
   },
 
   updateUser(updates) {
@@ -120,6 +120,15 @@ export const authApi = {
       body: { currentPassword, newPassword },
       auth: true
     })
+  },
+
+  // 提升用户等级 (仅 OP)
+  promoteUser(targetUid, newRank) {
+    return request('/auth/promote', {
+      method: 'PUT',
+      body: { targetUid, newRank },
+      auth: true
+    })
   }
 }
 
@@ -129,12 +138,12 @@ export const postsApi = {
     return request('/posts', { params })
   },
 
-  getPostById(id) {
-    return request(`/posts/${id}`)
+  getPostByPid(pid) {
+    return request(`/posts/${encodeURIComponent(pid)}`)
   },
 
   getUserPosts(uid, mainOnly = false) {
-    return request(`/posts/user/${uid}`, {
+    return request(`/posts/user/${encodeURIComponent(uid)}`, {
       params: { mainOnly: mainOnly ? 'true' : undefined }
     })
   },
@@ -147,30 +156,38 @@ export const postsApi = {
     })
   },
 
-  updatePost(id, updates) {
-    return request(`/posts/${id}`, {
+  updatePost(pid, updates) {
+    return request(`/posts/${encodeURIComponent(pid)}`, {
       method: 'PUT',
       body: updates,
       auth: true
     })
   },
 
-  deletePost(id) {
-    return request(`/posts/${id}`, {
+  setPostRank(pid, postrank) {
+    return request(`/posts/${encodeURIComponent(pid)}/rank`, {
+      method: 'PUT',
+      body: { postrank },
+      auth: true
+    })
+  },
+
+  deletePost(pid) {
+    return request(`/posts/${encodeURIComponent(pid)}`, {
       method: 'DELETE',
       auth: true
     })
   },
 
-  likePost(id) {
-    return request(`/posts/${id}/like`, {
+  likePost(pid) {
+    return request(`/posts/${encodeURIComponent(pid)}/like`, {
       method: 'POST',
       auth: true
     })
   },
 
-  addComment(postId, content) {
-    return request(`/posts/${postId}/comment`, {
+  addComment(pid, content) {
+    return request(`/posts/${encodeURIComponent(pid)}/comment`, {
       method: 'POST',
       body: { content },
       auth: true

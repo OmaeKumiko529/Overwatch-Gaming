@@ -2,6 +2,7 @@ import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import { getDb, getOne, getAll, insert, run } from '../db.js'
 import { generateToken, authMiddleware } from '../middleware/auth.js'
+import { generateUid } from '../utils/identifiers.js'
 
 const router = Router()
 
@@ -10,6 +11,35 @@ router.use(async (req, res, next) => {
   await getDb()
   next()
 })
+
+// 辅助：将数据库行映射为前端用户对象
+function mapUser(user) {
+  return {
+    id: user.id,
+    uid: user.uid || null,
+    username: user.username,
+    email: user.email,
+    role: JSON.parse(user.role || '["flexible"]'),
+    userrank: user.userrank !== undefined ? Number(user.userrank) : 0,
+    isAdmin: Number(user.userrank || 0) >= 3,
+    avatar: user.avatar || '/Head.png',
+    teamId: user.team_id || null,
+    createdAt: user.created_at,
+    updatedAt: user.updated_at
+  }
+}
+
+// 返回 session 格式
+function buildSession(user, token, rememberMe = false) {
+  const mapped = mapUser(user)
+  return {
+    ...mapped,
+    token,
+    loggedIn: true,
+    loginTime: new Date().toISOString(),
+    rememberMe
+  }
+}
 
 // 注册
 router.post('/register', async (req, res) => {
@@ -24,24 +54,33 @@ router.post('/register', async (req, res) => {
 
     const passwordHash = bcrypt.hashSync(password, 10)
 
+    // 生成本地时间字符串用于 UID
+    const now = new Date()
+    const localDateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`
+
+    // 生成 UID
+    const uid = generateUid(getOne, localDateStr)
+
     const result = insert(
-      'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
-      [username, email, passwordHash]
+      'INSERT INTO users (username, email, password_hash, role, uid, userrank) VALUES (?, ?, ?, ?, ?, ?)',
+      [username, email, passwordHash, '["flexible"]', uid, 0]
     )
 
     const user = {
       id: result.lastInsertRowid,
+      uid,
       username,
       email,
-      role: ['flexible'],
-      avatar: '/Head.png'
+      role: '["flexible"]',
+      avatar: '/Head.png',
+      userrank: 0
     }
 
     const token = generateToken(user)
 
     res.json({
       success: true,
-      user: { ...user, token, loggedIn: true, loginTime: new Date().toISOString(), rememberMe: false }
+      user: buildSession(user, token)
     })
   } catch (error) {
     console.error('注册失败:', error)
@@ -66,21 +105,10 @@ router.post('/login', async (req, res) => {
 
     const token = generateToken(user)
 
-    const session = {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      role: JSON.parse(user.role || '["flexible"]'),
-      isAdmin: !!user.is_admin,
-      avatar: user.avatar || '/Head.png',
-      teamId: user.team_id || null,
-      loggedIn: true,
-      loginTime: new Date().toISOString(),
-      rememberMe: !!rememberMe,
-      token
-    }
-
-    res.json({ success: true, user: session })
+    res.json({
+      success: true,
+      user: buildSession(user, token, !!rememberMe)
+    })
   } catch (error) {
     console.error('登录失败:', error)
     res.status(500).json({ success: false, message: '登录失败' })
@@ -99,15 +127,7 @@ router.get('/me', authMiddleware, async (req, res) => {
     res.json({
       success: true,
       user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: JSON.parse(user.role || '["flexible"]'),
-        isAdmin: !!user.is_admin,
-        avatar: user.avatar || '/Head.png',
-        teamId: user.team_id || null,
-        createdAt: user.created_at,
-        updatedAt: user.updated_at
+        ...mapUser(user)
       }
     })
   } catch (error) {
@@ -120,15 +140,17 @@ router.get('/me', authMiddleware, async (req, res) => {
 router.get('/users', async (req, res) => {
   try {
     await getDb()
-    const users = getAll('SELECT id, username, email, role, is_admin, avatar, team_id, created_at, updated_at FROM users')
+    const users = getAll('SELECT id, uid, username, email, role, userrank, avatar, team_id, created_at, updated_at FROM users')
     res.json({
       success: true,
       users: users.map(u => ({
         id: u.id,
+        uid: u.uid || null,
         username: u.username,
         email: u.email,
         role: JSON.parse(u.role || '["flexible"]'),
-        isAdmin: !!u.is_admin,
+        userrank: Number(u.userrank || 0),
+        isAdmin: Number(u.userrank || 0) >= 3,
         avatar: u.avatar || '/Head.png',
         teamId: u.team_id || null,
         createdAt: u.created_at,
@@ -141,26 +163,26 @@ router.get('/users', async (req, res) => {
   }
 })
 
-// 获取单个用户
-router.get('/users/:id', async (req, res) => {
+// 获取单个用户 - 支持 uid 字符串或数字 id
+router.get('/users/:uid', async (req, res) => {
   try {
     await getDb()
-    const user = getOne('SELECT id, username, email, role, is_admin, avatar, team_id, created_at, updated_at FROM users WHERE id = ?', [Number(req.params.id)])
+    const param = req.params.uid
+    // 尝试按 uid 查询（字符串），否则按 id 查询（数字）
+    let user = getOne('SELECT id, uid, username, email, role, userrank, avatar, team_id, created_at, updated_at FROM users WHERE uid = ?', [param])
+    if (!user) {
+      const id = Number(param)
+      if (!isNaN(id)) {
+        user = getOne('SELECT id, uid, username, email, role, userrank, avatar, team_id, created_at, updated_at FROM users WHERE id = ?', [id])
+      }
+    }
     if (!user) {
       return res.json({ success: false, message: '用户不存在' })
     }
     res.json({
       success: true,
       user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: JSON.parse(user.role || '["flexible"]'),
-        isAdmin: !!user.is_admin,
-        avatar: user.avatar || '/Head.png',
-        teamId: user.team_id || null,
-        createdAt: user.created_at,
-        updatedAt: user.updated_at
+        ...mapUser(user)
       }
     })
   } catch (error) {
@@ -207,16 +229,7 @@ router.put('/update', authMiddleware, async (req, res) => {
     const user = getOne('SELECT * FROM users WHERE id = ?', [userId])
     res.json({
       success: true,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: JSON.parse(user.role || '["flexible"]'),
-        avatar: user.avatar || '/Head.png',
-        teamId: user.team_id || null,
-        createdAt: user.created_at,
-        updatedAt: user.updated_at
-      }
+      user: mapUser(user)
     })
   } catch (error) {
     console.error('更新用户失败:', error)
@@ -255,20 +268,47 @@ router.put('/role', authMiddleware, async (req, res) => {
     const user = getOne('SELECT * FROM users WHERE id = ?', [userId])
     res.json({
       success: true,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: JSON.parse(user.role || '["flexible"]'),
-        avatar: user.avatar || '/Head.png',
-        teamId: user.team_id || null,
-        createdAt: user.created_at,
-        updatedAt: user.updated_at
-      }
+      user: mapUser(user)
     })
   } catch (error) {
     console.error('更新职责失败:', error)
     res.status(500).json({ success: false, message: '更新职责失败' })
+  }
+})
+
+// 提升用户等级 (仅 OP)
+router.put('/promote', authMiddleware, async (req, res) => {
+  try {
+    await getDb()
+    const operatorId = req.user.id
+    const { targetUid, newRank } = req.body
+
+    // 检查操作者是否为 OP
+    const operator = getOne('SELECT userrank FROM users WHERE id = ?', [operatorId])
+    if (!operator || Number(operator.userrank) < 3) {
+      return res.json({ success: false, message: '仅管理员可提升用户等级' })
+    }
+
+    // 检查目标用户
+    const target = getOne('SELECT id, uid, username, userrank FROM users WHERE uid = ? OR id = ?', [targetUid, Number(targetUid) || 0])
+    if (!target) {
+      return res.json({ success: false, message: '目标用户不存在' })
+    }
+
+    const rank = Number(newRank)
+    if (isNaN(rank) || rank < 0 || rank > 3) {
+      return res.json({ success: false, message: '无效的用户等级 (0-3)' })
+    }
+
+    run('UPDATE users SET userrank = ?, updated_at = datetime(\'now\', \'localtime\') WHERE id = ?', [rank, target.id])
+
+    res.json({
+      success: true,
+      message: `已将用户 ${target.username} 的等级更新为 ${rank}`
+    })
+  } catch (error) {
+    console.error('提升等级失败:', error)
+    res.status(500).json({ success: false, message: '操作失败' })
   }
 })
 

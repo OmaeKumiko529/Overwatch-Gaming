@@ -8,9 +8,11 @@
           <option value="latest">最新发布</option>
           <option value="popular">最多点赞</option>
         </select>
-        <select v-model="selectedCategory" class="control-select" @change="applyFilters">
-          <option value="">全部分类</option>
-          <option v-for="cat in categories" :key="cat.key" :value="cat.key">{{ cat.label }}</option>
+        <select v-model="selectedPostrank" class="control-select" @change="applyFilters">
+          <option value="">全部标记</option>
+          <option value="FF">🔴 红帖</option>
+          <option value="69">🔵 蓝帖</option>
+          <option value="78">🟢 绿帖</option>
         </select>
       </div>
     </div>
@@ -21,11 +23,14 @@
         v-for="post in displayedPosts"
         :key="post.id"
         class="post-card"
-        :class="'post-category-' + post.category"
-        @click="viewPost(post.id)"
+        :class="'postrank-' + (post.postrank || '69')"
+        @click="viewPost(post.pid)"
       >
         <div class="card-header">
-          <span class="category-badge">{{ categoryName(post.category) }}</span>
+          <span class="rank-badge" :style="{ backgroundColor: getPostRankColor(post.postrank), color: 'white' }">
+            {{ getPostRankIcon(post.postrank) }} {{ getPostRankLabel(post.postrank) }}
+          </span>
+          <span class="post-pid">PID: {{ post.pid }}</span>
           <span class="post-date">{{ formatDate(post.createdAt) }}</span>
         </div>
         <h3 class="post-title">{{ post.title }}</h3>
@@ -34,7 +39,7 @@
           <div class="post-meta">
             <span class="meta author">{{ post.username }}</span>
             <span class="meta likes">❤️ {{ post.likes }}</span>
-            <span class="meta comments">💬 {{ post.comments?.length || 0 }}</span>
+            <span class="meta comments">💬 {{ post.childPosts?.length || 0 }}</span>
           </div>
         </div>
       </div>
@@ -59,31 +64,40 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import postService from '../services/post.js'
+import { getPostRankInfo } from '../constants/rankMap.js'
+import { buildRouterLinkPost } from '../utils/encode.js'
 
 const router = useRouter()
 
 const allPosts = ref([])
-const categories = ref([])
 const sortBy = ref('latest')
-const selectedCategory = ref('')
+const selectedPostrank = ref('')
 const displayLimit = ref(12)
 const perPage = 12
 
-const CATEGORY_MAP = {
-  'general': '一般讨论',
-  'team': '战队招募',
-  'strategy': '战术攻略',
-  'highlight': '精彩集锦',
-  'question': '问题求助',
-  'announcement': '公告通知'
+// PostRank 辅助函数
+function getPostRankInfoByCode(code) {
+  return getPostRankInfo(code)
+}
+
+function getPostRankColor(code) {
+  return getPostRankInfo(code).color
+}
+
+function getPostRankIcon(code) {
+  return getPostRankInfo(code).icon
+}
+
+function getPostRankLabel(code) {
+  return getPostRankInfo(code).cn
 }
 
 const filteredPosts = computed(() => {
   let list = allPosts.value
 
-  // 分类筛选
-  if (selectedCategory.value) {
-    list = list.filter(p => p.category === selectedCategory.value)
+  // 标记筛选
+  if (selectedPostrank.value) {
+    list = list.filter(p => p.postrank === selectedPostrank.value)
   }
 
   // 排序
@@ -110,16 +124,6 @@ async function loadData() {
   allPosts.value = posts
     .filter(p => p.parentId === null || p.parentId === undefined)
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-
-  // 提取分类列表
-  const catSet = new Set()
-  allPosts.value.forEach(p => {
-    if (p.category) catSet.add(p.category)
-  })
-  categories.value = Array.from(catSet).map(key => ({
-    key,
-    label: CATEGORY_MAP[key] || key
-  }))
 }
 
 function applyFilters() {
@@ -128,10 +132,6 @@ function applyFilters() {
 
 function showMore() {
   displayLimit.value += perPage
-}
-
-function categoryName(cat) {
-  return CATEGORY_MAP[cat] || '其他'
 }
 
 function formatDate(dateString) {
@@ -153,8 +153,8 @@ function renderPreview(html, max = 100) {
   return text.length > max ? text.substring(0, max) + '...' : text
 }
 
-function viewPost(id) {
-  router.push({ name: 'PostDetail', params: { id } })
+function viewPost(pid) {
+  router.push(buildRouterLinkPost(pid))
 }
 
 onMounted(() => {
@@ -242,12 +242,10 @@ onMounted(() => {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
-.post-category-general { border-left-color: #6c757d; }
-.post-category-team { border-left-color: #28a745; }
-.post-category-strategy { border-left-color: #17a2b8; }
-.post-category-highlight { border-left-color: #ffc107; }
-.post-category-question { border-left-color: #fd7e14; }
-.post-category-announcement { border-left-color: #dc3545; }
+.postrank-FF { border-left-color: #dc3545; }
+.postrank-69 { border-left-color: #4facfe; }
+.postrank-78 { border-left-color: #28a745; }
+.postrank-00 { border-left-color: #212529; }
 
 .card-header {
   display: flex;

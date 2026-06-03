@@ -5,7 +5,7 @@
       <li><router-link to="/browse">浏览</router-link></li>
       <li v-if="auth.isLoggedIn"><router-link to="/createpost">发帖</router-link></li>
       <li v-if="auth.isLoggedIn"><router-link to="/user">用户面板</router-link></li>
-      <li v-if="auth.isAdmin"><router-link to="/announcements">发布公告</router-link></li>
+      <li v-if="auth.isAdmin || auth.isTrustedPlayer"><router-link to="/announcements">发布公告</router-link></li>
       <li><a href="https://www.owmod.net/" target="_blank" rel="noopener noreferrer">熔火工坊</a></li>
     </ul>
     <div class="nav-actions">

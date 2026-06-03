@@ -13,9 +13,9 @@ router.use(async (req, res, next) => {
 // 迁移端点：接收浏览器 localStorage 数据并写入 SQL 数据库
 router.post('/', authMiddleware, async (req, res) => {
   try {
-    // 检查是否为管理员
-    const user = getOne('SELECT is_admin FROM users WHERE id = ?', [req.user.id])
-    if (!user || !user.is_admin) {
+    // 检查是否为管理员 (userrank >= 3)
+    const user = getOne('SELECT userrank FROM users WHERE id = ?', [req.user.id])
+    if (!user || Number(user.userrank) < 3) {
       return res.json({ success: false, message: '仅管理员可执行迁移' })
     }
 

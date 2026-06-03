@@ -43,7 +43,11 @@ export const useAuthStore = defineStore('auth', () => {
   // ========== 计算属性 ==========
   const isLoggedIn = computed(() => currentUser.value !== null)
   const currentUsername = computed(() => currentUser.value?.username || null)
-  const isAdmin = computed(() => currentUser.value?.isAdmin === true)
+  const currentUid = computed(() => currentUser.value?.uid || null)
+  const userrank = computed(() => Number(currentUser.value?.userrank ?? 0))
+  const isAdmin = computed(() => userrank.value >= 3)
+  const isPlayer = computed(() => userrank.value >= 1)
+  const isTrustedPlayer = computed(() => userrank.value >= 2)
 
   // ========== 会话管理 ==========
   function loadSession() {
@@ -131,8 +135,8 @@ export const useAuthStore = defineStore('auth', () => {
     return res.success ? res.users : []
   }
 
-  async function getUserById(userId) {
-    const res = await authApi.getUserById(userId)
+  async function getUserById(userIdOrUid) {
+    const res = await authApi.getUserById(userIdOrUid)
     if (res.success) {
       return res.user
     }
@@ -179,8 +183,13 @@ export const useAuthStore = defineStore('auth', () => {
     return { success: false, message: res.message || '更新职责失败' }
   }
 
+  // 提升用户等级（仅 OP）
+  async function promoteUser(targetUid, newRank) {
+    const res = await authApi.promoteUser(targetUid, newRank)
+    return res
+  }
+
   function initTestData() {
-    // 测试数据由后端自动创建，前端不需要
     console.log('测试数据由后端管理')
   }
 
@@ -191,7 +200,11 @@ export const useAuthStore = defineStore('auth', () => {
     currentUser,
     isLoggedIn,
     currentUsername,
+    currentUid,
+    userrank,
     isAdmin,
+    isPlayer,
+    isTrustedPlayer,
     ROLE_OPTIONS,
     loadSession,
     getAllUsers,
@@ -203,6 +216,7 @@ export const useAuthStore = defineStore('auth', () => {
     updateUser,
     deleteUser,
     updateUserRole,
+    promoteUser,
     initTestData
   }
 })

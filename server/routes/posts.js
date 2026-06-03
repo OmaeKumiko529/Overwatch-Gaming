@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { getDb, getOne, getAll, insert, run } from '../db.js'
 import { authMiddleware, optionalAuth } from '../middleware/auth.js'
+import { generatePid } from '../utils/identifiers.js'
 
 const router = Router()
 
@@ -12,6 +13,7 @@ router.use(async (req, res, next) => {
 function mapPost(p) {
   return {
     id: p.id,
+    pid: p.pid || String(p.id),
     userId: p.user_id,
     username: p.username,
     title: p.title,
@@ -20,17 +22,28 @@ function mapPost(p) {
     likes: p.likes,
     context: p.context,
     parentId: p.parent_id,
-    mentions: JSON.parse(p.mentions || '[]'),
+    postrank: p.postrank || '69',
+    mentions: p.mentions ? JSON.parse(typeof p.mentions === 'string' ? p.mentions : '[]') : [],
     createdAt: p.created_at,
     updatedAt: p.updated_at
   }
 }
 
+// 获取当前用户 userrank（用于权限判断）
+function getUserrank(req) {
+  if (req.user && req.user.id) {
+    const u = getOne('SELECT userrank FROM users WHERE id = ?', [req.user.id])
+    return u ? Number(u.userrank) : 0
+  }
+  return 0
+}
+
 // 获取帖子列表
 router.get('/', optionalAuth, (req, res) => {
   try {
-    const { search, category, popular, limit } = req.query
+    const { search, category, postrank, popular, limit } = req.query
     const maxLimit = Math.min(Number(limit) || 20, 100)
+    const userrank = getUserrank(req)
 
     let sql = 'SELECT * FROM posts WHERE parent_id IS NULL'
     const params = []
@@ -40,9 +53,19 @@ router.get('/', optionalAuth, (req, res) => {
       params.push(category)
     }
 
+    if (postrank) {
+      sql += ' AND postrank = ?'
+      params.push(postrank)
+    }
+
+    // 黑帖只对 trusted_player+ 可见
+    if (userrank < 2) {
+      sql += " AND postrank != '00'"
+    }
+
     if (search) {
-      sql += ' AND (title LIKE ? OR content LIKE ?)'
-      params.push(`%${search}%`, `%${search}%`)
+      sql += ' AND (title LIKE ? OR content LIKE ? OR pid LIKE ?)'
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`)
     }
 
     if (popular === 'true') {
@@ -63,17 +86,31 @@ router.get('/', optionalAuth, (req, res) => {
 })
 
 // 获取帖子详情（含子帖）
-router.get('/:id', optionalAuth, (req, res) => {
+router.get('/:pid', optionalAuth, (req, res) => {
   try {
-    const postId = Number(req.params.id)
-    const post = getOne('SELECT * FROM posts WHERE id = ?', [postId])
+    const pid = req.params.pid
+    const userrank = getUserrank(req)
+
+    const post = getOne('SELECT * FROM posts WHERE pid = ?', [pid])
     if (!post) return res.json({ success: false, message: '帖子不存在' })
 
-    const childPosts = getAll('SELECT * FROM posts WHERE parent_id = ? ORDER BY created_at DESC', [postId])
+    // 黑帖权限检查：content 对无权用户隐藏
+    const mappedPost = mapPost(post)
+    if (post.postrank === '00' && userrank < 2) {
+      mappedPost.content = '[该帖子已被标记为黑帖，您没有权限查看内容]'
+    }
+
+    // 获取子帖 - 使用 context LIKE 匹配
+    const parentContext = post.context
+    let childPosts = []
+    if (parentContext) {
+      childPosts = getAll("SELECT * FROM posts WHERE context LIKE ? AND id != ? ORDER BY created_at ASC", [`${parentContext}/%`, post.id])
+        .map(mapPost)
+    }
 
     res.json({
       success: true,
-      post: { ...mapPost(post), childPosts: childPosts.map(mapPost) }
+      post: { ...mappedPost, childPosts }
     })
   } catch (error) {
     console.error('获取帖子详情失败:', error)
@@ -84,11 +121,21 @@ router.get('/:id', optionalAuth, (req, res) => {
 // 获取用户的帖子
 router.get('/user/:uid', (req, res) => {
   try {
-    const uid = Number(req.params.uid)
+    const param = req.params.uid
     const { mainOnly } = req.query
 
+    // 获取用户 id - 支持 uid 或数字 id
+    let user = getOne('SELECT id FROM users WHERE uid = ?', [param])
+    if (!user) {
+      const id = Number(param)
+      if (!isNaN(id)) {
+        user = getOne('SELECT id FROM users WHERE id = ?', [id])
+      }
+    }
+    if (!user) return res.json({ success: false, posts: [] })
+
     let sql = 'SELECT * FROM posts WHERE user_id = ?'
-    const params = [uid]
+    const params = [user.id]
 
     if (mainOnly === 'true') sql += ' AND parent_id IS NULL'
 
@@ -106,25 +153,55 @@ router.get('/user/:uid', (req, res) => {
 router.post('/', authMiddleware, (req, res) => {
   try {
     const userId = req.user.id
-    const { title, content, category, parentId, mentions } = req.body
+    const { title, content, parentId, mentions } = req.body
     const username = req.user.username
-    const context = parentId ? `${parentId}/#` : '#'
+
+    // 获取用户 UID
+    const user = getOne('SELECT uid, userrank FROM users WHERE id = ?', [userId])
+    if (!user) return res.json({ success: false, message: '用户不存在' })
+    const userUid = user.uid
+
+    // 生成 PID
+    const pid = generatePid(getOne, userUid)
+
+    // 构建 context
+    let context
+    if (parentId) {
+      // 子帖：查找父帖 context，追加当前用户 UID
+      const parentPost = getOne('SELECT pid, context, postrank FROM posts WHERE pid = ?', [parentId])
+      if (!parentPost) return res.json({ success: false, message: '父帖子不存在' })
+
+      // 检查父帖评论权限
+      const userrank = Number(user.userrank)
+      if (parentPost.postrank === 'FF' && userrank < 1) {
+        return res.json({ success: false, message: '您的等级不足，无法评论此红帖' })
+      }
+      if (parentPost.postrank === '00' && userrank < 3) {
+        return res.json({ success: false, message: '您的等级不足，无法评论此黑帖' })
+      }
+
+      context = `${parentPost.context}/${userUid}`
+    } else {
+      context = `#/${pid}`
+    }
 
     const result = insert(
-      'INSERT INTO posts (user_id, username, title, content, category, context, parent_id, mentions) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [userId, username, title, content, category || 'general', context, parentId || null, JSON.stringify(mentions || [])]
+      'INSERT INTO posts (user_id, username, title, content, category, context, parent_id, pid, postrank, mentions) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [userId, username, title, content, parentId ? 'comment' : 'general', context, parentId || null, pid, '69', JSON.stringify(mentions || [])]
     )
 
     const newPost = {
       id: result.lastInsertRowid,
+      pid,
       userId,
       username,
       title,
       content,
-      category: category || 'general',
+      category: parentId ? 'comment' : 'general',
       likes: 0,
       context,
       parentId: parentId || null,
+      postrank: '69',
       mentions: mentions || [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -136,9 +213,20 @@ router.post('/', authMiddleware, (req, res) => {
         if (String(m.userId) !== String(userId)) {
           insert(
             'INSERT INTO notifications (type, author, root, to_user) VALUES (?, ?, ?, ?)',
-            ['mention', String(userId), newPost.id, String(m.userId)]
+            ['mention', String(userId), pid, String(m.userId)]
           )
         }
+      }
+    }
+
+    // 通知帖主（如果是评论）
+    if (parentId) {
+      const parentPost = getOne('SELECT user_id FROM posts WHERE pid = ?', [parentId])
+      if (parentPost && String(parentPost.user_id) !== String(userId)) {
+        insert(
+          'INSERT INTO notifications (type, author, root, to_user) VALUES (?, ?, ?, ?)',
+          ['comment', String(userId), pid, String(parentPost.user_id)]
+        )
       }
     }
 
@@ -150,31 +238,30 @@ router.post('/', authMiddleware, (req, res) => {
 })
 
 // 更新帖子
-router.put('/:id', authMiddleware, (req, res) => {
+router.put('/:pid', authMiddleware, (req, res) => {
   try {
-    const postId = Number(req.params.id)
+    const pid = req.params.pid
     const userId = req.user.id
 
-    const post = getOne('SELECT * FROM posts WHERE id = ?', [postId])
+    const post = getOne('SELECT * FROM posts WHERE pid = ?', [pid])
     if (!post) return res.json({ success: false, message: '帖子不存在' })
     if (post.user_id !== userId) return res.json({ success: false, message: '无权更新此帖子' })
 
-    const { title, content, category } = req.body
+    const { title, content } = req.body
     const updates = []
     const params = []
 
     if (title !== undefined) { updates.push('title = ?'); params.push(title) }
     if (content !== undefined) { updates.push('content = ?'); params.push(content) }
-    if (category !== undefined) { updates.push('category = ?'); params.push(category) }
 
     if (updates.length === 0) return res.json({ success: false, message: '没有需要更新的字段' })
 
     updates.push("updated_at = datetime('now', 'localtime')")
-    params.push(postId)
+    params.push(post.id)
 
     run(`UPDATE posts SET ${updates.join(', ')} WHERE id = ?`, params)
 
-    const updated = getOne('SELECT * FROM posts WHERE id = ?', [postId])
+    const updated = getOne('SELECT * FROM posts WHERE id = ?', [post.id])
     res.json({ success: true, post: mapPost(updated) })
   } catch (error) {
     console.error('更新帖子失败:', error)
@@ -182,18 +269,49 @@ router.put('/:id', authMiddleware, (req, res) => {
   }
 })
 
-// 删除帖子
-router.delete('/:id', authMiddleware, (req, res) => {
+// 设置帖子标记 (仅 OP)
+router.put('/:pid/rank', authMiddleware, (req, res) => {
   try {
-    const postId = Number(req.params.id)
+    const pid = req.params.pid
+    const userId = req.user.id
+    const { postrank } = req.body
+
+    // 检查是否为 OP
+    const user = getOne('SELECT userrank FROM users WHERE id = ?', [userId])
+    if (!user || Number(user.userrank) < 3) {
+      return res.json({ success: false, message: '仅管理员可设置帖子标记' })
+    }
+
+    const validRanks = ['FF', '69', '78', '00']
+    if (!validRanks.includes(postrank)) {
+      return res.json({ success: false, message: '无效的帖子标记 (FF/69/78/00)' })
+    }
+
+    const post = getOne('SELECT * FROM posts WHERE pid = ?', [pid])
+    if (!post) return res.json({ success: false, message: '帖子不存在' })
+
+    run("UPDATE posts SET postrank = ?, updated_at = datetime('now', 'localtime') WHERE pid = ?", [postrank, pid])
+
+    const updated = getOne('SELECT * FROM posts WHERE id = ?', [post.id])
+    res.json({ success: true, post: mapPost(updated) })
+  } catch (error) {
+    console.error('设置帖子标记失败:', error)
+    res.status(500).json({ success: false, message: '设置失败' })
+  }
+})
+
+// 删除帖子
+router.delete('/:pid', authMiddleware, (req, res) => {
+  try {
+    const pid = req.params.pid
     const userId = req.user.id
 
-    const post = getOne('SELECT * FROM posts WHERE id = ?', [postId])
+    const post = getOne('SELECT * FROM posts WHERE pid = ?', [pid])
     if (!post) return res.json({ success: false, message: '帖子不存在' })
     if (post.user_id !== userId) return res.json({ success: false, message: '无权删除此帖子' })
 
-    run('DELETE FROM posts WHERE id = ?', [postId])
-    run('DELETE FROM posts WHERE parent_id = ?', [postId])
+    // 删除该帖子及其所有子帖（通过 context LIKE）
+    run('DELETE FROM posts WHERE context = ? OR context LIKE ?', [post.context, `${post.context}/%`])
 
     res.json({ success: true })
   } catch (error) {
@@ -203,25 +321,25 @@ router.delete('/:id', authMiddleware, (req, res) => {
 })
 
 // 点赞帖子
-router.post('/:id/like', authMiddleware, (req, res) => {
+router.post('/:pid/like', authMiddleware, (req, res) => {
   try {
-    const postId = Number(req.params.id)
+    const pid = req.params.pid
     const userId = req.user.id
 
-    const post = getOne('SELECT * FROM posts WHERE id = ?', [postId])
+    const post = getOne('SELECT * FROM posts WHERE pid = ?', [pid])
     if (!post) return res.json({ success: false, message: '帖子不存在' })
 
-    run("UPDATE posts SET likes = likes + 1, updated_at = datetime('now', 'localtime') WHERE id = ?", [postId])
+    run("UPDATE posts SET likes = likes + 1, updated_at = datetime('now', 'localtime') WHERE pid = ?", [pid])
 
     // 通知帖主
     if (String(post.user_id) !== String(userId)) {
       insert(
         'INSERT INTO notifications (type, author, root, to_user) VALUES (?, ?, ?, ?)',
-        ['like', String(userId), postId, String(post.user_id)]
+        ['like', String(userId), pid, String(post.user_id)]
       )
     }
 
-    const updated = getOne('SELECT likes FROM posts WHERE id = ?', [postId])
+    const updated = getOne('SELECT likes FROM posts WHERE pid = ?', [pid])
     res.json({ success: true, likes: updated.likes })
   } catch (error) {
     console.error('点赞失败:', error)
@@ -230,26 +348,44 @@ router.post('/:id/like', authMiddleware, (req, res) => {
 })
 
 // 添加评论
-router.post('/:id/comment', authMiddleware, (req, res) => {
+router.post('/:pid/comment', authMiddleware, (req, res) => {
   try {
-    const postId = Number(req.params.id)
+    const pid = req.params.pid
     const userId = req.user.id
     const { content } = req.body
 
-    const parentPost = getOne('SELECT * FROM posts WHERE id = ?', [postId])
+    const parentPost = getOne('SELECT * FROM posts WHERE pid = ?', [pid])
     if (!parentPost) return res.json({ success: false, message: '帖子不存在' })
 
+    // 检查评论权限
+    const user = getOne('SELECT uid, userrank FROM users WHERE id = ?', [userId])
+    const userrank = user ? Number(user.userrank) : 0
+
+    if (parentPost.postrank === 'FF' && userrank < 1) {
+      return res.json({ success: false, message: '您的等级不足 (需要玩家以上)，无法评论此红帖' })
+    }
+    if (parentPost.postrank === '00' && userrank < 3) {
+      return res.json({ success: false, message: '您的等级不足 (需要管理员)，无法评论此黑帖' })
+    }
+
     const username = req.user.username
+    const userUid = user.uid
     const title = `回复: ${parentPost.title.substring(0, 30)}...`
-    const context = `${postId}/#`
+
+    // 生成 PID（评论也有独立 PID）
+    const commentPid = generatePid(getOne, userUid)
+
+    // 构建 context
+    const context = `${parentPost.context}/${userUid}`
 
     const result = insert(
-      'INSERT INTO posts (user_id, username, title, content, category, context, parent_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [userId, username, title, content, 'comment', context, postId]
+      'INSERT INTO posts (user_id, username, title, content, category, context, parent_id, pid, postrank) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [userId, username, title, content, 'comment', context, parentPost.id, commentPid, '69']
     )
 
     const childPost = {
       id: result.lastInsertRowid,
+      pid: commentPid,
       userId,
       username,
       title,
@@ -257,7 +393,8 @@ router.post('/:id/comment', authMiddleware, (req, res) => {
       category: 'comment',
       likes: 0,
       context,
-      parentId: postId,
+      parentId: parentPost.id,
+      postrank: '69',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
@@ -266,7 +403,7 @@ router.post('/:id/comment', authMiddleware, (req, res) => {
     if (String(parentPost.user_id) !== String(userId)) {
       insert(
         'INSERT INTO notifications (type, author, root, to_user) VALUES (?, ?, ?, ?)',
-        ['comment', String(userId), postId, String(parentPost.user_id)]
+        ['comment', String(userId), commentPid, String(parentPost.user_id)]
       )
     }
 
@@ -277,7 +414,7 @@ router.post('/:id/comment', authMiddleware, (req, res) => {
   }
 })
 
-// 获取分类列表
+// 获取分类列表（保留以向后兼容）
 router.get('/categories/list', (req, res) => {
   try {
     const rows = getAll('SELECT DISTINCT category FROM posts WHERE parent_id IS NULL AND category IS NOT NULL')

@@ -53,9 +53,10 @@
         <div v-else>
           <!-- 帖子搜索结果 -->
           <div v-if="activeTab === 'posts'" class="posts-results">
-            <div v-for="post in posts" :key="post.id" class="post-card" @click="viewPostDetail(post.id)">
+            <div v-for="post in posts" :key="post.id" class="post-card" @click="viewPostDetail(post.pid)">
               <div class="post-header">
-                <span class="post-id">#{{ post.id }}</span>
+                <span class="post-rank-icon">{{ post.rankInfo?.icon || '🔵' }}</span>
+                <span class="post-pid">{{ post.pid ? 'PID: ' + post.pid : '#' + post.id }}</span>
                 <span class="post-title">{{ post.title }}</span>
               </div>
               <div class="post-content">{{ post.content.substring(0, 100) }}...</div>
@@ -74,10 +75,10 @@
               </div>
               <div class="user-info">
                 <div class="user-name">{{ user.name }}</div>
-                <div class="user-uid">UID: {{ user.id }}</div>
+                <div class="user-uid">UID: {{ user.uid || user.id }}</div>
                 <div class="user-bio">{{ user.bio || '暂无简介' }}</div>
               </div>
-              <button class="view-profile-button" @click="viewProfile(user.id)">
+              <button class="view-profile-button" @click="viewProfile(user.uid || user.id)">
                 查看资料
               </button>
             </div>
@@ -141,17 +142,19 @@ const performSearch = async () => {
       posts.value = allPosts.filter(post => {
         const isMainPost = post.parentId === null || post.parentId === undefined
         return isMainPost && (
-          post.id.toString().includes(query) ||
+          (post.pid && post.pid.toLowerCase().includes(query)) ||
           (post.title && post.title.toLowerCase().includes(query)) ||
           (post.username && post.username.toLowerCase().includes(query)) ||
           (post.content && post.content.toLowerCase().includes(query))
         )
       }).map(post => ({
         id: post.id,
+        pid: post.pid,
         title: post.title,
         content: post.content,
         author: post.username,
-        date: new Date(post.createdAt).toLocaleDateString('zh-CN')
+        date: new Date(post.createdAt).toLocaleDateString('zh-CN'),
+        rankInfo: { icon: getPostRankIcon(post.postrank) }
       }))
     } else {
       // 通过 API 搜索用户
@@ -159,12 +162,13 @@ const performSearch = async () => {
       const allUsers = res.success ? res.users : []
       users.value = allUsers.filter(user => {
         return (
-          user.id.toString().includes(query) ||
+          (user.uid && user.uid.toLowerCase().includes(query)) ||
           user.username.toLowerCase().includes(query) ||
           (user.email && user.email.toLowerCase().includes(query))
         )
       }).map(user => ({
         id: user.id,
+        uid: user.uid,
         name: user.username,
         bio: '守望先锋玩家'
       }))
@@ -178,12 +182,19 @@ const performSearch = async () => {
   }
 }
 
-const viewProfile = (uid) => {
-  router.push({ name: 'UserProfile', params: { uid } })
+function getPostRankIcon(postrank) {
+  const icons = { 'FF': '🔴', '69': '🔵', '78': '🟢', '00': '⚫' }
+  return icons[postrank] || '🔵'
 }
 
-const viewPostDetail = (postId) => {
-  router.push({ name: 'PostDetail', params: { id: postId } })
+const viewProfile = (uid) => {
+  router.push('/user/' + encodeURIComponent(String(uid)))
+}
+
+const viewPostDetail = (pid) => {
+  if (pid) {
+    router.push('/post/' + encodeURIComponent(pid))
+  }
 }
 
 watch(activeTab, () => {

@@ -35,7 +35,7 @@ export const usePostStore = defineStore('post', () => {
             notifStore.push({
               type: 'mention',
               Author: String(userId),
-              Root: res.post.id,
+              Root: res.post.pid,
               To: String(m.userId)
             })
           }
@@ -47,8 +47,8 @@ export const usePostStore = defineStore('post', () => {
     return { success: false, message: res.message || '发帖失败，请重试' }
   }
 
-  async function getPostById(postId) {
-    const res = await postsApi.getPostById(postId)
+  async function getPostByPid(pid) {
+    const res = await postsApi.getPostByPid(pid)
     return res.success ? res.post : null
   }
 
@@ -62,47 +62,47 @@ export const usePostStore = defineStore('post', () => {
     return res.success ? res.posts : []
   }
 
-  async function getChildPosts(postId) {
-    const res = await postsApi.getPostById(postId)
+  async function getChildPosts(pid) {
+    const res = await postsApi.getPostByPid(pid)
     if (res.success && res.post.childPosts) {
       return res.post.childPosts
     }
     return []
   }
 
-  async function getPostWithChildren(postId) {
-    const res = await postsApi.getPostById(postId)
+  async function getPostWithChildren(pid) {
+    const res = await postsApi.getPostByPid(pid)
     return res.success ? res.post : null
   }
 
-  async function deletePost(postId, userId) {
+  async function deletePost(pid, userId) {
     if (!userId) return { success: false, message: '请先登录' }
 
-    const res = await postsApi.deletePost(postId)
+    const res = await postsApi.deletePost(pid)
     if (res.success) {
-      posts.value = posts.value.filter(p => p.id !== Number(postId))
+      posts.value = posts.value.filter(p => p.pid !== pid)
       return { success: true }
     }
     return { success: false, message: res.message || '删除失败' }
   }
 
-  async function updatePost(postId, updates, userId) {
+  async function updatePost(pid, updates, userId) {
     if (!userId) return { success: false, message: '请先登录' }
 
-    const res = await postsApi.updatePost(postId, updates)
+    const res = await postsApi.updatePost(pid, updates)
     if (res.success) {
-      const idx = posts.value.findIndex(p => p.id === Number(postId))
+      const idx = posts.value.findIndex(p => p.pid === pid)
       if (idx !== -1) posts.value[idx] = res.post
       return { success: true, post: res.post }
     }
     return { success: false, message: res.message || '更新失败' }
   }
 
-  async function likePost(postId) {
-    const res = await postsApi.likePost(postId)
+  async function likePost(pid) {
+    const res = await postsApi.likePost(pid)
     if (res.success) {
       // 通知帖主
-      const post = posts.value.find(p => p.id === Number(postId))
+      const post = posts.value.find(p => p.pid === pid)
       if (post) {
         post.likes = res.likes
         const posterId = post.userId
@@ -111,7 +111,7 @@ export const usePostStore = defineStore('post', () => {
           notifStore.push({
             type: 'like',
             Author: String(notifStore.currentUid || ''),
-            Root: Number(postId),
+            Root: pid,
             To: String(posterId)
           })
         }
@@ -121,17 +121,17 @@ export const usePostStore = defineStore('post', () => {
     return { success: false, message: res.message || '点赞失败' }
   }
 
-  async function addComment(postId, commentText, userId, username) {
+  async function addComment(pid, commentText, userId, username) {
     if (!userId) return { success: false, message: '请先登录' }
 
-    const res = await postsApi.addComment(postId, commentText)
+    const res = await postsApi.addComment(pid, commentText)
     if (res.success) {
       // 通知帖主
       const notifStore = useNotificationStore()
       notifStore.push({
         type: 'comment',
         Author: String(userId),
-        Root: Number(postId),
+        Root: pid,
         To: String(notifStore.currentUid)
       })
       return { success: true, comment: res.comment }
@@ -139,10 +139,10 @@ export const usePostStore = defineStore('post', () => {
     return { success: false, message: res.message || '评论失败' }
   }
 
-  async function deleteComment(commentId, userId) {
+  async function deleteComment(commentPid, userId) {
     if (!userId) return { success: false, message: '请先登录' }
 
-    const res = await postsApi.deletePost(commentId)
+    const res = await postsApi.deletePost(commentPid)
     return res.success
       ? { success: true }
       : { success: false, message: res.message || '删除失败' }
@@ -173,11 +173,16 @@ export const usePostStore = defineStore('post', () => {
     return res.success ? res.posts : []
   }
 
+  async function getPostsByPostrank(postrank, limit = 20) {
+    const res = await postsApi.getPosts({ postrank, limit })
+    return res.success ? res.posts : []
+  }
+
   return {
     posts,
     getAllPosts,
     createPost,
-    getPostById,
+    getPostByPid,
     getUserPosts,
     getUserMainPosts,
     getChildPosts,
@@ -191,7 +196,8 @@ export const usePostStore = defineStore('post', () => {
     getPopularPosts,
     getLatestPosts,
     getPostCategories,
-    getPostsByCategory
+    getPostsByCategory,
+    getPostsByPostrank
   }
 })
 

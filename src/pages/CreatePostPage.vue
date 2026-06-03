@@ -18,22 +18,6 @@
         </div>
         
         <div class="form-group">
-          <label for="category">分类</label>
-          <select
-            id="category"
-            v-model="formData.category"
-            class="form-select"
-          >
-            <option value="general">一般讨论</option>
-            <option value="team">战队招募</option>
-            <option value="strategy">战术攻略</option>
-            <option value="highlight">精彩集锦</option>
-            <option value="question">问题求助</option>
-            <option value="announcement">公告通知</option>
-          </select>
-        </div>
-        
-        <div class="form-group">
           <label for="content">帖子内容</label>
           <RichTextEditor
             v-model="formData.content"
@@ -85,7 +69,6 @@ const auth = useAuthStore()
 
 const formData = reactive({
   title: '',
-  category: 'general',
   content: ''
 })
 
@@ -200,8 +183,8 @@ const handleCreatePost = async () => {
     
     const postData = {
       title: formData.title.trim(),
-      category: formData.category,
       content: formData.content.trim(),
+      category: 'general',
       mentions: mentionedUsers.value.map(user => ({
         userId: user.id,
         username: user.username
@@ -218,7 +201,10 @@ const handleCreatePost = async () => {
       formData.content = ''
       mentionedUsers.value = []
       
-      setTimeout(() => router.push({ name: 'User' }), 500)
+      // 跳转到新帖子详情（使用 PID）
+      setTimeout(() => {
+        router.push('/post/' + encodeURIComponent(result.post.pid))
+      }, 500)
     } else {
       message.value = result.message || '发布失败，请重试'
       isError.value = true

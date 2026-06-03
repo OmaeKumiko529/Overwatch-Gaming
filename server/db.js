@@ -54,6 +54,8 @@ function initSchema() {
       password_hash TEXT NOT NULL,
       role TEXT NOT NULL DEFAULT '["flexible"]',
       is_admin INTEGER NOT NULL DEFAULT 0,
+      uid TEXT UNIQUE,
+      userrank INTEGER NOT NULL DEFAULT 0,
       avatar TEXT NOT NULL DEFAULT '/Head.png',
       team_id INTEGER,
       created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
@@ -72,6 +74,8 @@ function initSchema() {
       likes INTEGER NOT NULL DEFAULT 0,
       context TEXT DEFAULT '#',
       parent_id INTEGER,
+      pid TEXT UNIQUE,
+      postrank TEXT NOT NULL DEFAULT '69',
       mentions TEXT DEFAULT '[]',
       created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
@@ -128,13 +132,32 @@ function initSchema() {
     )
   `)
 
-  // 检查 users 表中是否有 is_admin 列（用于迁移旧数据库）
+  // 检查并添加新列（用于迁移旧数据库）
   try {
-    const columns = db.exec("PRAGMA table_info('users')")
-    if (columns.length > 0) {
-      const colNames = columns[0].values.map(v => v[1])
+    const userCols = db.exec("PRAGMA table_info('users')")
+    if (userCols.length > 0) {
+      const colNames = userCols[0].values.map(v => v[1])
       if (!colNames.includes('is_admin')) {
         db.run("ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0")
+      }
+      if (!colNames.includes('uid')) {
+        db.run("ALTER TABLE users ADD COLUMN uid TEXT UNIQUE")
+      }
+      if (!colNames.includes('userrank')) {
+        db.run("ALTER TABLE users ADD COLUMN userrank INTEGER NOT NULL DEFAULT 0")
+      }
+    }
+  } catch {}
+
+  try {
+    const postCols = db.exec("PRAGMA table_info('posts')")
+    if (postCols.length > 0) {
+      const colNames = postCols[0].values.map(v => v[1])
+      if (!colNames.includes('pid')) {
+        db.run("ALTER TABLE posts ADD COLUMN pid TEXT UNIQUE")
+      }
+      if (!colNames.includes('postrank')) {
+        db.run("ALTER TABLE posts ADD COLUMN postrank TEXT NOT NULL DEFAULT '69'")
       }
     }
   } catch {}
@@ -156,11 +179,16 @@ function ensureAdminUser() {
   const existing = getOne('SELECT id FROM users WHERE username = ?', ['Admin'])
   if (!existing) {
     const passwordHash = bcrypt.hashSync('HsbXsy2626', 10)
+    const uid = 'u/?=202601010000'
     insert(
-      'INSERT INTO users (username, email, password_hash, is_admin) VALUES (?, ?, ?, ?)',
-      ['Admin', 'admin@omaekumiko.com', passwordHash, 1]
+      'INSERT INTO users (username, email, password_hash, is_admin, uid, userrank) VALUES (?, ?, ?, ?, ?, ?)',
+      ['Admin', 'admin@omaekumiko.com', passwordHash, 1, uid, 3]
     )
     console.log('👑 Admin 用户已创建')
+  } else if (!existing.uid) {
+    // 兼容旧数据：为 Admin 补充 uid 和 userrank（如果迁移脚本未覆盖）
+    const uid = 'u/?=202601010000'
+    run("UPDATE users SET uid = ?, userrank = ? WHERE username = 'Admin'", [uid, 3])
   }
 }
 
