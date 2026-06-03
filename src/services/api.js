@@ -36,6 +36,14 @@ async function request(endpoint, options = {}) {
     }
   }
 
+  // 可选认证：如果 token 存在就带上，不存在也不报错
+  if (auth === 'optional') {
+    const token = getToken()
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+  }
+
   let url = `${API_BASE}${endpoint}`
   if (params) {
     const searchParams = new URLSearchParams()
@@ -139,7 +147,7 @@ export const postsApi = {
   },
 
   getPostByPid(pid) {
-    return request(`/posts/${encodeURIComponent(pid)}`)
+    return request(`/posts/${encodeURIComponent(pid)}`, { auth: 'optional' })
   },
 
   getUserPosts(uid, mainOnly = false) {

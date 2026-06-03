@@ -58,11 +58,8 @@ router.get('/', optionalAuth, (req, res) => {
       params.push(postrank)
     }
 
-    // 黑帖只对 trusted_player+ 可见
-    if (userrank < 2) {
-      sql += " AND postrank != '00'"
-    }
-
+    // 黑帖在列表中所有人可见（标题显示），内容权限由详情接口控制
+    // 不再在此处过滤 postrank = '00'
     if (search) {
       sql += ' AND (title LIKE ? OR content LIKE ? OR pid LIKE ?)'
       params.push(`%${search}%`, `%${search}%`, `%${search}%`)

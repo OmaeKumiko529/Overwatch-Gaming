@@ -8,10 +8,10 @@ export const USERRANK_MAP = {
 
 // 帖子标记映射表
 export const POSTRANK_MAP = {
-  'FF': { key: 'red', label: 'Red Post', cn: '红帖', color: '#dc3545', icon: '🔴', bg: '#fff5f5', border: '#dc3545' },
-  '69': { key: 'blue', label: 'Blue Post', cn: '蓝帖', color: '#4facfe', icon: '🔵', bg: '#f0f8ff', border: '#4facfe' },
-  '78': { key: 'green', label: 'Green Post', cn: '绿帖', color: '#28a745', icon: '🟢', bg: '#f0fff4', border: '#28a745' },
-  '00': { key: 'black', label: 'Black Post', cn: '黑帖', color: '#212529', icon: '⚫', bg: '#f8f9fa', border: '#212529' }
+  'FF': { key: 'red', label: 'Warned', cn: '受警告内容', color: '#dc3545', icon: '', bg: '#fff5f5', border: '#dc3545' },
+  '69': { key: 'blue', label: 'Normal', cn: '', color: '#4facfe', icon: '', bg: '#f0f8ff', border: '#4facfe' },
+  '78': { key: 'green', label: 'Featured', cn: '精华内容', color: '#28a745', icon: '', bg: '#f0fff4', border: '#28a745' },
+  '00': { key: 'black', label: 'Banned', cn: '封禁内容', color: '#212529', icon: '', bg: '#f8f9fa', border: '#212529' }
 }
 
 // 获取用户等级信息

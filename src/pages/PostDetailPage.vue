@@ -27,8 +27,8 @@
       <div v-else class="post-content">
         <!-- 帖子头部：标记 + PID + 日期 -->
         <div class="post-header">
-          <div class="post-rank-badge" :style="{ backgroundColor: postRankInfo.color, color: 'white' }">
-            {{ postRankInfo.icon }} {{ postRankInfo.cn }}
+          <div v-if="post.postrank && post.postrank !== '69'" class="post-rank-badge" :style="{ backgroundColor: postRankInfo.color, color: 'white' }">
+            {{ postRankInfo.cn }}
           </div>
           <div class="post-pid">PID: {{ post.pid }}</div>
           <div class="post-date">{{ formatDate(post.createdAt) }}</div>
@@ -315,10 +315,10 @@ const showRankMenu = ref(false);
 
 // 等级映射
 const rankOptions = {
-  'FF': { icon: '🔴', cn: '红帖', color: '#dc3545' },
-  '69': { icon: '🔵', cn: '蓝帖', color: '#4facfe' },
-  '78': { icon: '🟢', cn: '绿帖', color: '#28a745' },
-  '00': { icon: '⚫', cn: '黑帖', color: '#212529' }
+  'FF': { icon: '', cn: '受警告内容', color: '#dc3545' },
+  '69': { icon: '', cn: '一般帖子', color: '#4facfe' },
+  '78': { icon: '', cn: '精华内容', color: '#28a745' },
+  '00': { icon: '', cn: '封禁内容', color: '#212529' }
 }
 
 // 从 context 提取根帖 PID
@@ -348,10 +348,15 @@ const postRankInfo = computed(() => {
   return getPostRankInfo(post.value?.postrank)
 })
 
-// 是否可以查看内容
+// 是否可以查看内容 — 信任服务端响应，如果服务端返回了真实内容则展示
 const canViewContent = computed(() => {
   if (!post.value) return false
-  return canViewPostContent(auth.userrank, post.value.postrank)
+  const restrictedMsg = '[该帖子已被标记为黑帖，您没有权限查看内容]'
+  // 如果内容不是受限提示，说明服务端允许查看
+  if (post.value.content && post.value.content !== restrictedMsg) {
+    return true
+  }
+  return false
 })
 
 // 是否可以评论
@@ -817,12 +822,24 @@ onMounted(() => {
 .post-rank-badge {
   font-family: 'MapleMono CN Regular', monospace;
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
   padding: 4px 14px;
   border-radius: 20px;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.3);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  color: #fff;
+}
+
+.post-rank-badge-normal {
+  background-color: #e9ecef !important;
+  color: #6c757d !important;
+  font-weight: 600 !important;
+  text-shadow: none !important;
+  border: 1px solid #dee2e6 !important;
+  box-shadow: none !important;
 }
 
 .post-pid {
