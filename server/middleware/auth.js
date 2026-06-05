@@ -49,3 +49,28 @@ export function optionalAuth(req, res, next) {
   }
   next()
 }
+
+// 管理员权限中间件：需 JWT 认证且 userrank >= 3
+export function adminMiddleware(req, res, next) {
+  const authHeader = req.headers.authorization
+  if (!authHeader) {
+    return res.status(401).json({ success: false, message: '请先登录' })
+  }
+
+  const token = authHeader.split(' ')[1]
+  if (!token) {
+    return res.status(401).json({ success: false, message: '无效的认证令牌' })
+  }
+
+  try {
+    const decoded = jwt.verify(token, getJwtSecret())
+    // 检查管理员权限
+    if (Number(decoded.userrank) < 3) {
+      return res.status(403).json({ success: false, message: '权限不足，需要管理员权限' })
+    }
+    req.user = decoded
+    next()
+  } catch (error) {
+    return res.status(401).json({ success: false, message: '认证已过期，请重新登录' })
+  }
+}

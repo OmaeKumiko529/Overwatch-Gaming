@@ -14,6 +14,7 @@ import teamsRoutes from './routes/teams.js'
 import notificationsRoutes from './routes/notifications.js'
 import announcementsRoutes from './routes/announcements.js'
 import migrateRoutes from './routes/migrate.js'
+import adminRoutes from './routes/admin.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -50,6 +51,7 @@ app.use('/api/teams', teamsRoutes)
 app.use('/api/notifications', notificationsRoutes)
 app.use('/api/announcements', announcementsRoutes)
 app.use('/api/migrate', migrateRoutes)
+app.use('/api/admin', adminRoutes)
 
 // 健康检查
 app.get('/api/health', (req, res) => {

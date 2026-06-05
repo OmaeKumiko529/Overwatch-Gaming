@@ -1,19 +1,18 @@
 <script setup>
 // 导入Vue Composition API
-import { onMounted } from 'vue'
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import NavBar from './components/NavBar.vue'
 
-// 组件挂载时初始化登录状态（由 NavBar 和子页面自行管理）
-onMounted(() => {
-  // 无需在 App 层管理登录状态，各组件通过 Pinia 自动响应
-})
+const route = useRoute()
+const hideNavBar = computed(() => route.meta && route.meta.hideNavBar)
 </script>
 
 <template>
   <!-- 应用根容器 -->
   <div class="app-container">
-    <!-- 导航栏组件 -->
-    <NavBar />
+    <!-- 导航栏组件（某些页面如管理后台隐藏） -->
+    <NavBar v-if="!hideNavBar" />
     
     <!-- 路由出口：Vue Router渲染匹配的页面组件 -->
     <router-view v-slot="{ Component }">

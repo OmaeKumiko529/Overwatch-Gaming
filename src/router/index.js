@@ -81,6 +81,12 @@ const routes = [
     path: '/announcements',
     name: 'Announcements',
     component: () => import('../pages/AnnouncementPage.vue')
+  },
+  {
+    path: '/adminpower',
+    name: 'AdminPanel',
+    component: () => import('../pages/AdminPanel.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true, hideNavBar: true }
   }
 ]
 
@@ -106,6 +112,16 @@ router.beforeEach((to, from, next) => {
       if (!sessionJson) {
         next('/login')
         return
+      }
+
+      // 检查管理员权限
+      if (to.meta.requiresAdmin) {
+        const session = JSON.parse(sessionJson);
+        const userrank = Number(session.userrank ?? 0);
+        if (userrank < 3) {
+          next('/')
+          return
+        }
       }
     } catch {
       next('/login')
