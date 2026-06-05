@@ -63,8 +63,12 @@ router.get('/', optionalAuth, (req, res) => {
     // 黑帖在列表中所有人可见（标题显示），内容权限由详情接口控制
     // 不再在此处过滤 postrank = '00'
     if (search) {
-      sql += ' AND (title LIKE ? OR content LIKE ? OR pid LIKE ?)'
-      params.push(`%${search}%`, `%${search}%`, `%${search}%`)
+      // 限制搜索字符串长度防止DoS
+      const safeSearch = typeof search === 'string' ? search.substring(0, 200) : ''
+      if (safeSearch.length > 0) {
+        sql += ' AND (title LIKE ? OR content LIKE ? OR pid LIKE ?)'
+        params.push(`%${safeSearch}%`, `%${safeSearch}%`, `%${safeSearch}%`)
+      }
     }
 
     if (popular === 'true') {
@@ -155,6 +159,20 @@ router.post('/', authMiddleware, (req, res) => {
     const { title, content, parentId, mentions } = req.body
     const username = req.user.username
 
+    // 服务端校验
+    if (!title || typeof title !== 'string' || title.trim().length === 0) {
+      return res.json({ success: false, message: '标题不能为空' })
+    }
+    if (title.length > 200) {
+      return res.json({ success: false, message: '标题长度不能超过200个字符' })
+    }
+    if (!content || typeof content !== 'string' || content.trim().length === 0) {
+      return res.json({ success: false, message: '内容不能为空' })
+    }
+    if (content.length > 50000) {
+      return res.json({ success: false, message: '内容长度不能超过50000个字符' })
+    }
+
     // 获取用户 UID
     const user = getOne('SELECT uid, userrank FROM users WHERE id = ?', [userId])
     if (!user) return res.json({ success: false, message: '用户不存在' })
@@ -206,13 +224,21 @@ router.post('/', authMiddleware, (req, res) => {
       updatedAt: new Date().toISOString()
     }
 
-    // 通知被@的用户
+    // 通知被@的用户（校验用户存在）
     if (mentions && mentions.length > 0) {
+      const seenUserIds = new Set()
       for (const m of mentions) {
-        if (String(m.userId) !== String(userId)) {
+        const targetUserId = String(m.userId)
+        if (targetUserId === String(userId)) continue
+        if (seenUserIds.has(targetUserId)) continue
+        seenUserIds.add(targetUserId)
+        
+        // 验证被@的用户存在
+        const mentionedUser = getOne('SELECT id FROM users WHERE id = ?', [Number(targetUserId)])
+        if (mentionedUser) {
           insert(
             'INSERT INTO notifications (type, author, root, to_user) VALUES (?, ?, ?, ?)',
-            ['mention', String(userId), pid, String(m.userId)]
+            ['mention', String(userId), pid, targetUserId]
           )
         }
       }
@@ -319,7 +345,7 @@ router.delete('/:pid', authMiddleware, (req, res) => {
   }
 })
 
-// 点赞帖子
+// 点赞帖子（带去重）
 router.post('/:pid/like', authMiddleware, (req, res) => {
   try {
     const pid = req.params.pid
@@ -328,7 +354,21 @@ router.post('/:pid/like', authMiddleware, (req, res) => {
     const post = getOne('SELECT * FROM posts WHERE pid = ?', [pid])
     if (!post) return res.json({ success: false, message: '帖子不存在' })
 
-    run("UPDATE posts SET likes = likes + 1, updated_at = datetime('now', 'localtime') WHERE pid = ?", [pid])
+    // 检查是否已点赞
+    const existingLike = getOne('SELECT id FROM post_likes WHERE post_id = ? AND user_id = ?', [post.id, userId])
+    if (existingLike) {
+      return res.json({ success: false, message: '您已经点过赞了' })
+    }
+
+    try {
+      run('BEGIN TRANSACTION')
+      insert('INSERT INTO post_likes (post_id, user_id) VALUES (?, ?)', [post.id, userId])
+      run("UPDATE posts SET likes = likes + 1, updated_at = datetime('now', 'localtime') WHERE id = ?", [post.id])
+      run('COMMIT')
+    } catch {
+      run('ROLLBACK')
+      return res.json({ success: false, message: '点赞失败' })
+    }
 
     // 通知帖主
     if (String(post.user_id) !== String(userId)) {

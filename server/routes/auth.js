@@ -1,16 +1,46 @@
 import { Router } from 'express'
 import bcrypt from 'bcryptjs'
+import rateLimit from 'express-rate-limit'
 import { getDb, getOne, getAll, insert, run } from '../db.js'
 import { generateToken, authMiddleware } from '../middleware/auth.js'
 import { generateUid } from '../utils/identifiers.js'
 
 const router = Router()
 
+// 登录限流：每个IP每分钟最多5次登录尝试
+const loginLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  message: { success: false, message: '登录尝试过于频繁，请稍后再试' },
+  standardHeaders: true,
+  legacyHeaders: false
+})
+
+// 注册限流：每个IP每小时最多3次注册
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 3,
+  message: { success: false, message: '注册过于频繁，请稍后再试' },
+  standardHeaders: true,
+  legacyHeaders: false
+})
+
 // 确保数据库已初始化
 router.use(async (req, res, next) => {
   await getDb()
   next()
 })
+
+// 辅助：脱敏邮箱（仅显示前两位字符和域名）
+function maskEmail(email) {
+  if (!email) return null
+  const parts = email.split('@')
+  if (parts.length !== 2) return email
+  const name = parts[0]
+  const domain = parts[1]
+  const maskedName = name.length <= 2 ? name.substring(0, 1) + '***' : name.substring(0, 2) + '***'
+  return `${maskedName}@${domain}`
+}
 
 // 辅助：将数据库行映射为前端用户对象
 function mapUser(user) {
@@ -41,10 +71,39 @@ function buildSession(user, token, rememberMe = false) {
   }
 }
 
-// 注册
-router.post('/register', async (req, res) => {
+// 注册（带限流和服务端校验）
+router.post('/register', registerLimiter, async (req, res) => {
   try {
     const { username, email, password } = req.body
+
+    // 服务端输入校验
+    if (!username || typeof username !== 'string') {
+      return res.json({ success: false, message: '用户名不能为空' })
+    }
+    if (username.length < 2 || username.length > 20) {
+      return res.json({ success: false, message: '用户名长度必须在2-20个字符之间' })
+    }
+    if (!/^[a-zA-Z0-9_\u4e00-\u9fa5]+$/.test(username)) {
+      return res.json({ success: false, message: '用户名只能包含字母、数字、下划线和中文' })
+    }
+    if (!email || typeof email !== 'string') {
+      return res.json({ success: false, message: '邮箱不能为空' })
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.json({ success: false, message: '邮箱格式不正确' })
+    }
+    if (email.length > 100) {
+      return res.json({ success: false, message: '邮箱长度不能超过100个字符' })
+    }
+    if (!password || typeof password !== 'string') {
+      return res.json({ success: false, message: '密码不能为空' })
+    }
+    if (password.length < 6) {
+      return res.json({ success: false, message: '密码长度至少为6位' })
+    }
+    if (password.length > 128) {
+      return res.json({ success: false, message: '密码长度不能超过128位' })
+    }
 
     // 检查用户名是否存在
     const existing = getOne('SELECT id FROM users WHERE username = ? OR email = ?', [username, email])
@@ -88,8 +147,8 @@ router.post('/register', async (req, res) => {
   }
 })
 
-// 登录
-router.post('/login', async (req, res) => {
+// 登录（带限流）
+router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { username, password, rememberMe } = req.body
     await getDb()
@@ -136,7 +195,7 @@ router.get('/me', authMiddleware, async (req, res) => {
   }
 })
 
-// 获取所有用户
+// 获取所有用户（公开API，邮箱脱敏）
 router.get('/users', async (req, res) => {
   try {
     await getDb()
@@ -147,7 +206,7 @@ router.get('/users', async (req, res) => {
         id: u.id,
         uid: u.uid || null,
         username: u.username,
-        email: u.email,
+        email: maskEmail(u.email),
         role: JSON.parse(u.role || '["flexible"]'),
         userrank: Number(u.userrank || 0),
         isAdmin: Number(u.userrank || 0) >= 3,
@@ -163,7 +222,7 @@ router.get('/users', async (req, res) => {
   }
 })
 
-// 获取单个用户 - 支持 uid 字符串或数字 id
+// 获取单个用户 - 支持 uid 字符串或数字 id（公开API，邮箱脱敏）
 router.get('/users/:uid', async (req, res) => {
   try {
     await getDb()
@@ -182,7 +241,8 @@ router.get('/users/:uid', async (req, res) => {
     res.json({
       success: true,
       user: {
-        ...mapUser(user)
+        ...mapUser(user),
+        email: maskEmail(user.email)
       }
     })
   } catch (error) {

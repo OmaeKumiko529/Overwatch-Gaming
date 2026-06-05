@@ -1,5 +1,12 @@
+import dotenv from 'dotenv'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+dotenv.config({ path: path.join(__dirname, '.env') })
 import express from 'express'
 import cors from 'cors'
+import rateLimit from 'express-rate-limit'
 import { getDb } from './db.js'
 import authRoutes from './routes/auth.js'
 import postsRoutes from './routes/posts.js'
@@ -11,8 +18,29 @@ import migrateRoutes from './routes/migrate.js'
 const app = express()
 const PORT = process.env.PORT || 3001
 
-// 中间件
-app.use(cors())
+// CORS 白名单
+const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173,http://localhost:3000').split(',')
+app.use(cors({
+  origin: function (origin, callback) {
+    // 允许没有 origin 的请求（如同源请求、curl等）
+    if (!origin) return callback(null, true)
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true)
+    }
+    return callback(null, false)
+  }
+}))
+
+// 全局速率限制
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15分钟
+  max: 1000, // 每个IP最多1000个请求
+  message: { success: false, message: '请求过于频繁，请稍后再试' },
+  standardHeaders: true,
+  legacyHeaders: false
+})
+app.use(limiter)
+
 app.use(express.json({ limit: '10mb' }))
 
 // 路由（各路由内部自行初始化数据库）

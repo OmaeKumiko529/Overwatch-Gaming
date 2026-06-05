@@ -1,8 +1,18 @@
 import { Router } from 'express'
+import rateLimit from 'express-rate-limit'
 import { getDb, getOne, getAll, insert, run } from '../db.js'
 import { authMiddleware } from '../middleware/auth.js'
 
 const router = Router()
+
+// 创建通知限流：每个用户每分钟最多10次
+const createNotifLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  message: { success: false, message: '创建通知过于频繁' },
+  standardHeaders: true,
+  legacyHeaders: false
+})
 
 router.use(async (req, res, next) => {
   await getDb()
@@ -82,14 +92,30 @@ router.put('/read-all', authMiddleware, (req, res) => {
   }
 })
 
-// 创建通知
-router.post('/', authMiddleware, (req, res) => {
+// 创建通知（带限流和目标用户校验）
+router.post('/', authMiddleware, createNotifLimiter, (req, res) => {
   try {
     const { type, Author, Root, To, title } = req.body
 
+    // 验证目标用户存在
+    const targetUserId = Number(To)
+    if (!targetUserId || isNaN(targetUserId)) {
+      return res.json({ success: false, message: '无效的目标用户' })
+    }
+    const targetUser = getOne('SELECT id FROM users WHERE id = ?', [targetUserId])
+    if (!targetUser) {
+      return res.json({ success: false, message: '目标用户不存在' })
+    }
+
+    // 验证通知类型白名单
+    const validTypes = ['mention', 'comment', 'like', 'system', 'custom']
+    if (!type || !validTypes.includes(type)) {
+      return res.json({ success: false, message: '无效的通知类型' })
+    }
+
     const result = insert(
       'INSERT INTO notifications (type, author, root, to_user, title) VALUES (?, ?, ?, ?, ?)',
-      [type, String(Author), Root, String(To), title || null]
+      [type, String(Author), Root, String(targetUserId), title || null]
     )
 
     const notif = {

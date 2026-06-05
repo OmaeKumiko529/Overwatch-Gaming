@@ -1,11 +1,17 @@
 import jwt from 'jsonwebtoken'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'owgaming-dev-secret-key-change-in-production'
+function getJwtSecret() {
+  const secret = process.env.JWT_SECRET
+  if (!secret) {
+    throw new Error('JWT_SECRET 环境变量未设置！请在 server/.env 中配置 JWT_SECRET')
+  }
+  return secret
+}
 
 export function generateToken(user) {
   return jwt.sign(
     { uid: user.uid, id: user.id, username: user.username, userrank: Number(user.userrank || 0) },
-    JWT_SECRET,
+    getJwtSecret(),
     { expiresIn: '30d' }
   )
 }
@@ -22,7 +28,7 @@ export function authMiddleware(req, res, next) {
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET)
+    const decoded = jwt.verify(token, getJwtSecret())
     req.user = decoded
     next()
   } catch (error) {
@@ -36,7 +42,7 @@ export function optionalAuth(req, res, next) {
     const token = authHeader.split(' ')[1]
     if (token) {
       try {
-        const decoded = jwt.verify(token, JWT_SECRET)
+        const decoded = jwt.verify(token, getJwtSecret())
         req.user = decoded
       } catch {}
     }

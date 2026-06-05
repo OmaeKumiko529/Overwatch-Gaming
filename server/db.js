@@ -162,6 +162,19 @@ function initSchema() {
     }
   } catch {}
 
+  // 创建点赞记录表（用于去重）
+  db.run(`
+    CREATE TABLE IF NOT EXISTS post_likes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      post_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      UNIQUE(post_id, user_id),
+      FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `)
+
   // 创建索引
   try { db.run('CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts(user_id)') } catch {}
   try { db.run('CREATE INDEX IF NOT EXISTS idx_posts_parent_id ON posts(parent_id)') } catch {}
@@ -170,6 +183,8 @@ function initSchema() {
   try { db.run('CREATE INDEX IF NOT EXISTS idx_team_members_user_id ON team_members(user_id)') } catch {}
   try { db.run('CREATE INDEX IF NOT EXISTS idx_notifications_to_user ON notifications(to_user)') } catch {}
   try { db.run('CREATE INDEX IF NOT EXISTS idx_announcements_user_id ON announcements(user_id)') } catch {}
+  try { db.run('CREATE INDEX IF NOT EXISTS idx_post_likes_post_id ON post_likes(post_id)') } catch {}
+  try { db.run('CREATE INDEX IF NOT EXISTS idx_post_likes_user_id ON post_likes(user_id)') } catch {}
 
   saveDb()
 }
@@ -178,13 +193,17 @@ function initSchema() {
 function ensureAdminUser() {
   const existing = getOne('SELECT id FROM users WHERE username = ?', ['Admin'])
   if (!existing) {
-    const passwordHash = bcrypt.hashSync('HsbXsy2626', 10)
+    const adminPassword = process.env.ADMIN_PASSWORD || 'ChangeMeNow123!'
+    if (adminPassword === 'ChangeMeNow123!') {
+      console.warn('⚠️  警告: 使用默认管理员密码！请在 server/.env 中设置 ADMIN_PASSWORD')
+    }
+    const passwordHash = bcrypt.hashSync(adminPassword, 10)
     const uid = 'u-20260101-0000'
     insert(
       'INSERT INTO users (username, email, password_hash, is_admin, uid, userrank) VALUES (?, ?, ?, ?, ?, ?)',
       ['Admin', 'admin@omaekumiko.com', passwordHash, 1, uid, 3]
     )
-    console.log('👑 Admin 用户已创建')
+    console.log('👑 Admin 用户已创建 (密码从环境变量读取)')
   } else if (!existing.uid) {
     // 兼容旧数据：为 Admin 补充 uid 和 userrank（如果迁移脚本未覆盖）
     const uid = 'u-20260101-0000'
