@@ -1,6 +1,12 @@
 # Overwatch Gaming
 
-这是一个以守望先锋为主题的社区论坛，也是我第一次将 Vue 3 用于完整的全栈项目。整个项目的前后端代码都托管在 [GitHub](https://github.com/FishMoies/Overwatch-Gaming) 上，使用 MIT 许可证开源。public 目录下包含的守望先锋相关美术资源（英雄职责图标）来自第三方的版权财产，仅供演示用途，不适用 MIT 许可证，商业使用或再分发需要用自有素材替换。
+![License](https://img.shields.io/badge/License-MIT-blue?logo=github)
+![Vue](https://img.shields.io/badge/Vue-3.x-green?logo=vue.js)
+![Supabase](https://img.shields.io/badge/Backend-Supabase-blueviolet?logo=supabase)
+![Status](https://img.shields.io/badge/Status-Development-orange)
+![Made with Love](https://img.shields.io/badge/Made%20with-%E2%9D%A4%20Love%20and%20Vue.js-white)
+
+这是一个以守望先锋为主题的社区论坛，可用于学习用途分发。此项目使用 MIT 许可证开源。public 目录下包含的守望先锋相关美术资源（英雄职责图标）来自第三方的版权财产，仅供演示用途，不适用 MIT 许可证，商业使用或再分发需要用自有素材替换。
 
 ## 技术栈
 
@@ -192,7 +198,7 @@ Overwatch-Gaming/
 
 ## Git 分支
 
-项目在开发过程中第一次尝试使用 Git 进行团队协作，共维护了六个本地分支和四个远程分支。main 分支是稳定版本，dev 分支汇合了多位开发者的前端功能，fmy-dev 是我本人的开发分支（包含数据库访问面板和 B站视频嵌入功能），lyd-dev 和 lyd-dev-test 是另一位开发者的分支，test 分支存放实验性设计（例如将全部逻辑迁移到 Supabase 的尝试），该分支可能存在未完成的 Bug。main 和 dev 分支在编译环境中不会出现阻塞性错误。
+共维护了六个本地分支和四个远程分支。main 分支是稳定版本，dev 分支汇合了正在开发的功能。 test 分支存放实验性设计（例如将全部逻辑迁移到 Supabase 的尝试），该分支可能存在未完成的 Bug。main 和 dev 分支在编译环境中不会出现阻塞性错误。
 
 ## 安装与运行
 
