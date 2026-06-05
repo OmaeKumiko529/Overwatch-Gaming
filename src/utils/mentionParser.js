@@ -17,9 +17,9 @@ export function extractMentionsFromHTML(htmlContent) {
     
     if (userId && username) {
       // 避免重复
-      if (!mentions.some(m => m.id === userId)) {
+      if (!mentions.some(m => String(m.id) === String(userId))) {
         mentions.push({
-          id: parseInt(userId),
+          id: String(userId), // 统一使用字符串
           username: username
         })
       }
@@ -34,15 +34,18 @@ export function extractMentionsFromText(textContent) {
   if (!textContent) return []
   
   const mentions = []
-  const mentionRegex = /@([a-zA-Z0-9_]+)/g
+  const mentionRegex = /@([a-zA-Z0-9_\u4e00-\u9fa5]+)/g
   let match
   
   while ((match = mentionRegex.exec(textContent)) !== null) {
     const username = match[1]
-    mentions.push({
-      username: username,
-      id: null // 需要后续通过用户名查找ID
-    })
+    // 不要重复
+    if (!mentions.some(m => m.username === username)) {
+      mentions.push({
+        username: username,
+        id: null // 需要后续通过用户名查找ID
+      })
+    }
   }
   
   return mentions

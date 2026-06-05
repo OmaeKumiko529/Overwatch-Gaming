@@ -386,12 +386,12 @@ router.post('/:pid/like', authMiddleware, (req, res) => {
   }
 })
 
-// 添加评论
+// 添加评论（支持提及）
 router.post('/:pid/comment', authMiddleware, (req, res) => {
   try {
     const pid = req.params.pid
     const userId = req.user.id
-    const { content } = req.body
+    const { content, mentions } = req.body
 
     const parentPost = getOne('SELECT * FROM posts WHERE pid = ?', [pid])
     if (!parentPost) return res.json({ success: false, message: '帖子不存在' })
@@ -418,8 +418,8 @@ router.post('/:pid/comment', authMiddleware, (req, res) => {
     const context = `${parentPost.context}/${userUid}`
 
     const result = insert(
-      'INSERT INTO posts (user_id, username, title, content, category, context, parent_id, pid, postrank) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [userId, username, title, content, 'comment', context, parentPost.id, commentPid, '69']
+      'INSERT INTO posts (user_id, username, title, content, category, context, parent_id, pid, postrank, mentions) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [userId, username, title, content, 'comment', context, parentPost.id, commentPid, '69', JSON.stringify(mentions || [])]
     )
 
     const childPost = {
@@ -436,6 +436,25 @@ router.post('/:pid/comment', authMiddleware, (req, res) => {
       postrank: '69',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
+    }
+
+    // 通知被@的用户（校验用户存在）
+    if (mentions && mentions.length > 0) {
+      const seenUserIds = new Set()
+      for (const m of mentions) {
+        const targetUserId = String(m.userId)
+        if (targetUserId === String(userId)) continue
+        if (seenUserIds.has(targetUserId)) continue
+        seenUserIds.add(targetUserId)
+        
+        const mentionedUser = getOne('SELECT id FROM users WHERE id = ?', [Number(targetUserId)])
+        if (mentionedUser) {
+          insert(
+            'INSERT INTO notifications (type, author, root, to_user) VALUES (?, ?, ?, ?)',
+            ['mention', String(userId), commentPid, targetUserId]
+          )
+        }
+      }
     }
 
     // 通知帖主

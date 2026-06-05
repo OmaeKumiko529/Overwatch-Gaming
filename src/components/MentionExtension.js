@@ -105,19 +105,13 @@ export const createMentionSuggestion = (onSearch, onSelect) => {
             avatar.className = 'mention-suggestion-avatar'
             avatar.alt = item.username
             
-            // 创建用户名
+            // 创建用户名（不再显示ID）
             const username = document.createElement('span')
             username.className = 'mention-suggestion-username'
             username.textContent = item.username
             
-            // 创建用户ID显示
-            const userId = document.createElement('span')
-            userId.className = 'mention-suggestion-userid'
-            userId.textContent = `#${item.id}`
-            
             li.appendChild(avatar)
             li.appendChild(username)
-            li.appendChild(userId)
             
             li.addEventListener('click', () => {
               onSelect(item)
@@ -156,13 +150,8 @@ export const createMentionSuggestion = (onSearch, onSelect) => {
             username.className = 'mention-suggestion-username'
             username.textContent = item.username
             
-            const userId = document.createElement('span')
-            userId.className = 'mention-suggestion-userid'
-            userId.textContent = `#${item.id}`
-            
             li.appendChild(avatar)
             li.appendChild(username)
-            li.appendChild(userId)
             
             li.addEventListener('click', () => {
               onSelect(item)
@@ -300,13 +289,8 @@ export const createSimpleMentionSuggestion = (onSearch) => {
             username.className = 'mention-suggestion-username'
             username.textContent = item.username
             
-            const userId = document.createElement('span')
-            userId.className = 'mention-suggestion-userid'
-            userId.textContent = `#${item.id}`
-            
             li.appendChild(avatar)
             li.appendChild(username)
-            li.appendChild(userId)
             
             li.addEventListener('click', () => {
               props.command({ id: item.id, label: item.username, username: item.username })
@@ -383,13 +367,8 @@ export const createSimpleMentionSuggestion = (onSearch) => {
             username.className = 'mention-suggestion-username'
             username.textContent = item.username
             
-            const userId = document.createElement('span')
-            userId.className = 'mention-suggestion-userid'
-            userId.textContent = `#${item.id}`
-            
             li.appendChild(avatar)
             li.appendChild(username)
-            li.appendChild(userId)
             
             li.addEventListener('click', () => {
               props.command({ id: item.id, label: item.username, username: item.username })

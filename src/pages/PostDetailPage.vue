@@ -294,6 +294,7 @@ import { getPostRankInfo, canViewPostContent, canCommentOnPost } from '../consta
 import postService from '../services/post.js';
 import { authApi } from '../services/api.js';
 import { decodeParam, encodePid, buildRouterLinkUser, buildRouterLinkPost } from '../utils/encode.js';
+import { processContent } from '../utils/contentFilter.js';
 
 const route = useRoute();
 const router = useRouter();
@@ -468,10 +469,8 @@ const loadPostDetail = async () => {
 
 const formatPostContent = (content) => {
   if (!content) return '';
-  if (content.includes('<') && content.includes('>')) {
-    return content;
-  }
-  return content.replace(/\n/g, '<br>');
+  // 使用内容过滤器处理（B站视频嵌入 + XSS 消毒）
+  return processContent(content);
 };
 
 const getPlainTextPreview = (htmlContent, maxLength = 150) => {
@@ -489,10 +488,8 @@ const getPlainTextPreview = (htmlContent, maxLength = 150) => {
 
 const formatCommentContent = (content) => {
   if (!content) return '';
-  if (content.includes('<') && content.includes('>')) {
-    return content;
-  }
-  return content.replace(/\n/g, '<br>');
+  // 使用内容过滤器处理（B站视频嵌入 + XSS 消毒）
+  return processContent(content);
 };
 
 const formatDate = (dateString) => {
@@ -1024,6 +1021,27 @@ onMounted(() => {
   margin: 0 0 1em 0;
 }
 
+/* B站视频嵌入响应式容器 */
+.post-text :deep(.bilibili-video-wrapper) {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%; /* 16:9 比例 */
+  height: 0;
+  overflow: hidden;
+  margin: 16px 0;
+  border-radius: 12px;
+  background: #000;
+}
+
+.post-text :deep(.bilibili-video-wrapper iframe) {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
 .post-stats {
   display: flex;
   gap: 30px;
@@ -1461,6 +1479,26 @@ onMounted(() => {
   font-size: 0.95rem;
   line-height: 1.6;
   color: #333;
+}
+
+.comment-content :deep(.bilibili-video-wrapper) {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%;
+  height: 0;
+  overflow: hidden;
+  margin: 12px 0;
+  border-radius: 8px;
+  background: #000;
+}
+
+.comment-content :deep(.bilibili-video-wrapper iframe) {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
 }
 
 .comment-pid {
