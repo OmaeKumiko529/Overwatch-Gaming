@@ -120,9 +120,9 @@ function handleImageError(e) {
 /* 右侧 */
 .info-section {
   width: 55%;
-  height: calc(100vh - 60px);
-  padding: 40px;
-  margin-right: 80px;
+  height: calc(100vh - 5.556vh);
+  padding: 2.083vw;
+  margin-right: 4.167vw;
   box-sizing: border-box;
   overflow-y: auto;
 }
@@ -131,26 +131,26 @@ function handleImageError(e) {
 
 /* 标题 */
 .english-title {
-  font-size: 96px;
+  font-size: clamp(2.5rem, 5vw, 6rem);
   font-family: "SmileySans-Oblique", sans-serif;
   font-weight: 700;
-  margin-top: 100px;
+  margin-top: 5.208vw;
   justify-content: flex-end;
   display: flex;
   align-items: center; /* 关键：垂直居中 */
-  gap: 10px; /* 图片和文字间距 */
+  gap: 0.521vw; /* 图片和文字间距 */
 }
 
 .cn-title {
-  font-size: 24px;
-  margin-top: 10px;
+  font-size: clamp(1rem, 1.25vw, 1.5rem);
+  margin-top: 0.926vh;
   color: #000000;
   text-align: right;
 }
 
 .desc-text {
   margin-top: 0px;
-  margin-bottom: 30px;
+  margin-bottom: 2.778vh;
   line-height: 1.6;
   color: #818181;
   text-align: right;
@@ -159,8 +159,8 @@ function handleImageError(e) {
 /* ✅ 核心：网格布局 */
 .hero-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-  gap: 20px 50px;
+  grid-template-columns: repeat(auto-fill, minmax(6.25vw, 1fr));
+  gap: 1.042vw 2.604vw;
 }
 
 /* 单个英雄 */
@@ -178,9 +178,9 @@ function handleImageError(e) {
 
 /* 头像 */
 .hero-item img {
-  width: 120px;
+  width: 6.25vw;
   height: auto;
-  border-radius: 14px;
+  border-radius: 0.729vw;
   object-fit: cover;
   border: 2px solid transparent;
   transition: all 0.2s ease;
@@ -192,8 +192,8 @@ function handleImageError(e) {
 
 /* 名字 现在不用 图片自带*/
 .hero-name {
-  margin-top: 8px;
-  font-size: 12px;
+  margin-top: 0.741vh;
+  font-size: clamp(0.625rem, 0.625vw, 0.75rem);
   color: #ddd;
 }
 </style>

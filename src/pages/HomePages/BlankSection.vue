@@ -2,7 +2,7 @@
   <div class="section blank-page">
     <div class="content">
       <h1 class="main-title">{{ title }}</h1>
-      <p class="subtitle" style="padding-left: 10px;">
+      <p class="subtitle" style="padding-left: 0.521vw;">
         {{ description }}
       </p>
     </div>
@@ -27,7 +27,7 @@ defineProps({
   height: 100vh;
   overflow: hidden;
   position: relative;
-  padding-top: 60px;
+  padding-top: 5.556vh;
   box-sizing: border-box;
 }
 
@@ -41,26 +41,26 @@ defineProps({
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
-  padding-left: 180px;
+  padding-left: 9.375vw;
   box-sizing: border-box;
   color: white;
   z-index: 1001;
   position: relative;
-  padding-top: 80px;
+  padding-top: 7.407vh;
 }
 
 .main-title {
   font-family: "Fugaz One", sans-serif;
-  font-size: 4rem;
+  font-size: clamp(2rem, 3.33vw, 4rem);
   margin: 0;
   text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
 }
 
 .subtitle {
   font-family: 'SmileySans Oblique', sans-serif;
-  font-size: 1.2rem;
+  font-size: clamp(0.875rem, 1vw, 1.2rem);
   color: rgba(255, 255, 255, 0.8);
-  margin-top: 10px;
+  margin-top: 0.926vh;
   text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
 }
 </style>

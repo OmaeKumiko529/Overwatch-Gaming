@@ -191,23 +191,43 @@ function initSchema() {
 
 // 确保 Admin 管理员用户存在
 function ensureAdminUser() {
-  const existing = getOne('SELECT id FROM users WHERE username = ?', ['Admin'])
+  const adminPassword = process.env.ADMIN_PASSWORD || '88888888'
+  const uid = 'u-20260101-0000'
+
+  const existing = getOne('SELECT id, password_hash, uid, userrank FROM users WHERE username = ?', ['Admin'])
+
   if (!existing) {
-    const adminPassword = process.env.ADMIN_PASSWORD || 'ChangeMeNow123!'
-    if (adminPassword === 'ChangeMeNow123!') {
-      console.warn('⚠️  警告: 使用默认管理员密码！请在 server/.env 中设置 ADMIN_PASSWORD')
+    if (adminPassword === '88888888') {
+      console.warn('⚠️  警告: 使用默认管理员密码 (88888888)。请在 server/.env 中更改 ADMIN_PASSWORD')
     }
     const passwordHash = bcrypt.hashSync(adminPassword, 10)
-    const uid = 'u-20260101-0000'
     insert(
       'INSERT INTO users (username, email, password_hash, is_admin, uid, userrank) VALUES (?, ?, ?, ?, ?, ?)',
       ['Admin', 'admin@omaekumiko.com', passwordHash, 1, uid, 3]
     )
     console.log('👑 Admin 用户已创建 (密码从环境变量读取)')
-  } else if (!existing.uid) {
-    // 兼容旧数据：为 Admin 补充 uid 和 userrank（如果迁移脚本未覆盖）
-    const uid = 'u-20260101-0000'
-    run("UPDATE users SET uid = ?, userrank = ? WHERE username = 'Admin'", [uid, 3])
+  } else {
+    // Admin 已存在 → 只补充缺失字段，绝不覆盖密码（尊重前端改的密码）
+    const needsUpdate = []
+    const params = []
+
+    // 补充 uid（只有旧数据迁移时需要）
+    if (!existing.uid) {
+      needsUpdate.push('uid = ?')
+      params.push(uid)
+    }
+
+    // 补充 userrank（如果为 0 则设为 3）
+    if (!existing.userrank || existing.userrank === 0) {
+      needsUpdate.push('userrank = ?')
+      params.push(3)
+    }
+
+    if (needsUpdate.length > 0) {
+      params.push('Admin')
+      run(`UPDATE users SET ${needsUpdate.join(', ')} WHERE username = ?`, params)
+      console.log('🔄 Admin 账户已同步 (uid/userrank 已补充)')
+    }
   }
 }
 

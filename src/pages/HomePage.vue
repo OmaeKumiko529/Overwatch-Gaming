@@ -22,7 +22,8 @@ let rightChar = null
 function handleMouseMove(e) {
   const x = e.clientX
   const w = window.innerWidth
-  const offset = (x / w - 0.5) * 12
+  const baseMultiplier = w / 160  // 1920px->12px, 缩放时自动适应
+  const offset = (x / w - 0.5) * baseMultiplier
 
   if (leftChar && rightChar) {
     leftChar.style.transform =
