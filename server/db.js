@@ -175,6 +175,22 @@ function initSchema() {
     )
   `)
 
+  // Overwatch 英雄数据表（从 OverFast API 同步，管理员手动触发）
+  db.run(`
+    CREATE TABLE IF NOT EXISTS ow_heroes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      hero_key TEXT NOT NULL UNIQUE,
+      name TEXT NOT NULL,
+      portrait TEXT,
+      role TEXT NOT NULL,
+      subrole TEXT,
+      data_json TEXT NOT NULL,
+      last_synced TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+    )
+  `)
+  try { db.run('CREATE INDEX IF NOT EXISTS idx_ow_heroes_role ON ow_heroes(role)') } catch {}
+  try { db.run('CREATE UNIQUE INDEX IF NOT EXISTS idx_ow_heroes_key ON ow_heroes(hero_key)') } catch {}
+
   // 创建索引
   try { db.run('CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts(user_id)') } catch {}
   try { db.run('CREATE INDEX IF NOT EXISTS idx_posts_parent_id ON posts(parent_id)') } catch {}

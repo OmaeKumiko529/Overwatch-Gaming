@@ -83,6 +83,11 @@ const routes = [
     component: () => import('../pages/AnnouncementPage.vue')
   },
   {
+    path: '/heroes',
+    name: 'Heroes',
+    component: () => import('../pages/HeroesPage.vue')
+  },
+  {
     path: '/adminpower',
     name: 'AdminPanel',
     component: () => import('../pages/AdminPanel.vue'),

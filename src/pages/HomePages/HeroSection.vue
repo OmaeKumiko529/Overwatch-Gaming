@@ -11,7 +11,7 @@
       <h1 class="main-title">E426 Overwatch</h1>
 
       <p class="subtitle" style="padding-left: 0.521vw;">
-        基于Vue.js开发的轻量级守望先锋®团队管理平台<br/><br/>
+        基于Vue.js开发的轻量级守望先锋®论坛<br/><br/>
       </p>
 
       <br>

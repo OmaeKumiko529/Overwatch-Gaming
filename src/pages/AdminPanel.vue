@@ -89,6 +89,14 @@
               class="search-input"
               @input="debouncedSearch"
             />
+            <button
+              v-if="currentTable === 'ow_heroes'"
+              class="btn btn-sync"
+              @click="syncHeroesFromAPI"
+              :disabled="syncing"
+            >
+              {{ syncing ? '同步中...' : '⬇ 从 OverFast 同步' }}
+            </button>
             <button class="btn btn-add" @click="openAddModal">+ 新增行</button>
           </div>
         </div>
@@ -184,7 +192,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { adminApi } from '../services/api.js'
+import { adminApi, heroesApi } from '../services/api.js'
 
 const router = useRouter()
 
@@ -197,6 +205,7 @@ const tableLabels = {
   notifications: '通知',
   announcements: '公告',
   post_likes: '点赞记录',
+  ow_heroes: 'OW英雄数据',
   adminUsers: '管理员'
 }
 
@@ -225,6 +234,10 @@ const showModal = ref(false)
 const editingRow = ref(null)
 const formData = ref({})
 const saving = ref(false)
+
+// OW 英雄同步
+const syncing = ref(false)
+const syncMessage = ref('')
 
 // SQL 控制台
 const sqlQuery = ref('')
@@ -508,6 +521,32 @@ async function preloadAllData() {
     preloadProgress.value = '⚠️ 预加载部分失败'
   } finally {
     preloading.value = false
+  }
+}
+
+async function syncHeroesFromAPI() {
+  if (!confirm('将从 OverFast API 拉取全部英雄数据并写入数据库。继续吗？')) return
+  syncing.value = true
+  syncMessage.value = ''
+  try {
+    const res = await heroesApi.syncHeroes()
+    if (res.success) {
+      syncMessage.value = res.message
+      alert(`✅ ${res.message}`)
+      // 刷新数据
+      dataCache.value = {}
+      await loadTables()
+      await loadStats()
+      if (currentTable.value === 'ow_heroes') {
+        await loadTableData()
+      }
+    } else {
+      alert('同步失败: ' + (res.message || '未知错误'))
+    }
+  } catch (e) {
+    alert('同步失败: ' + e.message)
+  } finally {
+    syncing.value = false
   }
 }
 
@@ -883,6 +922,15 @@ onMounted(() => {
 
 .btn-close:hover {
   background: #7a3a3a;
+}
+
+.btn-sync {
+  background: #8a6a2a;
+  color: #ffd700;
+}
+
+.btn-sync:hover:not(:disabled) {
+  background: #aa8a3a;
 }
 
 .btn-add {

@@ -13,7 +13,8 @@ router.use(async (req, res, next) => {
 // 允许操作的表名白名单
 const ALLOWED_TABLES = [
   'users', 'posts', 'teams', 'team_members',
-  'notifications', 'announcements', 'post_likes'
+  'notifications', 'announcements', 'post_likes',
+  'ow_heroes'
 ]
 
 // 获取表的主键列名（假设第一列是主键）
