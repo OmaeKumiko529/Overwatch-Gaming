@@ -66,6 +66,12 @@ export const postService = {
     return { success: false, message: res.message || '点赞失败' }
   },
 
+  async unlikePost(pid) {
+    const res = await postsApi.unlikePost(pid)
+    if (res.success) return { success: true, likes: res.likes }
+    return { success: false, message: res.message || '取消点赞失败' }
+  },
+
   async addComment(pid, commentText, userId, username) {
     if (!userId) return { success: false, message: '请先登录' }
 

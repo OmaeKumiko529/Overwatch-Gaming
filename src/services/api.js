@@ -203,6 +203,13 @@ export const postsApi = {
     })
   },
 
+  unlikePost(pid) {
+    return request(`/posts/${encodeURIComponent(pid)}/like`, {
+      method: 'DELETE',
+      auth: true
+    })
+  },
+
   addComment(pid, content) {
     return request(`/posts/${encodeURIComponent(pid)}/comment`, {
       method: 'POST',

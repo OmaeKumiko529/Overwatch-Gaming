@@ -93,6 +93,7 @@ router.get('/:pid', optionalAuth, (req, res) => {
   try {
     const pid = req.params.pid
     const userrank = req.user ? Number(req.user.userrank) : 0
+    const userId = req.user ? req.user.id : null
 
     const post = getOne('SELECT * FROM posts WHERE pid = ?', [pid])
     if (!post) return res.json({ success: false, message: '帖子不存在' })
@@ -103,12 +104,30 @@ router.get('/:pid', optionalAuth, (req, res) => {
       mappedPost.content = '[该帖子已被标记为黑帖，您没有权限查看内容]'
     }
 
+    // 检查当前用户是否已点赞主帖
+    if (userId) {
+      const userLiked = getOne('SELECT id FROM post_likes WHERE post_id = ? AND user_id = ?', [post.id, userId])
+      mappedPost.isLikedByUser = !!userLiked
+    } else {
+      mappedPost.isLikedByUser = false
+    }
+
     // 获取子帖 - 使用 context LIKE 匹配
     const parentContext = post.context
     let childPosts = []
     if (parentContext) {
       childPosts = getAll("SELECT * FROM posts WHERE context LIKE ? AND id != ? ORDER BY created_at ASC", [`${parentContext}/%`, post.id])
         .map(mapPost)
+    }
+
+    // 检查当前用户是否已赞每条子帖
+    if (userId) {
+      childPosts = childPosts.map(c => {
+        const liked = getOne('SELECT id FROM post_likes WHERE post_id = ? AND user_id = ?', [c.id, userId])
+        return { ...c, isLikedByUser: !!liked }
+      })
+    } else {
+      childPosts = childPosts.map(c => ({ ...c, isLikedByUser: false }))
     }
 
     res.json({
@@ -342,6 +361,36 @@ router.delete('/:pid', authMiddleware, (req, res) => {
   } catch (error) {
     console.error('删除帖子失败:', error)
     res.status(500).json({ success: false, message: '删除失败' })
+  }
+})
+
+// 取消点赞
+router.delete('/:pid/like', authMiddleware, (req, res) => {
+  try {
+    const pid = req.params.pid
+    const userId = req.user.id
+
+    const post = getOne('SELECT * FROM posts WHERE pid = ?', [pid])
+    if (!post) return res.json({ success: false, message: '帖子不存在' })
+
+    const existingLike = getOne('SELECT id FROM post_likes WHERE post_id = ? AND user_id = ?', [post.id, userId])
+    if (!existingLike) return res.json({ success: false, message: '您还没有点赞' })
+
+    try {
+      run('BEGIN TRANSACTION')
+      run('DELETE FROM post_likes WHERE id = ?', [existingLike.id])
+      run("UPDATE posts SET likes = MAX(likes - 1, 0), updated_at = datetime('now', 'localtime') WHERE id = ?", [post.id])
+      run('COMMIT')
+    } catch {
+      run('ROLLBACK')
+      return res.json({ success: false, message: '取消点赞失败' })
+    }
+
+    const updated = getOne('SELECT likes FROM posts WHERE pid = ?', [pid])
+    res.json({ success: true, likes: updated.likes })
+  } catch (error) {
+    console.error('取消点赞失败:', error)
+    res.status(500).json({ success: false, message: '取消点赞失败' })
   }
 })
 

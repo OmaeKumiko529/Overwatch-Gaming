@@ -9,14 +9,25 @@ const dbPath = path.join(__dirname, 'data.db')
 
 let db = null
 let SQL = null
+let saveTimer = null
 
-// 保存数据库到文件
+// 保存数据库到文件（失败不抛异常）
 function saveDb() {
-  if (db) {
+  if (!db) return
+  try {
     const data = db.export()
     const buffer = Buffer.from(data)
     fs.writeFileSync(dbPath, buffer)
+  } catch (e) {
+    // 磁盘写入失败不抛异常——数据库内存状态已更新，下次写入会重试
+    console.error('saveDb 写入磁盘失败:', e.message)
   }
+}
+
+// 防抖异步写入（避免高并发时频繁同步 I/O）
+function scheduleSave() {
+  clearTimeout(saveTimer)
+  saveTimer = setTimeout(saveDb, 300)
 }
 
 // 初始化数据库
@@ -275,7 +286,7 @@ export function getAll(sql, params = []) {
 // 工具函数：执行写操作
 export function run(sql, params = []) {
   db.run(sql, params)
-  saveDb()
+  scheduleSave()
   return { changes: db.getRowsModified() }
 }
 
@@ -283,7 +294,7 @@ export function run(sql, params = []) {
 export function insert(sql, params = []) {
   db.run(sql, params)
   const result = db.exec("SELECT last_insert_rowid() as id")
-  saveDb()
+  scheduleSave()
   const lastId = result.length > 0 ? result[0].values[0][0] : null
   return { lastInsertRowid: lastId, changes: db.getRowsModified() }
 }
@@ -294,7 +305,7 @@ export function transaction(fn) {
     db.run('BEGIN TRANSACTION')
     fn()
     db.run('COMMIT')
-    saveDb()
+    scheduleSave()
     return true
   } catch (error) {
     db.run('ROLLBACK')
