@@ -6,6 +6,7 @@ import { authApi } from '../services/api.js';
 import postService from '../services/post.js';
 import { useTeamStore } from '../stores/team.js';
 
+import pop from '../utils/pop.js';
 import ProfileHeader from './UserPanel/ProfileHeader.vue';
 import OverviewTab from './UserPanel/OverviewTab.vue';
 import TeamTab from './UserPanel/TeamTab.vue';
@@ -78,12 +79,10 @@ async function loadUserInfo() {
       if (res.success && res.user) {
         userInfo.value = res.user
       } else {
-        message.value = '用户不存在'
-        isError.value = true
+        pop.toast('用户不存在', 'error')
       }
     } catch {
-      message.value = '加载用户信息失败'
-      isError.value = true
+      pop.toast('加载用户信息失败', 'error')
     }
   } else {
     if (auth.currentUser) {
@@ -136,16 +135,13 @@ async function handleChangePassword(data) {
   try {
     const res = await authApi.changePassword(data.currentPassword, data.newPassword)
     if (res.success) {
-      message.value = '密码修改成功'
-      isError.value = false
+      pop.toast('密码修改成功', 'success')
       showChangePassword.value = false
     } else {
-      message.value = res.message || '修改失败'
-      isError.value = true
+      pop.toast(res.message || '修改失败', 'error')
     }
   } catch {
-    message.value = '修改失败，请检查网络'
-    isError.value = true
+    pop.toast('修改失败，请检查网络', 'error')
   }
 }
 
@@ -154,8 +150,7 @@ async function handleDeleteAccount(password) {
   try {
     const res = await authApi.changePassword(password, '__verify__')
     if (!res.success) {
-      message.value = '密码错误'
-      isError.value = true
+      pop.toast('密码错误', 'error')
       return
     }
     const delRes = await authApi.deleteUser()
@@ -164,8 +159,7 @@ async function handleDeleteAccount(password) {
       router.push({ name: 'Home' })
     }
   } catch {
-    message.value = '删除失败'
-    isError.value = true
+    pop.toast('删除失败', 'error')
   }
 }
 
@@ -175,16 +169,13 @@ async function handleCreateTeam(name) {
     const result = await teamStore.createTeam(name, auth.currentUser.id)
     if (result.success) {
       await loadTeamInfo()
-      message.value = '战队创建成功'
-      isError.value = false
+      pop.toast('战队创建成功', 'success')
       showCreateTeam.value = false
     } else {
-      message.value = result.message || '创建失败'
-      isError.value = true
+      pop.toast(result.message || '创建失败', 'error')
     }
   } catch {
-    message.value = '创建失败，请检查网络'
-    isError.value = true
+    pop.toast('创建失败，请检查网络', 'error')
   }
 }
 
@@ -194,16 +185,13 @@ async function handleJoinTeam(name) {
     const result = await teamStore.joinTeam(name, auth.currentUser.id)
     if (result.success) {
       await loadTeamInfo()
-      message.value = '成功加入战队'
-      isError.value = false
+      pop.toast('成功加入战队', 'success')
       showJoinTeam.value = false
     } else {
-      message.value = result.message || '加入失败'
-      isError.value = true
+      pop.toast(result.message || '加入失败', 'error')
     }
   } catch {
-    message.value = '加入失败，请检查网络'
-    isError.value = true
+    pop.toast('加入失败，请检查网络', 'error')
   }
 }
 
@@ -213,16 +201,13 @@ async function handleLeaveTeam() {
     const result = await teamStore.leaveTeam(auth.currentUser.id)
     if (result.success) {
       await loadTeamInfo()
-      message.value = result.teamDeleted ? '已退出战队，战队已解散' : '已成功退出战队'
-      isError.value = false
+      pop.toast(result.teamDeleted ? '已退出战队，战队已解散' : '已成功退出战队', 'success')
       showLeaveConfirm.value = false
     } else {
-      message.value = result.message || '退出失败'
-      isError.value = true
+      pop.toast(result.message || '退出失败', 'error')
     }
   } catch {
-    message.value = '退出失败，请检查网络'
-    isError.value = true
+    pop.toast('退出失败，请检查网络', 'error')
   }
 }
 
@@ -233,16 +218,13 @@ async function handleChangeRole(roles) {
     if (result.success) {
       loadUserInfo()
       loadTeamInfo()
-      message.value = '职责更新成功'
-      isError.value = false
+      pop.toast('职责更新成功', 'success')
       showChangeRole.value = false
     } else {
-      message.value = result.message || '更新失败'
-      isError.value = true
+      pop.toast(result.message || '更新失败', 'error')
     }
   } catch {
-    message.value = '更新失败'
-    isError.value = true
+    pop.toast('更新失败', 'error')
   }
 }
 
@@ -251,15 +233,14 @@ function viewPost(id) {
 }
 
 async function deletePost(pid) {
-  if (!confirm('确定删除这篇帖子吗？')) return
+  const ok = await pop.confirm('确定删除这篇帖子吗？', '', { icon: 'warning' })
+  if (!ok) return
   const result = await postService.deletePost(pid, auth.currentUser?.id)
   if (result.success) {
     userPosts.value = userPosts.value.filter(p => p.pid !== pid)
-    message.value = '帖子删除成功'
-    isError.value = false
+    pop.toast('帖子删除成功', 'success')
   } else {
-    message.value = result.message || '删除失败'
-    isError.value = true
+    pop.toast(result.message || '删除失败', 'error')
   }
 }
 
@@ -348,11 +329,6 @@ watch(userInfo, (newVal) => {
       />
     </div>
 
-    <!-- Global Message -->
-    <div v-if="message" class="global-msg" :class="{ error: isError }">
-      {{ message }}
-    </div>
-
     <!-- Modals -->
     <ModalChangePassword v-if="showChangePassword" @close="showChangePassword = false" @submit="handleChangePassword" />
     <ModalDeleteAccount v-if="showDeleteConfirm" @close="showDeleteConfirm = false" @confirm="handleDeleteAccount" />
@@ -367,13 +343,13 @@ watch(userInfo, (newVal) => {
 .user-profile {
   min-height: 100vh;
   padding-top: 60px;
-  background: #f0f2f5;
+  background: #0f0f1a;
   font-family: 'MapleMono CN Regular', monospace;
 }
 
 .tab-bar {
-  background: #fff;
-  border-bottom: 1px solid #e9ecef;
+  background: #1a1a2e;
+  border-bottom: 1px solid #2a2a4a;
   position: sticky;
   top: 60px;
   z-index: 100;
@@ -397,7 +373,7 @@ watch(userInfo, (newVal) => {
   font-family: 'MapleMono CN Regular', monospace;
   font-size: 1rem;
   font-weight: 600;
-  color: #6c757d;
+  color: #888;
   cursor: pointer;
   transition: all 0.3s;
   border-bottom: 3px solid transparent;
@@ -405,13 +381,13 @@ watch(userInfo, (newVal) => {
 }
 
 .tab-btn:hover {
-  color: #333;
-  background: #f8f9fa;
+  color: #4facfe;
+  background: #252545;
 }
 
 .tab-btn.active {
-  color: #667eea;
-  border-bottom-color: #667eea;
+  color: #4facfe;
+  border-bottom-color: #4facfe;
 }
 
 .tab-icon {
@@ -422,33 +398,6 @@ watch(userInfo, (newVal) => {
   max-width: 1000px;
   margin: 0 auto;
   padding: 0 20px 40px;
-}
-
-.global-msg {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  padding: 12px 24px;
-  border-radius: 10px;
-  font-weight: 600;
-  z-index: 2000;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
-  animation: slideIn 0.3s ease;
-}
-
-.global-msg:not(.error) {
-  background: #d4edda;
-  color: #155724;
-}
-
-.global-msg.error {
-  background: #f8d7da;
-  color: #721c24;
-}
-
-@keyframes slideIn {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
 }
 
 @media (max-width: 640px) {

@@ -29,7 +29,6 @@
           />
         </div>
         
-        <!-- 提及用户显示 -->
         <div v-if="mentionedUsers.length > 0" class="mentioned-users">
           <h3 class="mentioned-users-title">提及的用户</h3>
           <div class="mentioned-users-list">
@@ -46,10 +45,6 @@
           </button>
           <button type="button" class="back-button" @click="goBack">取消</button>
         </div>
-        
-        <div v-if="message" class="message" :class="{ 'error': isError, 'success': !isError }">
-          {{ message }}
-        </div>
       </form>
     </div>
   </div>
@@ -59,6 +54,7 @@
 import { ref, reactive, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
+import pop from '../utils/pop.js'
 import RichTextEditor from '../components/RichTextEditor.vue'
 import { extractMentionsFromHTML } from '../utils/mentionParser.js'
 import { authApi } from '../services/api.js'
@@ -72,20 +68,15 @@ const formData = reactive({
   content: ''
 })
 
-const message = ref('')
-const isError = ref(false)
 const isSubmitting = ref(false)
 const mentionedUsers = ref([])
 const allUsers = ref([])
 
-// 检查用户是否已登录
 onMounted(() => {
   if (!auth.isLoggedIn) {
-    message.value = '请先登录后再发帖'
-    isError.value = true
+    pop.toast('请先登录后再发帖', 'error')
     router.push({ name: 'Login' })
   }
-  // 加载用户列表用于提及
   loadUsers()
 })
 
@@ -98,12 +89,10 @@ async function loadUsers() {
   } catch {}
 }
 
-// 监听内容变化，更新提及用户列表
 watch(() => formData.content, (newContent) => {
   updateMentionedUsers(newContent)
 })
 
-// 处理提及事件
 const handleMention = (user) => {
   if (!mentionedUsers.value.some(u => u.id === user.id)) {
     mentionedUsers.value.push({
@@ -111,19 +100,10 @@ const handleMention = (user) => {
       username: user.username,
       avatar: user.avatar || '/Head.png'
     })
-    
-    message.value = `已提及用户 @${user.username}`
-    isError.value = false
-    
-    setTimeout(() => {
-      if (message.value === `已提及用户 @${user.username}`) {
-        message.value = ''
-      }
-    }, 3000)
+    pop.toast(`已提及用户 @${user.username}`, 'info')
   }
 }
 
-// 从内容中更新提及用户列表
 const updateMentionedUsers = (htmlContent) => {
   if (!htmlContent) {
     mentionedUsers.value = []
@@ -146,37 +126,31 @@ const updateMentionedUsers = (htmlContent) => {
 
 const handleCreatePost = async () => {
   if (!formData.title.trim()) {
-    message.value = '请输入帖子标题'
-    isError.value = true
+    pop.toast('请输入帖子标题', 'error')
     return
   }
   
   if (!formData.content.trim()) {
-    message.value = '请输入帖子内容'
-    isError.value = true
+    pop.toast('请输入帖子内容', 'error')
     return
   }
   
   if (formData.title.length > 100) {
-    message.value = '标题不能超过100个字符'
-    isError.value = true
+    pop.toast('标题不能超过100个字符', 'error')
     return
   }
   
   if (formData.content.length > 5000) {
-    message.value = '内容不能超过5000个字符'
-    isError.value = true
+    pop.toast('内容不能超过5000个字符', 'error')
     return
   }
   
   isSubmitting.value = true
-  message.value = ''
   
   try {
     const currentUser = auth.currentUser
     if (!currentUser) {
-      message.value = '请先登录后再发帖'
-      isError.value = true
+      pop.toast('请先登录后再发帖', 'error')
       router.push({ name: 'Login' })
       return
     }
@@ -194,24 +168,20 @@ const handleCreatePost = async () => {
     const result = await postService.createPost(postData, currentUser.id, currentUser.username)
     
     if (result.success) {
-      message.value = '帖子发布成功！正在跳转...'
-      isError.value = false
+      pop.toast('帖子发布成功！正在跳转...', 'success')
       
       formData.title = ''
       formData.content = ''
       mentionedUsers.value = []
       
-      // 跳转到新帖子详情（使用 PID）
       setTimeout(() => {
         router.push('/post/' + encodeURIComponent(result.post.pid))
       }, 500)
     } else {
-      message.value = result.message || '发布失败，请重试'
-      isError.value = true
+      pop.toast(result.message || '发布失败，请重试', 'error')
     }
   } catch (error) {
-    message.value = '发布失败：' + error.message
-    isError.value = true
+    pop.toast('发布失败：' + error.message, 'error')
   } finally {
     isSubmitting.value = false
   }
@@ -226,7 +196,7 @@ const goBack = () => {
 .create-post-page {
   min-height: 100vh;
   padding-top: 80px;
-  background: #f0f2f5;
+  background: #0f0f1a;
   padding-left: 20px;
   padding-right: 20px;
   padding-bottom: 40px;
@@ -234,14 +204,14 @@ const goBack = () => {
 }
 
 .form-container {
-  background: white;
+  background: #1a1a2e;
   border-radius: 16px;
   padding: 36px;
   width: 100%;
   max-width: 680px;
   margin: 0 auto;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-  border: 1px solid #e9ecef;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  border: 1px solid #2a2a4a;
   animation: slideUp 0.4s ease;
 }
 
@@ -259,7 +229,7 @@ const goBack = () => {
 .page-title {
   font-family: 'SmileySans Oblique', sans-serif;
   font-size: 1.8rem;
-  color: #333;
+  color: #4facfe;
   text-align: center;
   margin-bottom: 32px;
   font-weight: bold;
@@ -281,19 +251,20 @@ const goBack = () => {
 .form-group label {
   font-family: 'MapleMono CN Regular', monospace;
   font-size: 1rem;
-  color: #495057;
+  color: #a0aec0;
   font-weight: 600;
 }
 
 .form-input,
 .form-select {
   padding: 12px 16px;
-  border: 2px solid #dee2e6;
+  border: 2px solid #2a2a4a;
   border-radius: 8px;
   font-size: 1rem;
   font-family: 'MapleMono CN Regular', monospace;
   transition: border-color 0.2s;
-  background: white;
+  background: #0a0a18;
+  color: #e0e0e0;
 }
 
 .form-input:focus,
@@ -307,7 +278,7 @@ const goBack = () => {
   right: 12px;
   bottom: -22px;
   font-size: 0.8rem;
-  color: #adb5bd;
+  color: #6c757d;
 }
 
 .rich-text-editor-wrapper {
@@ -315,7 +286,7 @@ const goBack = () => {
 }
 
 .mentioned-users {
-  background: #f8f9fa;
+  background: #252545;
   border-radius: 10px;
   padding: 16px;
   margin-top: 8px;
@@ -324,7 +295,7 @@ const goBack = () => {
 .mentioned-users-title {
   font-size: 0.95rem;
   font-weight: 600;
-  color: #495057;
+  color: #a0aec0;
   margin: 0 0 12px 0;
 }
 
@@ -338,10 +309,11 @@ const goBack = () => {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #e9ecef;
+  background: #1a1a2e;
   padding: 4px 10px;
   border-radius: 20px;
   font-size: 0.85rem;
+  border: 1px solid #2a2a4a;
 }
 
 .mentioned-user-avatar {
@@ -365,7 +337,7 @@ const goBack = () => {
 .submit-button {
   flex: 1;
   padding: 14px;
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background: linear-gradient(135deg, #4facfe 0%, #667eea 100%);
   color: white;
   border: none;
   border-radius: 10px;
@@ -388,40 +360,21 @@ const goBack = () => {
 
 .back-button {
   flex: 1;
-  background-color: #f1f1f1;
-  color: #333;
-  border: 2px solid #ddd;
+  background: transparent;
+  color: #a0aec0;
+  border: 2px solid #2a2a4a;
   padding: 14px;
   border-radius: 10px;
   font-family: 'MapleMono CN Regular', monospace;
   font-size: 1.1rem;
   font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
 }
 
 .back-button:hover {
-  background-color: #e0e0e0;
-}
-
-.message {
-  margin-top: 12px;
-  padding: 12px 16px;
-  border-radius: 8px;
-  text-align: center;
-  font-family: 'MapleMono CN Regular', monospace;
-  font-size: 1rem;
-}
-
-.message.success {
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-}
-
-.message.error {
-  background-color: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
+  background: #252545;
+  border-color: #4facfe;
+  color: #e0e0e0;
 }
 </style>

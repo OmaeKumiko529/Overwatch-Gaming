@@ -642,7 +642,7 @@ onMounted(() => {
 .stat-count {
   font-size: 22px;
   font-weight: bold;
-  color: #ffd700;
+  color: #4facfe;
 }
 
 /* 主体布局 */
@@ -696,7 +696,7 @@ onMounted(() => {
 
 .table-item.active {
   background: #3a3a6a;
-  color: #ffd700;
+  color: #4facfe;
 }
 
 .table-name {
@@ -730,7 +730,7 @@ onMounted(() => {
 
 .sql-input:focus {
   outline: none;
-  border-color: #ffd700;
+  border-color: #4facfe;
 }
 
 .sql-result {
@@ -791,7 +791,7 @@ onMounted(() => {
 
 .search-input:focus {
   outline: none;
-  border-color: #ffd700;
+  border-color: #4facfe;
 }
 
 /* 数据表 */
@@ -837,7 +837,7 @@ onMounted(() => {
 
 .sort-indicator {
   margin-left: 4px;
-  color: #ffd700;
+  color: #4facfe;
 }
 
 .data-table tbody td {
@@ -926,7 +926,7 @@ onMounted(() => {
 
 .btn-sync {
   background: #8a6a2a;
-  color: #ffd700;
+  color: #4facfe;
 }
 
 .btn-sync:hover:not(:disabled) {
@@ -944,7 +944,7 @@ onMounted(() => {
 
 .btn-sql {
   background: #5a4a2a;
-  color: #ffd700;
+  color: #4facfe;
 }
 
 .btn-sql:hover:not(:disabled) {
@@ -1086,7 +1086,7 @@ onMounted(() => {
 
 .form-input:focus {
   outline: none;
-  border-color: #ffd700;
+  border-color: #4facfe;
 }
 
 .form-textarea {
@@ -1104,7 +1104,7 @@ onMounted(() => {
 
 .form-textarea:focus {
   outline: none;
-  border-color: #ffd700;
+  border-color: #4facfe;
 }
 
 .modal-footer {

@@ -18,7 +18,6 @@
         </div>
       </div>
 
-      <!-- 成员网格 -->
       <div class="members-section">
         <h4 class="section-title">战队成员</h4>
         <div class="members-grid">
@@ -63,7 +62,6 @@
         </div>
       </div>
 
-      <!-- 操作按钮 - 仅自己 -->
       <div class="team-actions" v-if="isOwner">
         <button class="action-btn leave-btn" @click="$emit('leave-team')">
           <span class="btn-icon">🚪</span>
@@ -72,7 +70,6 @@
       </div>
     </div>
 
-    <!-- 未加入战队 -->
     <div v-else class="no-team-card">
       <div class="no-team-icon">🏆</div>
       <p class="no-team-text">{{ isOwner ? '您尚未加入任何战队' : '该用户尚未加入任何战队' }}</p>
@@ -140,11 +137,11 @@ function onAvatarError(e) {
 }
 
 .team-card, .no-team-card {
-  background: #fff;
+  background: #1a1a2e;
   border-radius: 14px;
   padding: 28px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  border: 1px solid #e9ecef;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  border: 1px solid #2a2a4a;
 }
 
 .team-header {
@@ -153,7 +150,7 @@ function onAvatarError(e) {
   align-items: flex-start;
   margin-bottom: 24px;
   padding-bottom: 16px;
-  border-bottom: 2px solid #667eea;
+  border-bottom: 2px solid #4facfe;
 }
 
 .team-name-section {
@@ -165,13 +162,13 @@ function onAvatarError(e) {
 .team-name {
   font-size: 1.6rem;
   font-weight: 700;
-  color: #667eea;
+  color: #4facfe;
   margin: 0;
 }
 
 .team-id {
   font-size: 0.85rem;
-  color: #6c757d;
+  color: #a0aec0;
 }
 
 .team-stats {
@@ -187,18 +184,18 @@ function onAvatarError(e) {
   display: block;
   font-size: 1.1rem;
   font-weight: 600;
-  color: #667eea;
+  color: #4facfe;
 }
 
 .team-stat-label {
   font-size: 0.8rem;
-  color: #6c757d;
+  color: #a0aec0;
 }
 
 .section-title {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #495057;
+  color: #e0e0e0;
   margin-bottom: 16px;
 }
 
@@ -209,8 +206,8 @@ function onAvatarError(e) {
 }
 
 .member-card {
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
+  background: #252545;
+  border: 1px solid #2a2a4a;
   border-radius: 12px;
   padding: 18px 14px;
   text-align: center;
@@ -220,8 +217,8 @@ function onAvatarError(e) {
 
 .member-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-  border-color: #667eea;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  border-color: #4facfe;
 }
 
 .member-avatar img {
@@ -230,18 +227,18 @@ function onAvatarError(e) {
   border-radius: 50%;
   object-fit: cover;
   margin-bottom: 10px;
-  background: #e9ecef;
+  background: #353739;
   border: 2px solid transparent;
   transition: border-color 0.3s;
 }
 
 .member-card:hover .member-avatar img {
-  border-color: #667eea;
+  border-color: #4facfe;
 }
 
 .member-name {
   font-weight: 600;
-  color: #333;
+  color: #e0e0e0;
   font-size: 0.95rem;
   margin-bottom: 4px;
 }
@@ -259,13 +256,13 @@ function onAvatarError(e) {
 }
 
 .badge.creator {
-  background: #e8eaff;
-  color: #667eea;
+  background: #252545;
+  color: #4facfe;
 }
 
 .badge.self {
-  background: #d4edda;
-  color: #28a745;
+  background: #0a3a0a;
+  color: #22c55e;
 }
 
 .member-roles {
@@ -286,10 +283,10 @@ function onAvatarError(e) {
   display: inline-block;
 }
 
-.role-heavy { background: rgba(255,193,7,0.15); color: #856404; border: 1px solid #ffc107; }
-.role-damage { background: rgba(220,53,69,0.15); color: #721c24; border: 1px solid #dc3545; }
-.role-support { background: rgba(40,167,69,0.15); color: #155724; border: 1px solid #28a745; }
-.role-flexible { background: rgba(108,117,125,0.15); color: #495057; border: 1px solid #6c757d; }
+.role-heavy { background: rgba(255,193,7,0.15); color: #ffc107; border: 1px solid #ffc107; }
+.role-damage { background: rgba(220,53,69,0.15); color: #ef4444; border: 1px solid #ef4444; }
+.role-support { background: rgba(40,167,69,0.15); color: #22c55e; border: 1px solid #22c55e; }
+.role-flexible { background: rgba(108,117,125,0.15); color: #a0aec0; border: 1px solid #6c757d; }
 
 .flexible-icons-row {
   display: flex;
@@ -306,13 +303,13 @@ function onAvatarError(e) {
 
 .role-label {
   font-size: 0.8rem;
-  color: #6c757d;
+  color: #a0aec0;
 }
 
 .team-actions {
   margin-top: 24px;
   padding-top: 16px;
-  border-top: 1px solid #e9ecef;
+  border-top: 1px solid #2a2a4a;
   display: flex;
   justify-content: flex-end;
 }
@@ -335,13 +332,13 @@ function onAvatarError(e) {
 }
 
 .leave-btn {
-  background: rgba(220,53,69,0.08);
-  border: 2px solid #dc3545;
-  color: #dc3545;
+  background: rgba(220,53,69,0.15);
+  border: 2px solid #ef4444;
+  color: #ef4444;
 }
 
 .leave-btn:hover {
-  background: #dc3545;
+  background: #ef4444;
   color: white;
 }
 
@@ -357,7 +354,7 @@ function onAvatarError(e) {
 
 .no-team-text {
   font-size: 1.2rem;
-  color: #6c757d;
+  color: #a0aec0;
   margin-bottom: 24px;
 }
 
@@ -368,23 +365,23 @@ function onAvatarError(e) {
 }
 
 .primary-btn {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
+  background: linear-gradient(135deg, #4facfe, #667eea);
+  color: #ffffff;
 }
 
 .primary-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 6px 16px rgba(79,172,254,0.3);
 }
 
 .outline-btn {
-  background: rgba(102, 126, 234, 0.08);
-  border: 2px solid #667eea;
-  color: #667eea;
+  background: rgba(79,172,254,0.1);
+  border: 2px solid #4facfe;
+  color: #4facfe;
 }
 
 .outline-btn:hover {
-  background: #667eea;
-  color: white;
+  background: #4facfe;
+  color: #ffffff;
 }
 </style>

@@ -66,6 +66,7 @@
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth.js'
 import { announcementsApi } from '../services/api.js'
+import pop from '../utils/pop.js'
 
 const auth = useAuthStore()
 
@@ -127,14 +128,17 @@ async function submitAnnouncement() {
 }
 
 async function deleteAnnouncement(id) {
-  if (!confirm('确定要删除此公告吗？')) return
+  const ok = await pop.confirm('确定要删除此公告吗？')
+  if (!ok) return
   try {
     const res = await announcementsApi.delete(id)
     if (res.success) {
       announcements.value = announcements.value.filter(a => a.id !== id)
+      pop.up('删除成功', '公告已删除', 'success')
     }
   } catch (err) {
     console.error('删除公告失败:', err)
+    pop.up('删除失败', '无法删除公告，请稍后重试', 'error')
   }
 }
 

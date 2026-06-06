@@ -14,22 +14,18 @@
       </div>
     </div>
 
-    <!-- 加载中 -->
     <div v-if="loading" class="state-message">
       <div class="spinner"></div>
       <p>加载帖子中...</p>
     </div>
 
-    <!-- 无帖子 -->
     <div v-else-if="posts.length === 0" class="state-message">
       <p class="empty-text">{{ isOwner ? '您还没有发布过任何帖子' : `${username}还没有发布过任何帖子` }}</p>
       <button v-if="isOwner" class="create-btn-empty" @click="$emit('create-post')">
-        <span>📝</span>
         <span>发布第一篇帖子</span>
       </button>
     </div>
 
-    <!-- 帖子瀑布流 -->
     <div v-else class="posts-waterfall">
       <div
         v-for="post in posts"
@@ -143,7 +139,7 @@ function renderPreview(html, max = 150) {
 .posts-title {
   font-size: 1.4rem;
   font-weight: 700;
-  color: #667eea;
+  color: #4facfe;
   margin: 0;
 }
 
@@ -159,11 +155,11 @@ function renderPreview(html, max = 150) {
   align-items: center;
   gap: 6px;
   padding: 10px 22px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
+  background: transparent;
+  color: #e0e0e0;
+  border: 2px solid #ffffff;
   border-radius: 10px;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   font-weight: 600;
   font-size: 0.95rem;
   cursor: pointer;
@@ -172,27 +168,28 @@ function renderPreview(html, max = 150) {
 
 .create-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(102,126,234,0.3);
+  box-shadow: 0 6px 20px rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.08);
 }
 
 .posts-stats {
   display: flex;
   gap: 12px;
   font-size: 0.9rem;
-  color: #6c757d;
+  color: #a0aec0;
 }
 
 .state-message {
   text-align: center;
   padding: 60px 20px;
-  color: #6c757d;
+  color: #a0aec0;
 }
 
 .spinner {
   width: 36px;
   height: 36px;
-  border: 3px solid #e9ecef;
-  border-top: 3px solid #667eea;
+  border: 3px solid #2a2a4a;
+  border-top: 3px solid #4facfe;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 12px;
@@ -210,11 +207,11 @@ function renderPreview(html, max = 150) {
 
 .create-btn-empty {
   padding: 10px 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
+  background: transparent;
+  color: #e0e0e0;
+  border: 2px solid #ffffff;
   border-radius: 10px;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   font-weight: 600;
   font-size: 0.95rem;
   cursor: pointer;
@@ -226,7 +223,8 @@ function renderPreview(html, max = 150) {
 
 .create-btn-empty:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(102,126,234,0.3);
+  box-shadow: 0 6px 20px rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.08);
 }
 
 .posts-waterfall {
@@ -236,26 +234,27 @@ function renderPreview(html, max = 150) {
 }
 
 .post-card {
-  background: #fff;
+  background: #1a1a2e;
   border-radius: 14px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  border: 1px solid #e9ecef;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  border: 1px solid #2a2a4a;
   transition: all 0.3s ease;
   border-left: 4px solid #4facfe;
 }
 
 .post-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  border-color: #4facfe;
 }
 
 .post-category-general { border-left-color: #6c757d; }
-.post-category-team { border-left-color: #28a745; }
+.post-category-team { border-left-color: #22c55e; }
 .post-category-strategy { border-left-color: #17a2b8; }
 .post-category-highlight { border-left-color: #ffc107; }
 .post-category-question { border-left-color: #fd7e14; }
-.post-category-announcement { border-left-color: #dc3545; }
+.post-category-announcement { border-left-color: #ef4444; }
 
 .post-header {
   display: flex;
@@ -269,25 +268,25 @@ function renderPreview(html, max = 150) {
   font-weight: 600;
   padding: 4px 12px;
   border-radius: 20px;
-  background: #f0f0ff;
-  color: #667eea;
+  background: #252545;
+  color: #4facfe;
 }
 
 .post-date {
   font-size: 0.8rem;
-  color: #6c757d;
+  color: #a0aec0;
 }
 
 .post-title {
   font-size: 1.15rem;
   font-weight: 700;
-  color: #333;
+  color: #e0e0e0;
   margin-bottom: 10px;
   line-height: 1.4;
 }
 
 .post-content {
-  color: #555;
+  color: #a0aec0;
   line-height: 1.6;
   margin-bottom: 16px;
   font-size: 0.9rem;
@@ -298,7 +297,7 @@ function renderPreview(html, max = 150) {
   justify-content: space-between;
   align-items: center;
   padding-top: 12px;
-  border-top: 1px solid #e9ecef;
+  border-top: 1px solid #2a2a4a;
 }
 
 .post-stats {
@@ -308,7 +307,7 @@ function renderPreview(html, max = 150) {
 
 .stat {
   font-size: 0.85rem;
-  color: #6c757d;
+  color: #a0aec0;
 }
 
 .post-actions {
@@ -327,23 +326,23 @@ function renderPreview(html, max = 150) {
 }
 
 .view-btn {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
+  background: linear-gradient(135deg, #4facfe, #667eea);
+  color: #ffffff;
 }
 
 .view-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+  box-shadow: 0 4px 12px rgba(79,172,254,0.3);
 }
 
 .del-btn {
-  background: rgba(220,53,69,0.08);
-  color: #dc3545;
-  border: 1.5px solid #dc3545;
+  background: rgba(220,53,69,0.15);
+  color: #ef4444;
+  border: 1.5px solid #ef4444;
 }
 
 .del-btn:hover {
-  background: #dc3545;
+  background: #ef4444;
   color: white;
 }
 </style>

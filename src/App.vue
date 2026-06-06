@@ -3,6 +3,7 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import NavBar from './components/NavBar.vue'
+import Popup from './components/Popup.vue'
 
 const route = useRoute()
 const hideNavBar = computed(() => route.meta && route.meta.hideNavBar)
@@ -23,6 +24,8 @@ const hideNavBar = computed(() => route.meta && route.meta.hideNavBar)
       </Transition>
     </router-view>
   </div>
+  <!-- 全局弹窗组件 -->
+  <Popup />
 </template>
 
 <style scoped>

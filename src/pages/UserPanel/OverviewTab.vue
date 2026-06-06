@@ -1,6 +1,5 @@
 <template>
   <div class="overview-tab">
-    <!-- 数据面板 -->
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-icon">📝</div>
@@ -19,7 +18,6 @@
       </div>
     </div>
 
-    <!-- 基本信息 -->
     <div class="info-card">
       <h3 class="card-title">基本信息</h3>
       <div class="info-list">
@@ -84,18 +82,19 @@ function formatDate(dateString) {
 }
 
 .stat-card {
-  background: #fff;
+  background: #1a1a2e;
   border-radius: 14px;
   padding: 24px 16px;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  border: 1px solid #e9ecef;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  border: 1px solid #2a2a4a;
   transition: all 0.3s ease;
 }
 
 .stat-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  border-color: #4facfe;
 }
 
 .stat-icon {
@@ -106,31 +105,31 @@ function formatDate(dateString) {
 .stat-number {
   font-size: 2.2rem;
   font-weight: 700;
-  color: #667eea;
+  color: #4facfe;
   margin-bottom: 4px;
 }
 
 .stat-desc {
   font-size: 0.9rem;
-  color: #6c757d;
+  color: #a0aec0;
   font-weight: 500;
 }
 
 .info-card {
-  background: #fff;
+  background: #1a1a2e;
   border-radius: 14px;
   padding: 28px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  border: 1px solid #e9ecef;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  border: 1px solid #2a2a4a;
 }
 
 .card-title {
   font-size: 1.2rem;
   font-weight: 600;
-  color: #333;
+  color: #e0e0e0;
   margin-bottom: 20px;
   padding-bottom: 12px;
-  border-bottom: 2px solid #667eea;
+  border-bottom: 2px solid #4facfe;
 }
 
 .info-list {
@@ -144,7 +143,7 @@ function formatDate(dateString) {
   justify-content: space-between;
   align-items: center;
   padding: 14px 0;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #2a2a4a;
 }
 
 .info-row:last-child {
@@ -154,14 +153,14 @@ function formatDate(dateString) {
 
 .info-label {
   font-weight: 500;
-  color: #666;
+  color: #a0aec0;
   font-size: 0.95rem;
   white-space: nowrap;
 }
 
 .info-value {
   font-weight: 500;
-  color: #333;
+  color: #e0e0e0;
   text-align: right;
   max-width: 60%;
   word-break: break-word;
