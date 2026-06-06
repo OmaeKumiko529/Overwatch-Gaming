@@ -213,9 +213,13 @@
 
           <!-- 添加评论 -->
           <div v-if="canComment" class="add-comment">
+            <div v-if="replyToUsername" class="reply-to-hint">
+              回复 <strong>{{ replyToUsername }}</strong>
+              <button class="cancel-reply-btn" @click="cancelReply">取消回复</button>
+            </div>
             <textarea
               v-model="newComment"
-              :placeholder="commentPlaceholder"
+              :placeholder="replyToUsername ? `回复 ${replyToUsername}...` : commentPlaceholder"
               class="comment-input"
               rows="3"
               @keydown.enter.exact.prevent="addComment"
@@ -270,7 +274,7 @@
                   <span>{{ likedComments[childPost.pid] ? '❤️' : '🤍' }}</span>
                   <span>{{ commentLikes[childPost.pid] ?? childPost.likes ?? 0 }}</span>
                 </button>
-                <button class="comment-action-btn" @click="replyToComment(childPost.username)">
+                <button class="comment-action-btn" @click="replyToComment(childPost.pid, childPost.username)">
                   💬 回复
                 </button>
               </div>
@@ -324,6 +328,9 @@ const isLiked = ref(false);
 const showRankMenu = ref(false);
 const likeLoading = ref(false);
 const commentLikeLoading = ref({});
+// 正在回复的评论 PID（null 表示回复根帖子）
+const replyToPid = ref(null);
+const replyToUsername = ref('');
 
 // 等级映射
 const rankOptions = {
@@ -614,6 +621,13 @@ const focusCommentInput = () => {
   }
 };
 
+// 取消回复模式
+function cancelReply() {
+  replyToPid.value = null;
+  replyToUsername.value = '';
+  newComment.value = '';
+}
+
 const addComment = async () => {
   if (!auth.isLoggedIn) {
     message.value = '请先登录';
@@ -632,12 +646,22 @@ const addComment = async () => {
     isError.value = true;
     return;
   }
+
+  // 使用被回复评论的 PID（如果有），否则使用根帖 PID
+  const targetPid = replyToPid.value || pid.value;
   
   try {
-    const result = await postService.addComment(pid.value, newComment.value.trim(), auth.currentUser.id, auth.currentUser.username);
+    const result = await postService.addComment(targetPid, newComment.value.trim(), auth.currentUser.id, auth.currentUser.username);
     
     if (result.success) {
-      childPosts.value.unshift(result.comment);
+      // 如果回复的是评论子帖，重新加载帖子以刷新整个评论树
+      if (replyToPid.value) {
+        await loadPostDetail();
+      } else {
+        childPosts.value.unshift(result.comment);
+      }
+      replyToPid.value = null;
+      replyToUsername.value = '';
       newComment.value = '';
       message.value = '评论发布成功';
       isError.value = false;
@@ -690,15 +714,17 @@ const likeComment = async (commentPid) => {
   commentLikeLoading.value[commentPid] = false;
 };
 
-// 回复评论（在输入框插入 @用户名）
-const replyToComment = (username) => {
+// 回复评论（记录目标评论 PID 和用户名）
+const replyToComment = (commentPid, username) => {
   if (!auth.isLoggedIn) {
     message.value = '请先登录';
     isError.value = true;
     return;
   }
+  replyToPid.value = commentPid;
+  replyToUsername.value = username;
   const atText = `@${username} `;
-  newComment.value = newComment.value ? atText + newComment.value : atText;
+  newComment.value = atText;
   const textarea = document.querySelector('.comment-input');
   if (textarea) {
     textarea.focus();
@@ -2081,5 +2107,33 @@ onMounted(() => {
   .post-actions {
     grid-template-columns: 1fr;
   }
+}
+
+/* 回复提示和取消回复按钮 */
+.reply-to-hint {
+  font-size: 0.88rem;
+  color: #4facfe;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cancel-reply-btn {
+  padding: 2px 10px;
+  background: none;
+  border: 1px solid #adb5bd;
+  border-radius: 100px;
+  color: #6c757d;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'MapleMono CN Regular', monospace;
+}
+
+.cancel-reply-btn:hover {
+  background: #6c757d;
+  border-color: #6c757d;
+  color: white;
 }
 </style>

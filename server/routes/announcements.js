@@ -9,6 +9,23 @@ router.use(async (req, res, next) => {
   next()
 })
 
+// 向所有用户广播公告通知
+function broadcastAnnouncement(announcement, authorId) {
+  try {
+    const users = getAll('SELECT id FROM users')
+    for (const user of users) {
+      // 不向自己发通知
+      if (String(user.id) === String(authorId)) continue
+      insert(
+        'INSERT INTO notifications (type, author, root, to_user, title) VALUES (?, ?, ?, ?, ?)',
+        ['announcement', String(authorId), null, String(user.id), announcement.title]
+      )
+    }
+  } catch (err) {
+    console.error('广播公告通知失败:', err.message)
+  }
+}
+
 // 获取公告列表
 router.get('/', (req, res) => {
   try {
@@ -64,6 +81,9 @@ router.post('/', authMiddleware, (req, res) => {
       content: content.trim(),
       created_at: new Date().toISOString()
     }
+
+    // 向所有用户广播公告通知
+    broadcastAnnouncement(newAnnouncement, req.user.id)
 
     res.json({ success: true, announcement: newAnnouncement })
   } catch (error) {

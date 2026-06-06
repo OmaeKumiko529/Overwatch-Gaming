@@ -108,7 +108,7 @@ router.post('/', authMiddleware, createNotifLimiter, (req, res) => {
     }
 
     // 验证通知类型白名单
-    const validTypes = ['mention', 'comment', 'like', 'system', 'custom']
+    const validTypes = ['mention', 'comment', 'like', 'system', 'custom', 'announcement']
     if (!type || !validTypes.includes(type)) {
       return res.json({ success: false, message: '无效的通知类型' })
     }

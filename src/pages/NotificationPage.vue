@@ -53,7 +53,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useNotificationStore } from '../stores/notification.js'
 import { useAuthStore } from '../stores/auth.js'
@@ -65,11 +65,28 @@ const authStore = useAuthStore()
 
 const notifications = computed(() => notifStore.notifications)
 const unreadCount = computed(() => notifStore.unreadCount)
+const userCache = ref({})
+
+// 预加载用户列表到本地缓存，实现 authorName 同步查找
+async function preloadUsers() {
+  const users = await userService.getAllUsers()
+  const map = {}
+  for (const u of users) {
+    map[String(u.id)] = u
+    if (u.uid) map[u.uid] = u
+  }
+  userCache.value = map
+}
 
 function authorName(uid) {
   if (!uid) return '未知用户'
-  const user = userService.getUserById(uid)
-  return user ? user.username : '未知用户'
+  const user = userCache.value[String(uid)]
+  if (user) return user.username
+  // 单次懒加载（不阻塞渲染）
+  userService.getUserById(uid).then(u => {
+    if (u) userCache.value[String(u.id)] = u
+  })
+  return '未知用户'
 }
 
 function formatTime(dateString) {
@@ -91,9 +108,12 @@ function handleClick(notif) {
   if (!notif.IsRead) {
     notifStore.markRead(notif.id)
   }
-  // 跳转到关联内容（Root 现为 PID 字符串）
   if (notif.Root) {
-    router.push('/post/' + encodeURIComponent(notif.Root))
+    if (notif.type === 'announcement') {
+      router.push('/announcements')
+    } else {
+      router.push('/post/' + encodeURIComponent(notif.Root))
+    }
   }
 }
 
@@ -101,11 +121,13 @@ function handleMarkAllRead() {
   notifStore.markAllRead()
 }
 
-onMounted(() => {
+onMounted(async () => {
   const cu = authStore.currentUser
   if (cu && cu.id) {
     notifStore.load(String(cu.id))
   }
+  // 预加载用户列表以正确显示通知中的用户名
+  await preloadUsers()
 })
 </script>
 
