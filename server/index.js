@@ -100,6 +100,11 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
+// 404 处理（匹配所有未定义的路由）
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: '请求的资源不存在' })
+})
+
 // 全局错误处理
 app.use((err, req, res, next) => {
   console.error('服务器错误:', err)
