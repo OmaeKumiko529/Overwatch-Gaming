@@ -87,6 +87,7 @@ CREATE TABLE users (
 | `team_id` | INTEGER | 所属战队 ID（外键到 teams 表） |
 | `created_at` | TEXT | 创建时间（本地时区） |
 | `updated_at` | TEXT | 最后更新时间（本地时区） |
+| `preference` | TEXT | JSON 对象，存储用户兴趣偏好标签计数，如 `{"源氏": 3, "total": 10}` |
 
 ### 2. `posts` — 帖子与评论
 
@@ -99,11 +100,13 @@ CREATE TABLE posts (
   content    TEXT NOT NULL,
   category   TEXT NOT NULL DEFAULT 'general',
   likes      INTEGER NOT NULL DEFAULT 0,
+  views      INTEGER NOT NULL DEFAULT 0,
   context    TEXT DEFAULT '#',
   parent_id  INTEGER,
   pid        TEXT UNIQUE,
   postrank   TEXT NOT NULL DEFAULT '69',
   mentions   TEXT DEFAULT '[]',
+  tags       TEXT NOT NULL DEFAULT '[]',
   created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -120,11 +123,13 @@ CREATE TABLE posts (
 | `content` | TEXT | 帖子内容（HTML 格式） |
 | `category` | TEXT | 分类：`general`（主帖）或 `comment`（子帖） |
 | `likes` | INTEGER | 点赞计数 |
+| `views` | INTEGER | 帖子浏览量计数 |
 | `context` | TEXT | 嵌套路径，如 `#/p-xxx/u-yyy` |
 | `parent_id` | INTEGER | 父帖 ID（NULL 表示主帖） |
 | `pid` | TEXT | 公开帖子标识符，如 `p-20260105-a1b2` |
 | `postrank` | TEXT | 帖子标记：FF=红帖、69=普通、78=绿帖、00=黑帖 |
 | `mentions` | TEXT | JSON 数组，@提及的用户信息 |
+| `tags` | TEXT | JSON 数组，帖子标签，如 `["攻略", "源氏"]` |
 | `created_at` | TEXT | 创建时间 |
 | `updated_at` | TEXT | 更新时间 |
 
@@ -135,6 +140,27 @@ CREATE INDEX idx_posts_user_id ON posts(user_id)
 CREATE INDEX idx_posts_parent_id ON posts(parent_id)
 CREATE INDEX idx_posts_category ON posts(category)
 ```
+
+### 新增字段说明
+
+#### views — 浏览量
+
+每次访问帖子详情时递增，用于热度排序：
+
+```js
+// server/routes/posts.js — 获取帖子详情时
+run("UPDATE posts SET views = views + 1 WHERE pid = ?", [pid])
+```
+
+#### tags — 帖子标签
+
+JSON 数组格式，存储帖子的分类标签，供个性化推荐系统使用：
+
+```json
+["攻略", "源氏", "新手"]
+```
+
+用户在浏览带标签的帖子时，标签会被记录到其 `preference` 偏好数据中。
 
 ### 3. `teams` — 战队
 
@@ -282,33 +308,54 @@ CREATE INDEX idx_ow_heroes_role ON ow_heroes(role)
 CREATE UNIQUE INDEX idx_ow_heroes_key ON ow_heroes(hero_key)
 ```
 
+## preference 字段 — 用户偏好
+
+`users` 表的 `preference` 字段存储用户的兴趣偏好数据，格式为 JSON 对象：
+
+```json
+{
+  "total": 15,
+  "攻略": 5,
+  "源氏": 3,
+  "赛事": 7
+}
+```
+
+- `total`：总记录次数
+- 其余键：标签名称 → 用户与该标签互动的次数
+
+偏好数据由个性化推荐系统自动记录和更新，用于按兴趣排序帖子列表。详见 [个性化推荐系统](Systems.md#8-个性化推荐系统)。
+
 ## 增量迁移机制
 
-为兼容不同版本的数据库结构，`initSchema()` 函数在创建表后通过 `PRAGMA table_info` 检查列存量，对缺失的列执行 `ALTER TABLE` 补充：
+为兼容不同版本的数据库结构，`initSchema()` 函数在创建表后通过 `PRAGMA table_info` 检查列存量，对缺失的列执行 `ALTER TABLE` 补充。当前支持以下新增列的增量迁移：
+
+**users 表增量迁移**：
+
+- `is_admin` ← 兼容旧数据的权限字段
+- `uid` ← 公开唯一标识符
+- `userrank` ← 用户等级
+- `preference` ← 用户偏好数据（默认 `{"total":0}`）
+
+**posts 表增量迁移**：
+
+- `pid` ← 公开帖子标识符
+- `postrank` ← 帖子标记等级
+- `views` ← 帖子浏览量（默认 0）
+- `tags` ← 帖子标签数组（默认 `[]`）
 
 ```js
-// 检查 users 表是否缺少某些列
-const userCols = db.exec("PRAGMA table_info('users')")
-if (userCols.length > 0) {
-  const colNames = userCols[0].values.map(v => v[1])
-  if (!colNames.includes('uid')) {
-    db.run("ALTER TABLE users ADD COLUMN uid TEXT UNIQUE")
-  }
-  if (!colNames.includes('userrank')) {
-    db.run("ALTER TABLE users ADD COLUMN userrank INTEGER NOT NULL DEFAULT 0")
-  }
+// 检查 users 表是否缺少 preference 列
+if (!colNames.includes('preference')) {
+  db.run("ALTER TABLE users ADD COLUMN preference TEXT NOT NULL DEFAULT '{\"total\":0}'")
 }
 
-// posts 表的增量迁移
-const postCols = db.exec("PRAGMA table_info('posts')")
-if (postCols.length > 0) {
-  const colNames = postCols[0].values.map(v => v[1])
-  if (!colNames.includes('pid')) {
-    db.run("ALTER TABLE posts ADD COLUMN pid TEXT UNIQUE")
-  }
-  if (!colNames.includes('postrank')) {
-    db.run("ALTER TABLE posts ADD COLUMN postrank TEXT NOT NULL DEFAULT '69'")
-  }
+// 检查 posts 表是否缺少新列
+if (!colNames.includes('views')) {
+  db.run("ALTER TABLE posts ADD COLUMN views INTEGER NOT NULL DEFAULT 0")
+}
+if (!colNames.includes('tags')) {
+  db.run("ALTER TABLE posts ADD COLUMN tags TEXT NOT NULL DEFAULT '[]'")
 }
 ```
 

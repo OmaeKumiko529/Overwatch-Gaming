@@ -79,6 +79,7 @@ Overwatch-Gaming/
 │   ├── MapleMono-CN-Regular.ttf # 自定义等宽字体
 │   ├── 默认头图设计.psd       # PSD 设计源文件
 │   ├── 职责专题页面参考.psd
+│   ├── seed-data.json         # 种子数据（前端加载用）
 │   └── Nsc/                   # 其他静态子目录
 ├── src/                       # 前端源代码
 │   ├── App.vue                # 根组件（NavBar 条件渲染、过渡动画、Popup 挂载）
@@ -87,11 +88,12 @@ Overwatch-Gaming/
 │   ├── components/            # 可复用组件
 │   │   ├── NavBar.vue         # 导航栏
 │   │   ├── SearchInput.vue    # 搜索输入框
-│   │   ├── RichTextEditor.vue # 富文本编辑器（TipTap）
+│   │   ├── RichTextEditor.vue # 富文本编辑器（TipTap，含 Git/B站/@提及扩展）
 │   │   ├── UserrankBadge.vue  # 用户等级徽章
 │   │   ├── Popup.vue          # 全站弹窗组件
 │   │   ├── MentionExtension.js  # @提及 TipTap 扩展
-│   │   └── BilibiliNode.js    # B站视频嵌入 TipTap 节点
+│   │   ├── BilibiliNode.js    # B站视频嵌入 TipTap 节点
+│   │   └── GitNode.js         # Git 仓库嵌入 TipTap 节点
 │   ├── pages/                 # 页面级组件
 │   │   ├── HomePage.vue       # 首页
 │   │   ├── LoginPage.vue      # 登录页
@@ -105,6 +107,7 @@ Overwatch-Gaming/
 │   │   ├── AnnouncementPage.vue # 公告列表
 │   │   ├── AdminPanel.vue     # 管理后台
 │   │   ├── HeroesPage.vue     # 英雄图鉴
+│   │   ├── GeneratePage.vue   # 数据生成器（管理员）
 │   │   ├── ErrorPage.vue      # 错误页面
 │   │   └── HomePages/         # 首页子组件
 │   │       ├── HeroSection.vue
@@ -119,10 +122,11 @@ Overwatch-Gaming/
 │   │   ├── SettingsTab.vue    # 设置标签页
 │   │   └── modals/            # 弹窗表单
 │   ├── services/              # API 调用封装层
-│   │   ├── api.js             # 统一 fetch 客户端 + 8 组 API 封装
+│   │   ├── api.js             # 统一 fetch 客户端 + 11 组 API 封装
 │   │   ├── auth.js            # 旧的 localStorage 认证服务（向后兼容）
 │   │   ├── post.js            # 帖子辅助服务
 │   │   ├── user.js            # 用户搜索服务
+│   │   ├── preference.js      # 偏好记录与排序服务
 │   │   └── notification.js    # 通知轮询服务
 │   ├── stores/                # Pinia 全局状态
 │   │   ├── auth.js            # 认证状态
@@ -134,7 +138,7 @@ Overwatch-Gaming/
 │   │   ├── auth.js            # 认证工具
 │   │   ├── encode.js          # 编码工具
 │   │   ├── mentionParser.js   # @提及 HTML 解析器
-│   │   ├── contentFilter.js   # 内容安全过滤器
+│   │   ├── contentFilter.js   # 内容过滤器（BV标签、Git标签渲染）
 │   │   └── pop.js             # 弹窗快捷调用工具
 │   ├── constants/             # 常量定义
 │   │   ├── rankMap.js         # 用户等级 + 帖子标记映射表
@@ -148,18 +152,24 @@ Overwatch-Gaming/
 │   ├── setup-env.js           # 交互式 .env 配置引导
 │   ├── package.json           # 后端依赖
 │   ├── middleware/auth.js     # 三层认证中间件
-│   ├── routes/                # 路由模块
-│   │   ├── auth.js            # 认证与用户管理（11 个端点）
+│   ├── routes/                # 路由模块（共 11 个路由文件）
+│   │   ├── auth.js            # 认证与用户管理（10 个端点）
 │   │   ├── posts.js           # 帖子 CRUD（11 个端点）
 │   │   ├── teams.js           # 战队管理（5 个端点）
 │   │   ├── notifications.js   # 通知管理（5 个端点）
 │   │   ├── announcements.js   # 公告管理（4 个端点）
 │   │   ├── heroes.js          # 英雄图鉴（3 个端点）
 │   │   ├── admin.js           # 管理后台（7 个端点）
-│   │   └── migrate.js         # 数据迁移（1 个端点）
+│   │   ├── migrate.js         # 数据迁移（1 个端点）
+│   │   ├── preference.js      # 个性化偏好（2 个端点）
+│   │   ├── seed.js            # 种子数据注入（1 个端点，管理员）
+│   │   └── git.js             # Git 仓库信息（1 个端点）
 │   └── utils/identifiers.js   # UID/PID 生成器
 ├── tools/
-│   └── migrate-localstorage.js # 浏览器 localStorage 数据迁移到 SQLite
+│   ├── migrate-localstorage.js # 浏览器 localStorage 数据迁移到 SQLite
+│   ├── seed-data.json          # 种子数据定义文件（后端注入用）
+│   ├── generate-seed.js        # 种子数据生成脚本
+│   └── append-seed.js          # 追加种子数据脚本
 ├── vite.config.js             # Vite 构建配置（proxy + base + alias）
 ├── index.html                 # HTML 入口
 ├── package.json               # 前端依赖
@@ -527,7 +537,7 @@ async function request(endpoint, options = {}) {
 }
 ```
 
-`api.js` 导出 8 组 API 对象 + 2 个辅助函数：
+`api.js` 导出 11 组 API 对象 + 2 个辅助函数：
 
 | 导出对象 | 方法数 | 说明 |
 |----------|--------|------|
@@ -538,6 +548,8 @@ async function request(endpoint, options = {}) {
 | `notificationsApi` | 5 | 列表、未读数、标记已读 |
 | `announcementsApi` | 4 | 列表/详情、创建/删除 |
 | `adminApi` | 7 | 表 CRUD、SQL、统计 |
+| `preferenceApi` | 2 | 偏好记录与获取 |
+| `gitApi` | 1 | Git 仓库信息获取 |
 | `persistLoginSession` | — | 保存会话到存储 |
 | `clearLoginSession` | — | 清除会话 |
 
@@ -553,6 +565,15 @@ async function request(endpoint, options = {}) {
 用户搜索服务，用于 RichTextEditor @提及：
 - `refreshUsers()` — 从后端拉取用户列表
 - `searchUsers(query)` — 本地模糊搜索
+
+### services/preference.js
+
+偏好服务，用于个性化推荐系统：
+- `recordTags(tags)` — 记录用户对标签的偏好
+- `getUserPreference(uid)` — 获取用户偏好数据
+- `sortByPreference(preference, posts)` — 按偏好权重对帖子排序
+
+排序算法：每个帖子的得分 = Σ (pref[tag] / total) for tag in post.tags，按得分降序排列。
 
 ### services/post.js / services/notification.js
 
@@ -624,7 +645,9 @@ pop.up({ title: '提示', style: 'ow' })
 
 ### utils/contentFilter.js
 
-基于 DOMPurify，移除危险标签和事件处理属性。
+基于 DOMPurify 的内容过滤器，同时支持特殊标签渲染：
+- `<bv>BVxxx</bv>` → Bilibili 嵌入式视频
+- `<git data-*></git>` → Git 仓库信息卡片
 
 ### utils/encode.js / utils/auth.js
 
@@ -687,7 +710,7 @@ pop.up({ title: '提示', style: 'ow' })
 
 ## 13. 页面组件参考清单
 
-### 一级页面（13 个）
+### 一级页面（14 个）
 
 | 组件 | 路由 | 功能 |
 |------|------|------|
@@ -703,6 +726,7 @@ pop.up({ title: '提示', style: 'ow' })
 | `UserPanel.vue` | `/user/:uid` | 用户面板（5 子标签页） |
 | `HeroesPage.vue` | `/heroes` | 英雄图鉴 |
 | `AdminPanel.vue` | `/adminpower` | 管理后台 |
+| `GeneratePage.vue` | `/generate` | 数据生成器（管理员） |
 | `ErrorPage.vue` | `/error/:code` | 错误页 |
 
 ### 首页子组件
@@ -723,13 +747,13 @@ pop.up({ title: '提示', style: 'ow' })
 
 ### RichTextEditor.vue
 
-基于 TipTap，支持加粗/标题/列表/引用/@提及/B站嵌入。
+基于 TipTap，支持加粗/标题/列表/引用/@提及/B站嵌入/Git仓库嵌入。
 
 ```vue
 <RichTextEditor v-model="content" :max-length="10000" :enable-mention="true" />
 ```
 
-**复用**：复制 `RichTextEditor.vue` + `MentionExtension.js` + `BilibiliNode.js`，安装 `@tiptap/vue-3`、`@tiptap/starter-kit`、`@tiptap/extension-mention`。
+**复用**：复制 `RichTextEditor.vue` + `MentionExtension.js` + `BilibiliNode.js` + `GitNode.js`，安装 `@tiptap/vue-3`、`@tiptap/starter-kit`、`@tiptap/extension-mention`。
 
 ### SearchInput.vue
 
@@ -770,6 +794,10 @@ Supabase → SQLite 数据迁移。
 ### tools/migrate-localstorage.js
 
 浏览器 localStorage 数据迁移到 SQLite。
+
+### tools/seed-data.json / tools/generate-seed.js / tools/append-seed.js
+
+种子数据工具集，用于开发/测试环境的数据初始化。通过管理员页面 `/generate` 或 API `POST /api/seed/inject` 注入。
 
 ---
 

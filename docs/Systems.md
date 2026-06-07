@@ -1,6 +1,6 @@
 # 核心系统详解
 
-本文档深入解析项目的几个核心设计：帖子线程模型、帖子标记与权限分级、点赞事务机制、富文本编辑器、全站弹窗系统以及管理员通用 CRUD 面板。
+本文档深入解析项目的几个核心设计：帖子线程模型、帖子标记与权限分级、点赞事务机制、富文本编辑器、全站弹窗系统、管理员通用 CRUD 面板、Git 仓库嵌入系统、个性化推荐系统以及种子数据生成器。
 
 ## 1. 帖子线程模型
 
@@ -248,6 +248,7 @@ try {
 | `StarterKit` | `@tiptap/starter-kit` | 基础编辑能力：加粗、斜体、删除线、标题(H1-H3)、列表、引用、分隔线 |
 | `UserMention` | 自定义 (`MentionExtension.js`) | @提及用户，弹出自动补全列表 |
 | `BilibiliNode` | 自定义 (`BilibiliNode.js`) | 嵌入 Bilibili 视频，通过 BV/AV/EP 号渲染 |
+| `GitNode` | 自定义 (`GitNode.js`) | 嵌入 GitHub/Gitee 仓库信息卡片 |
 
 ### @提及功能
 
@@ -282,6 +283,20 @@ try {
 
 支持的视频格式：BV 号、AV 号、EP 号。
 
+### Git 仓库嵌入
+
+在工具栏点击仓库图标按钮，输入 GitHub/Gitee 仓库 URL，编辑器会自动：
+
+1. 调用 `POST /api/git/fetch` 获取仓库元数据
+2. 在编辑器内插入 `<git>` 自定义节点（灰色卡片样式）
+3. 卡片展示：仓库名称、平台图标（GitHub/Gitee）、贡献者头像
+4. 提交后，前端 `contentFilter.js` 将 `<git>` 标签渲染为可交互的信息卡片
+
+相关文件：
+- `src/components/GitNode.js` — TipTap 自定义节点定义
+- `src/utils/contentFilter.js` — `<git>` 标签渲染函数 `buildGitCard()`
+- `server/routes/git.js` — 后端 API
+
 ### 编辑器的可复用性
 
 如需将编辑器嵌入到其他项目，只需复制以下文件：
@@ -290,6 +305,7 @@ try {
 src/components/RichTextEditor.vue   # 主组件
 src/components/MentionExtension.js   # @提及扩展
 src/components/BilibiliNode.js       # B站视频扩展
+src/components/GitNode.js            # Git仓库嵌入扩展
 ```
 
 然后安装依赖：`@tiptap/vue-3`、`@tiptap/starter-kit`。
@@ -430,3 +446,218 @@ const sql = `UPDATE \`${tableName}\` SET ${setClauses.join(', ')} WHERE \`${pk}\
 - **行操作**：每行提供编辑/删除按钮
 - **SQL 查询台**：可直接执行 SELECT 查询（展示结果表格）
 - **统计面板**：显示数据库总体健康状态
+
+## 7. Git 仓库嵌入系统
+
+项目支持在富文本编辑器中嵌入 GitHub/Gitee 仓库信息卡片，这是一个从前端编辑器到后端 API 再到前端展示的完整链路。
+
+### 整体流程
+
+```
+用户输入仓库 URL → TipTap GitNode → POST /api/git/fetch → GitHub/Gitee API
+    ↓
+仓库元数据返回 → 编辑器内嵌 <git> 节点
+    ↓
+帖子提交/展示 → contentFilter.js 渲染为可视化卡片
+```
+
+### 前端编辑器集成
+
+`GitNode.js` 是一个自定义的 TipTap 节点（`src/components/GitNode.js`），继承自 `@tiptap/core` 的 Node 类：
+
+- **节点类型**：`block` 级原子节点（`atom: true`），不可分割
+- **属性**：`url`、`platform`（github/gitee）、`title`、`contributors`（JSON 字符串）
+- **插入命令**：`editor.commands.insertGit({ url, platform, title, contributors })`
+- **渲染**：在编辑器内显示为灰底卡片，包含仓库名称、平台图标和贡献者列表
+
+### 后端 API
+
+`server/routes/git.js` 接收仓库 URL，解析出 owner 和 repo，分别请求 GitHub 或 Gitee 的公开 API：
+
+- **URL 解析**：正则匹配 `github.com/owner/repo` 或 `gitee.com/owner/repo`
+- **GitHub API**：`GET /repos/{owner}/{repo}` + `GET /repos/{owner}/{repo}/contributors?per_page=10`
+- **Gitee API**：`GET /api/v5/repos/{owner}/{repo}` + `GET /api/v5/repos/{owner}/{repo}/contributors?per_page=10`
+
+### 前端展示渲染
+
+帖子详情页展示时，`contentFilter.js` 的 `buildGitCard()` 函数将 `<git>` 标签转换为 HTML 信息卡片：
+
+```
+┌─────────────────────────────────────┐
+│  🔗 FishMoies/Overwatch-Gaming  GitHub │
+│                                       │
+│  [头像] FishMoies  [头像] fmy-dev     │
+│  ...等5个贡献者                        │
+│                                       │
+│           查看仓库 →                   │
+└─────────────────────────────────────┘
+```
+
+### 相关文件
+
+| 文件 | 路径 |
+|------|------|
+| TipTap 节点定义 | `src/components/GitNode.js` |
+| 编辑器组件 | `src/components/RichTextEditor.vue` |
+| 内容渲染器 | `src/utils/contentFilter.js` |
+| 后端 API | `server/routes/git.js` |
+| 服务端注册 | `server/index.js`（`app.use('/api/git', gitRoutes)`） |
+
+## 8. 个性化推荐系统
+
+系统通过记录用户浏览帖子的标签偏好，实现基于兴趣的帖子排序推荐。
+
+### 数据模型
+
+偏好数据存储在 `users` 表的 `preference` 字段中，格式为 JSON 对象：
+
+```json
+{
+  "total": 15,
+  "攻略": 5,
+  "源氏": 3,
+  "赛事": 7
+}
+```
+
+- `total`：总记录次数
+- 其余键：标签名称 → 用户浏览次数
+
+### 记录流程
+
+```
+用户浏览帖子详情 (PostDetailPage.vue)
+    │
+    ▼
+提取帖子的 tags 字段 (如 ["攻略", "源氏"])
+    │
+    ▼
+preferenceService.recordTags(tags)
+    │
+    ▼
+POST /api/preference/record → 数据库 preference 递增
+```
+
+### 排序算法
+
+偏好排序在 `src/services/preference.js` 的 `sortByPreference()` 方法中实现：
+
+```
+算法步骤：
+1. 获取用户偏好数据 preference
+2. 计算每个标签的权重：weight[tag] = preference[tag] / preference.total
+3. 对每个帖子计算得分：score = Σ weight[tag] for tag in post.tags
+4. 按得分降序排列帖子列表
+
+示例：
+用户偏好 = { 攻略: 5, 源氏: 3, 赛事: 7, total: 15 }
+
+帖子A: tags=["攻略"]  → score = 5/15 ≈ 0.333
+帖子B: tags=["赛事"]  → score = 7/15 ≈ 0.467
+帖子C: tags=["闲聊"]  → score = 0
+
+排序结果: [帖子B, 帖子A, 帖子C]
+```
+
+### 性能考虑
+
+- 偏好记录为异步操作，失败时静默忽略，不干扰用户体验
+- 排序在前端进行，后端只存储和提供原始偏好数据
+- `preference` 字段在 `db.js` 中通过增量迁移添加，兼容旧数据库
+
+### 相关文件
+
+| 文件 | 路径 |
+|------|------|
+| 后端 API | `server/routes/preference.js` |
+| 前端服务 | `src/services/preference.js` |
+| 前端 API 封装 | `src/services/api.js`（`preferenceApi`） |
+| 数据库字段 | `server/db.js`（`users.preference`） |
+
+## 9. 种子数据生成器
+
+项目提供了管理员一键注入测试数据的工具，用于开发、测试和演示环境的数据初始化。
+
+### 种子数据文件
+
+种子数据定义在 `tools/seed-data.json` 中，包含预定义的用户和帖子：
+
+```json
+{
+  "users": [
+    {
+      "username": "测试用户A",
+      "email": "testa@example.com",
+      "password": "123123",
+      "role": "[\"damage\"]",
+      "userrank": 1,
+      "avatar": "/Head.png"
+    }
+  ],
+  "posts": [
+    {
+      "authorIndex": 0,
+      "title": "测试帖子标题",
+      "content": "<p>帖子内容</p>",
+      "category": "general",
+      "likes": 0,
+      "views": 0,
+      "postrank": "69",
+      "tags": ["测试"]
+    }
+  ]
+}
+```
+
+- `authorIndex` 引用 `users` 数组中的索引位置
+- 所有密码默认为 `123123`，方便测试登录
+
+### 注入流程
+
+```
+管理员访问 /generate 页面
+    │
+    ▼
+读取 tools/seed-data.json → 显示数据概览
+    │
+    ▼
+点击"注入种子数据"按钮
+    │
+    ▼
+POST /api/seed/inject（需管理员认证）
+    │
+    ▼
+阶段一：遍历用户 → 生成 UID → bcrypt 哈希密码 → INSERT
+    │
+    ▼
+阶段二：遍历帖子 → 生成 PID → 构建 context → INSERT
+    │
+    ▼
+返回注入结果（新建数量 + 详细列表）
+```
+
+### 重复数据保护
+
+- 用户名已存在 → 跳过，标记为"已存在"
+- 帖子标题已存在 → 跳过，标记为"已存在"
+- 只报告实际新建的数据量
+
+### 辅助工具
+
+| 文件 | 说明 |
+|------|------|
+| `tools/seed-data.json` | 种子数据定义文件 |
+| `tools/generate-seed.js` | 种子数据生成脚本 |
+| `tools/append-seed.js` | 追加种子数据脚本 |
+| `server/routes/seed.js` | 后端 API |
+| `src/pages/GeneratePage.vue` | 前端管理页面 |
+
+### 相关文件
+
+| 文件 | 路径 |
+|------|------|
+| 后端 API | `server/routes/seed.js` |
+| 前端页面 | `src/pages/GeneratePage.vue` |
+| 种子数据 | `tools/seed-data.json` |
+| 生成工具 | `tools/generate-seed.js` |
+| 追加工具 | `tools/append-seed.js` |

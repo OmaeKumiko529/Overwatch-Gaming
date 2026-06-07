@@ -403,10 +403,12 @@ GET /api/posts
       "content": "<p>如题，求大佬指点</p>",
       "category": "general",
       "likes": 3,
+      "views": 42,
       "context": "#/p-20260607-2841-42",
       "parentId": null,
       "postrank": "69",
       "mentions": [],
+      "tags": ["攻略", "源氏"],
       "createdAt": "2026-06-07 00:00:00",
       "updatedAt": "2026-06-07 00:00:00"
     }
@@ -422,7 +424,7 @@ GET /api/posts/:pid
 
 **认证**：可选
 
-**说明**：返回帖子的完整信息及所有子帖（树形结构）。如果帖子为黑帖（`postrank='00'`）且当前用户等级不足 2，内容会被隐藏。
+**说明**：返回帖子的完整信息及所有子帖（树形结构）。如果帖子为黑帖（`postrank='00'`）且当前用户等级不足 2，内容会被隐藏。访问时自动递增 `views` 计数器。
 
 **成功响应**：
 
@@ -438,10 +440,12 @@ GET /api/posts/:pid
     "content": "<p>如题，求大佬指点</p>",
     "category": "general",
     "likes": 3,
+    "views": 42,
     "context": "#/p-20260607-2841-42",
     "parentId": null,
     "postrank": "69",
     "mentions": [],
+    "tags": ["攻略", "源氏"],
     "createdAt": "2026-06-07 00:00:00",
     "updatedAt": "2026-06-07 00:00:00",
     "isLikedByUser": false,
@@ -515,12 +519,14 @@ POST /api/posts
   "title": "新手求助：怎么玩好源氏？",
   "content": "<p>如题，求大佬指点</p>",
   "parentId": null,
-  "mentions": []
+  "mentions": [],
+  "tags": ["攻略", "源氏"]
 }
 ```
 
 - `parentId` 为 `null` 时创建主帖；提供值时创建子帖（评论）
 - `mentions` 数组格式：`[{ userId: 2, username: "某人" }]`
+- `tags` 数组格式：`["攻略", "源氏"]`
 - 标题长度限制：200 字符；内容长度限制：50000 字符
 - 评论时校验父帖的 postrank 权限
 
@@ -896,7 +902,7 @@ GET /api/admin/table/:tableName
 | `sortBy` | string | id | 排序列 |
 | `sortOrder` | string | DESC | 排序方向（asc/desc） |
 
-**说明**：`password_hash` 字段自动脱敏。仅允许操作白名单中的 8 张表。
+**说明**：`password_hash` 字段自动脱敏。仅允许操作白名单中的 9 张表（含 `ow_heroes`）。
 
 ### 7.3 插入行
 
@@ -996,3 +1002,168 @@ POST /api/migrate
 
 **认证**：无  
 **说明**：从 Supabase 格式导入数据到 SQLite
+
+---
+
+## 9. Git 仓库嵌入模块 — `/api/git`
+
+### 9.1 获取仓库信息
+
+```
+POST /api/git/fetch
+```
+
+**认证**：无  
+**说明**：根据 GitHub/Gitee 仓库 URL 获取仓库元数据，包括名称、描述、贡献者列表。支持 TipTap 富文本编辑器中嵌入仓库信息卡片。
+
+**请求体**：
+
+```json
+{
+  "url": "https://github.com/FishMoies/Overwatch-Gaming"
+}
+```
+
+**支持的 URL 格式**：
+
+| 平台 | 格式 |
+|------|------|
+| GitHub | `https://github.com/owner/repo` 或 `github.com/owner/repo` |
+| Gitee | `https://gitee.com/owner/repo` 或 `gitee.com/owner/repo` |
+
+**成功响应**：
+
+```json
+{
+  "success": true,
+  "data": {
+    "title": "FishMoies/Overwatch-Gaming",
+    "description": "基于 Vue 3 + Express + SQLite 的守望先锋主题论坛模板",
+    "url": "https://github.com/FishMoies/Overwatch-Gaming",
+    "platform": "github",
+    "contributors": [
+      { "login": "FishMoies", "avatar_url": "https://avatars.githubusercontent.com/u/xxx?v=4" },
+      { "login": "fmy-dev", "avatar_url": "https://avatars.githubusercontent.com/u/yyy?v=4" }
+    ]
+  }
+}
+```
+
+**失败响应**（不支持的 URL）：
+
+```json
+{
+  "success": false,
+  "message": "无法识别的链接，仅支持 GitHub 和 Gitee 仓库链接"
+}
+```
+
+---
+
+## 10. 个性化偏好模块 — `/api/preference`
+
+### 10.1 记录用户偏好标签
+
+```
+POST /api/preference/record
+```
+
+**认证**：必需  
+**说明**：记录用户对特定标签的偏好。每次用户浏览带标签的帖子时，前端自动调用此接口递增标签计数。
+
+**请求体**：
+
+```json
+{
+  "tags": ["攻略", "源氏"]
+}
+```
+
+**成功响应**：
+
+```json
+{
+  "success": true,
+  "preference": {
+    "total": 15,
+    "攻略": 5,
+    "源氏": 3,
+    "赛事": 7
+  }
+}
+```
+
+### 10.2 获取用户偏好
+
+```
+GET /api/preference/:uid
+```
+
+**认证**：无  
+**说明**：获取指定用户的偏好数据。支持 UID 字符串或数字 ID。
+
+**成功响应**：
+
+```json
+{
+  "success": true,
+  "preference": {
+    "total": 15,
+    "攻略": 5,
+    "源氏": 3,
+    "赛事": 7
+  }
+}
+```
+
+---
+
+## 11. 种子数据模块 — `/api/seed`
+
+### 11.1 注入种子数据（仅管理员）
+
+```
+POST /api/seed/inject
+```
+
+**认证**：必需（管理员，userrank ≥ 3）  
+**说明**：从 `tools/seed-data.json` 文件中读取预定义的测试用户和帖子数据，一键注入数据库。用于开发、测试和演示环境的数据初始化。
+
+**成功响应**：
+
+```json
+{
+  "success": true,
+  "message": "种子数据注入完成：5 个用户, 12 篇帖子",
+  "detail": {
+    "users": [
+      { "username": "测试用户A", "uid": "u-20260607-1234", "id": 6, "status": "已创建" },
+      { "username": "测试用户B", "uid": "u-20260607-5678", "id": 7, "status": "已创建" }
+    ],
+    "posts": [
+      { "title": "测试帖子标题", "pid": "p-20260607-1234-42", "id": 10, "status": "已创建" }
+    ]
+  }
+}
+```
+
+---
+
+## 12. 路由挂载概览
+
+所有 API 路由在 `server/index.js` 中统一挂载：
+
+| 路径前缀 | 源文件 | 端点数量 | 说明 |
+|----------|--------|----------|------|
+| `/api/auth` | `routes/auth.js` | 10 | 认证与用户管理 |
+| `/api/posts` | `routes/posts.js` | 11 | 帖子 CRUD |
+| `/api/teams` | `routes/teams.js` | 5 | 战队管理 |
+| `/api/notifications` | `routes/notifications.js` | 5 | 通知管理 |
+| `/api/announcements` | `routes/announcements.js` | 4 | 公告管理 |
+| `/api/admin` | `routes/admin.js` | 7 | 管理后台 |
+| `/api/heroes` | `routes/heroes.js` | 3 | 英雄图鉴 |
+| `/api/migrate` | `routes/migrate.js` | 1 | 数据迁移 |
+| `/api/preference` | `routes/preference.js` | 2 | 个性化偏好 |
+| `/api/seed` | `routes/seed.js` | 1 | 种子数据注入 |
+| `/api/git` | `routes/git.js` | 1 | Git 仓库信息 |
+| `/api/health` | 内联于 index.js | 1 | 健康检查 |

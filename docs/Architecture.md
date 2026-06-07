@@ -198,6 +198,7 @@ CORS 配置在 `server/index.js` 中，通过 `origin` 回调函数校验：
 | `/notifications` | Notifications | 通知列表 | 无 |
 | `/announcements` | Announcements | 公告列表 | 无 |
 | `/heroes` | Heroes | 英雄图鉴 | 无 |
+| `/generate` | Generate | 数据生成器 | `requiresAuth` + `requiresAdmin` |
 | `/adminpower` | AdminPanel | 管理员面板 | `requiresAuth` + `requiresAdmin` |
 | `/error/:code` | Error | 错误页 | 无 |
 | `/:pathMatch(.*)*` | NotFound | 404 → 重定向到 `/error/404` | - |
