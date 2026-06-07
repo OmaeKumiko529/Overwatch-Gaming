@@ -517,6 +517,34 @@ onMounted(() => loadPostDetail())
 .cancel-reply-btn { padding: 2px 10px; background: none; border: 1px solid #4a5568; border-radius: 100px; color: #a0aec0; font-size: 0.78rem; cursor: pointer; transition: all 0.2s; font-family: 'MapleMono CN Regular', monospace; }
 .cancel-reply-btn:hover { background: #4a5568; border-color: #4a5568; color: white; }
 
+/* Git 仓库卡片（帖子正文和评论中） */
+.post-text :deep(.gcd),
+.comment-content :deep(.gcd) { display: block; border: 1px solid #2d8a4e; border-radius: 8px; padding: 14px 18px; margin: 12px 0; background: #0d2818; transition: border-color 0.2s; }
+.post-text :deep(.gcd:hover),
+.comment-content :deep(.gcd:hover) { border-color: #36a85e; }
+.post-text :deep(.gch),
+.comment-content :deep(.gch) { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.post-text :deep(.gpi),
+.comment-content :deep(.gpi) { font-size: 1.1em; }
+.post-text :deep(.gct),
+.comment-content :deep(.gct) { font-weight: 600; color: #4ade80; font-size: 1em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.post-text :deep(.gpl),
+.comment-content :deep(.gpl) { font-size: 0.8em; color: #2d8a4e; background: rgba(45,138,78,0.15); padding: 2px 8px; border-radius: 4px; flex-shrink: 0; }
+.post-text :deep(.gcb),
+.comment-content :deep(.gcb) { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.post-text :deep(.gco),
+.comment-content :deep(.gco) { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.post-text :deep(.git-ca),
+.comment-content :deep(.git-ca) { width: 22px !important; height: 22px !important; border-radius: 50%; object-fit: cover; display: inline-block; vertical-align: middle; }
+.post-text :deep(.git-cn),
+.comment-content :deep(.git-cn) { font-size: 0.85em; color: #a0aec0; margin-right: 2px; }
+.post-text :deep(.git-cm),
+.comment-content :deep(.git-cm) { font-size: 0.82em; color: #6c757d; margin-left: 2px; }
+.post-text :deep(.gcl),
+.comment-content :deep(.gcl) { display: inline-block; font-size: 0.85em; color: #2d8a4e; text-decoration: none; font-weight: 500; transition: color 0.2s; }
+.post-text :deep(.gcl:hover),
+.comment-content :deep(.gcl:hover) { color: #4ade80; text-decoration: underline; }
+
 @media (max-width: 640px) {
   .post-detail-container { padding: 24px 16px; border-radius: 16px; }
   .post-title { font-size: 1.5rem; }

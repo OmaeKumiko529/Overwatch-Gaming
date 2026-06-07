@@ -427,4 +427,14 @@ export function clearLoginSession() {
   } catch {}
 }
 
-export default { authApi, postsApi, teamsApi, notificationsApi, preferenceApi, adminApi, persistLoginSession, clearLoginSession }
+// ========== Git API (代理 GitHub/Gitee 仓库信息) ==========
+export const gitApi = {
+  fetchRepoInfo(url) {
+    return request('/git/fetch', {
+      method: 'POST',
+      body: { url }
+    })
+  }
+}
+
+export default { authApi, postsApi, teamsApi, notificationsApi, preferenceApi, adminApi, gitApi, persistLoginSession, clearLoginSession }

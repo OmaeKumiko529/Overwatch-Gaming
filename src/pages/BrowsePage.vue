@@ -73,7 +73,7 @@ import { buildRouterLinkPost } from '../utils/encode.js'
 
 const router = useRouter()
 const allPosts = ref([])
-const sortBy = ref('latest')
+const sortBy = ref('preference')
 const selectedPostrank = ref('')
 const displayLimit = ref(12)
 const perPage = 12

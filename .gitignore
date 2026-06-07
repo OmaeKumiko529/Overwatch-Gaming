@@ -48,3 +48,30 @@ __screenshots__/
 # 环境变量文件（包含密钥和密码）
 .env
 server/.env
+
+# 设计稿源文件（PSD等大型二进制文件）
+*.psd
+*.psb
+
+# 设计参考截图目录（非应用资源）
+public/Nsc/
+
+# 开发工具脚本（非生产资源）
+tools/
+server/migrate-v2.js
+server/check_db.js
+
+# 本地测试文件（含硬编码密码/密钥）
+test_auth.html
+test_admin_login.js
+
+# SQLite 数据库衍生文件
+*.db-journal
+*.db-wal
+*.db-shm
+
+# 备份与临时文件
+*.backup
+*.bak
+temp/
+tmp/

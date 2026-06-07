@@ -1,0 +1,679 @@
+{
+  "users": [
+    {
+      "username": "深夜加班人",
+      "email": "night_owl_42@example.com",
+      "password": "123123",
+      "userrank": 1,
+      "role": "[\"flexible\"]",
+      "avatar": "/Head.png"
+    },
+    {
+      "username": "草莓味的喵",
+      "email": "strawberry_meow@example.com",
+      "password": "123123",
+      "userrank": 0,
+      "role": "[\"flexible\"]",
+      "avatar": "/Head.png"
+    },
+    {
+      "username": "今天也想摆烂",
+      "email": "lazy_today_233@example.com",
+      "password": "123123",
+      "userrank": 2,
+      "role": "[\"flexible\"]",
+      "avatar": "/Head.png"
+    },
+    {
+      "username": "风吹裤衩飘",
+      "email": "wind_pants@example.com",
+      "password": "123123",
+      "userrank": 1,
+      "role": "[\"flexible\"]",
+      "avatar": "/Head.png"
+    },
+    {
+      "username": "奶茶续命中",
+      "email": "milk_tea_life@example.com",
+      "password": "123123",
+      "userrank": 0,
+      "role": "[\"flexible\"]",
+      "avatar": "/Head.png"
+    },
+    {
+      "username": "键盘侠阿祖",
+      "email": "azhu_keyboard@example.com",
+      "password": "123123",
+      "userrank": 2,
+      "role": "[\"flexible\"]",
+      "avatar": "/Head.png"
+    },
+    {
+      "username": "别问我不知道",
+      "email": "idontknow_99@example.com",
+      "password": "123123",
+      "userrank": 0,
+      "role": "[\"flexible\"]",
+      "avatar": "/Head.png"
+    },
+    {
+      "username": "秃头程序猿",
+      "email": "bald_coder@example.com",
+      "password": "123123",
+      "userrank": 1,
+      "role": "[\"flexible\"]",
+      "avatar": "/Head.png"
+    },
+    {
+      "username": "月亮不睡我睡",
+      "email": "moon_sleeper@example.com",
+      "password": "123123",
+      "userrank": 0,
+      "role": "[\"flexible\"]",
+      "avatar": "/Head.png"
+    },
+    {
+      "username": "爱吃火锅的鱼",
+      "email": "fish_hotpot@example.com",
+      "password": "123123",
+      "userrank": 0,
+      "role": "[\"flexible\"]",
+      "avatar": "/Head.png"
+    },
+    {
+      "username": "在下萝莉控",
+      "email": "lolicon_daze@example.com",
+      "password": "123123",
+      "userrank": 1,
+      "role": "[\"flexible\"]",
+      "avatar": "/Head.png"
+    },
+    {
+      "username": "八级大狂风",
+      "email": "big_wind_8@example.com",
+      "password": "123123",
+      "userrank": 0,
+      "role": "[\"flexible\"]",
+      "avatar": "/Head.png"
+    },
+    {
+      "username": "今天吃啥好呢",
+      "email": "what2eat@example.com",
+      "password": "123123",
+      "userrank": 0,
+      "role": "[\"flexible\"]",
+      "avatar": "/Head.png"
+    },
+    {
+      "username": "下雨天不想起",
+      "email": "rainy_sleep@example.com",
+      "password": "123123",
+      "userrank": 1,
+      "role": "[\"flexible\"]",
+      "avatar": "/Head.png"
+    },
+    {
+      "username": "周末去哪儿",
+      "email": "weekend_go@example.com",
+      "password": "123123",
+      "userrank": 0,
+      "role": "[\"flexible\"]",
+      "avatar": "/Head.png"
+    },
+    {
+      "username": "钱包瘦了",
+      "email": "wallet_thin@example.com",
+      "password": "123123",
+      "userrank": 0,
+      "role": "[\"flexible\"]",
+      "avatar": "/Head.png"
+    },
+    {
+      "username": "社恐患者001",
+      "email": "social_phobia@example.com",
+      "password": "123123",
+      "userrank": 1,
+      "role": "[\"flexible\"]",
+      "avatar": "/Head.png"
+    },
+    {
+      "username": "追番人追番魂",
+      "email": "anime_fan@example.com",
+      "password": "123123",
+      "userrank": 2,
+      "role": "[\"flexible\"]",
+      "avatar": "/Head.png"
+    },
+    {
+      "username": "楼下小黑",
+      "email": "xiaohei_down@example.com",
+      "password": "123123",
+      "userrank": 0,
+      "role": "[\"flexible\"]",
+      "avatar": "/Head.png"
+    },
+    {
+      "username": "奶茶五分糖",
+      "email": "mild_sweet@example.com",
+      "password": "123123",
+      "userrank": 0,
+      "role": "[\"flexible\"]",
+      "avatar": "/Head.png"
+    }
+  ],
+  "posts": [
+    {
+      "title": "兄弟们帮我看看这个配置合理吗",
+      "content": "<p>RT，预算7k左右，主要打瓦罗兰特和永劫，偶尔剪剪视频。</p><p>CPU：i5-14600KF<br>显卡：RTX 4060Ti 8G<br>内存：32G DDR5 6000<br>主板：B760M<br>电源：750W</p><p>有没有什么地方可以缩一缩或者需要升级的？</p>",
+      "category": "general",
+      "tags": [
+        "游戏",
+        "数码"
+      ],
+      "likes": 34,
+      "views": 567,
+      "postrank": "69",
+      "authorIndex": 0
+    },
+    {
+      "title": "小区楼下的流浪猫一家",
+      "content": "<p>每天下班都能在小区花坛看到一家三口流浪猫，大橘带着两只小橘。</p><p><img src='https://placekitten.com/400/300' alt='猫咪' /></p><p>今天试着带了点猫粮过去，大橘一开始还挺警惕的，后来闻到味道就凑过来了。小家伙们胆子也大，直接开吃。打算以后每天带点粮过去，希望冬天它们能找到暖和的地方。</p>",
+      "category": "general",
+      "tags": [
+        "生活",
+        "宠物"
+      ],
+      "likes": 67,
+      "views": 892,
+      "postrank": "69",
+      "authorIndex": 1
+    },
+    {
+      "title": "吐槽一下现在的996文化",
+      "content": "<p>入职新公司一个月，每天都在晚上十点以后下班，周末还要oncall。薪资是高了一点，但感觉完全没有自己的生活了。</p><p>上周女朋友生日我都只能在公司视频陪她吹蜡烛，真的破防了。想跑路又怕下家更坑，有没有过来人给点建议？</p>",
+      "category": "general",
+      "tags": [
+        "生活",
+        "职场"
+      ],
+      "likes": 128,
+      "views": 2340,
+      "postrank": "69",
+      "authorIndex": 2
+    },
+    {
+      "title": "周末去了趟景德镇",
+      "content": "<p>心血来潮报了个周末陶艺体验课，从拉坯到上釉全程自己动手。</p><p>做了个歪歪扭扭的杯子，虽然丑但是成就感满满。老师说我这种零基础能做成这样已经不错了（怀疑是安慰我）。</p><p>景德镇真的是一个很有烟火气的地方，到处都是瓷器元素，连路灯都是陶瓷的。推荐大家有空去玩玩。</p>",
+      "category": "general",
+      "tags": [
+        "生活",
+        "旅行"
+      ],
+      "likes": 45,
+      "views": 678,
+      "postrank": "69",
+      "authorIndex": 3
+    },
+    {
+      "title": "无限暖暖玩了三天，说说感受",
+      "content": "<p>之前看宣传片就觉得画风很戳我，玩了三天说点真实感受：</p><p>优点：<br>1. 画面确实好看，换装系统做得很精致<br>2. 开放世界探索感意外的不错<br>3. 拍照模式能玩一天</p><p>缺点：<br>1. 优化有点拉胯，我的4060偶尔会掉帧<br>2. 抽卡价格和原神看齐了，钱包遭不住<br>3. 剧情有点低幼</p><p>总体给7.5分吧，休闲玩玩还可以。</p>",
+      "category": "general",
+      "tags": [
+        "游戏",
+        "二次元"
+      ],
+      "likes": 53,
+      "views": 1234,
+      "postrank": "69",
+      "authorIndex": 4
+    },
+    {
+      "title": "教大家一个超简单的番茄鸡蛋面",
+      "content": "<p>适合独居党/宿舍党的快手晚餐，全程不超过15分钟：</p><p>1. 两个番茄切小块，两个鸡蛋打散<br>2. 热油炒鸡蛋盛出备用<br>3. 下番茄炒出汁水，加一勺番茄酱（灵魂！）<br>4. 加水烧开下面条<br>5. 面条快熟的时候把鸡蛋倒回去<br>6. 加盐、生抽、葱花出锅</p><p>成本不到5块钱，比外卖健康多了。</p>",
+      "category": "general",
+      "tags": [
+        "生活",
+        "美食"
+      ],
+      "likes": 89,
+      "views": 1567,
+      "postrank": "78",
+      "authorIndex": 5
+    },
+    {
+      "title": "有没有人看最新一集葬送的芙莉莲",
+      "content": "<p>这集也太好哭了吧！肥伦和修塔尔克的互动真的太可爱了，感觉这集经费在燃烧，打戏作画质量拉满。</p><p>话说有人和我一样觉得赞因才是真主角吗？每次他出场都特别搞笑。</p><p>没看的强烈推荐，这季度最好的番没有之一。</p>",
+      "category": "general",
+      "tags": [
+        "生活",
+        "二次元"
+      ],
+      "likes": 72,
+      "views": 1100,
+      "postrank": "69",
+      "authorIndex": 6
+    },
+    {
+      "title": "分享一下我的桌面布置",
+      "content": "<p>终于把桌面折腾成想要的样子了！</p><p>主屏是27寸4K，副屏竖着放看文档和聊天软件。桌底理线花了我一下午，用了理线槽和魔术贴，终于告别蜘蛛网了。</p><p>桌面清单：<br>- 显示器：Dell U2723QE<br>- 键盘：NuPhy Air75 v2<br>- 鼠标：罗技 GPW<br>- 音响：HomePod mini x2<br>- 台灯：Yeelight 屏幕挂灯</p><p>建议大家有条件一定上理线槽，桌面干净了心情都好很多。</p>",
+      "category": "general",
+      "tags": [
+        "数码",
+        "生活"
+      ],
+      "likes": 38,
+      "views": 445,
+      "postrank": "69",
+      "authorIndex": 7
+    },
+    {
+      "title": "健身房遇到一个很无语的事",
+      "content": "<p>昨晚练胸，有个大哥走过来直接问我『你练完没有，我还要用』，关键是我刚做完一组正在休息，杠铃片上汗都还在。</p><p>我说还有两组，他就站在旁边盯着我看，压力巨大。结果我草草做完他就上去直接加片到100kg做半程卧推，动作都没控制那种。</p><p>健身房这种『巡场』大哥真的劝退，大家有遇到过吗？</p>",
+      "category": "general",
+      "tags": [
+        "生活",
+        "健身"
+      ],
+      "likes": 95,
+      "views": 1876,
+      "postrank": "69",
+      "authorIndex": 8
+    },
+    {
+      "title": "周末扫街拍的几张照片",
+      "content": "<p>入手了一台二手富士XT30 II，周末去老城区扫了一下午街。富士的胶片模拟直出真的省心，基本不用后期。</p><p>拍了些老爷爷下棋、路边猫、菜市场光影之类的。虽然构图还很新手，但自己挺喜欢的。</p><p>有没有摄影大佬指点一下构图技巧？现在感觉拍出来的东西总差了点意思。</p>",
+      "category": "general",
+      "tags": [
+        "生活",
+        "摄影"
+      ],
+      "likes": 41,
+      "views": 534,
+      "postrank": "69",
+      "authorIndex": 9
+    },
+    {
+      "title": "网易云年度报告出来了",
+      "content": "<p>今年听了2846个小时，最高的一天循环了同一首歌86次（我自己都不记得是哪首了）。</p><p>年度歌手是周杰伦，果然每年都是他。年度歌曲是《普通朋友》，大概是因为失恋那段时间一直在听吧。</p><p>最离谱的是10月某天凌晨3点我还在听《安河桥》，大数据是真的知道我那段时间失眠。</p><p>你们的年度歌手是谁？</p>",
+      "category": "general",
+      "tags": [
+        "生活",
+        "音乐"
+      ],
+      "likes": 63,
+      "views": 2100,
+      "postrank": "78",
+      "authorIndex": 10
+    },
+    {
+      "title": "给大家安利一个冷门国产游戏",
+      "content": "<p>《戴森球计划》打折入手了，本来以为是普通工厂模拟游戏，结果一玩就停不下来。</p><p>从一个星球开始，逐步建立星际自动化生产线，最后戴森云包裹整个恒星的那一刻，真的震撼到起鸡皮疙瘩。</p><p>制作组只有五个人，能做到这个程度真的牛逼。喜欢异星工厂、幸福工厂的朋友不要错过。</p>",
+      "category": "general",
+      "tags": [
+        "游戏",
+        "独立游戏"
+      ],
+      "likes": 47,
+      "views": 789,
+      "postrank": "69",
+      "authorIndex": 11
+    },
+    {
+      "title": "分享一下我的全栈项目经验",
+      "content": "<p>上个月独立完成了一个个人博客项目，技术栈如下：</p><p>前端：Next.js 14 + TailwindCSS + TypeScript<br>后端：NestJS + Prisma + PostgreSQL<br>部署：Docker + Nginx 反代</p><p>遇到的坑：<br>1. Next.js 的 server action 在 production 下有一些奇怪的行为<br>2. Prisma migrate 在 CI/CD 里要注意先决条件<br>3. Nginx 的缓存策略折腾了一晚上</p><p>有兴趣的可以看看我的 GitHub，链接在签名里。</p>",
+      "category": "general",
+      "tags": [
+        "知识",
+        "编程"
+      ],
+      "likes": 55,
+      "views": 923,
+      "postrank": "78",
+      "authorIndex": 0
+    },
+    {
+      "title": "网上买的榴莲翻车了",
+      "content": "<p>在某直播间看到99块钱一个金枕，主播信誓旦旦说包熟包甜，我一冲动下单了。</p><p>结果到货打开一看，完全没熟，肉硬邦邦的，放进米缸捂了三天还是不行。找客服退款，客服说『生果不在售后范围内』。</p><p>我真的服了，99块钱买了个教训。以后买榴莲还是去水果店自己挑吧，直播间的便宜真不能贪。</p>",
+      "category": "general",
+      "tags": [
+        "生活",
+        "吐槽"
+      ],
+      "likes": 82,
+      "views": 1450,
+      "postrank": "69",
+      "authorIndex": 1
+    },
+    {
+      "title": "黑神话悟空最难Boss排名",
+      "content": "<p>一周目通关了，说说我觉得最难的前五个Boss：</p><p>1. 杨戬 — 打了四个小时，P2阶段的快慢刀简直反人类<br>2. 毒敌大王 — 毒池子加多动症，近战噩梦<br>3. 小黄龙 — 出招前摇太短，反应不过来<br>4. 大圣残躯 — 纯纯的数值检测<br>5. 黄眉大王 — 机制恶心人</p><p>你们觉得哪个最难？</p>",
+      "category": "general",
+      "tags": [
+        "游戏",
+        "单机游戏"
+      ],
+      "likes": 112,
+      "views": 3200,
+      "postrank": "69",
+      "authorIndex": 2
+    },
+    {
+      "title": "教你用Claude写Python脚本",
+      "content": "<p>最近发现Claude写代码真的很强，分享一下我的使用技巧：</p><p>1. 需求要写清楚，最好给出输入输出的例子<br>2. 让AI先生成伪代码，确认逻辑后再生成完整代码<br>3. 遇到bug可以直接贴错误信息让AI修<br>4. 复杂逻辑可以分段让AI实现</p><p>我用Claude半天就写完了一个自动化数据清洗脚本，以前自己手写至少要两天。</p>",
+      "category": "general",
+      "tags": [
+        "知识",
+        "编程",
+        "AI"
+      ],
+      "likes": 78,
+      "views": 1678,
+      "postrank": "78",
+      "authorIndex": 7
+    },
+    {
+      "title": "有没有人和我一样社恐的",
+      "content": "<p>今天公司团建去唱K，我全程坐在角落里玩手机。其实也不是不想参与，就是不知道怎么融入。</p><p>看着同事们玩得很开心，自己也想加入，但话到嘴边就是说不出口。最后找了个借口提前走了，回家路上觉得自己好没用。</p><p>有没有同款社恐人士？你们都是怎么克服的？</p>",
+      "category": "general",
+      "tags": [
+        "生活",
+        "情感"
+      ],
+      "likes": 156,
+      "views": 2890,
+      "postrank": "69",
+      "authorIndex": 3
+    },
+    {
+      "title": "拼多多买的手机翻新机能买吗",
+      "content": "<p>想换手机了，官网价格太贵，看到拼多多百亿补贴比官网便宜了800块，但是听说是后封机/摸摸党退换的机器，有点慌。</p><p>有没有在拼多多买过手机的兄弟说说经验？<br>1. 能不能安全下车？<br>2. 保修和官方的有区别吗？<br>3. 怎么检查是不是翻新机？</p>",
+      "category": "general",
+      "tags": [
+        "数码",
+        "生活"
+      ],
+      "likes": 33,
+      "views": 987,
+      "postrank": "69",
+      "authorIndex": 4
+    },
+    {
+      "title": "推荐几本2024年我看过的好书",
+      "content": "<p>今年看了大概30本书，挑几本最推荐的：</p><p>📖 《置身事内》 - 讲中国政府和经济发展，通俗易懂，看完对很多政策有了更深的理解<br>📖 《认知觉醒》 - 关于自我管理和元认知，实操性很强<br>📖 《三体》重读 - 每次读都有新的感悟，这次注意到了很多以前没注意的细节<br>📖 《我在北京送快递》 - 底层劳动者的真实生活记录，很震撼</p><p>欢迎大家给我推荐书！</p>",
+      "category": "general",
+      "tags": [
+        "知识",
+        "阅读"
+      ],
+      "likes": 61,
+      "views": 1102,
+      "postrank": "78",
+      "authorIndex": 6
+    },
+    {
+      "title": "大家有没有戒不掉的生活习惯",
+      "content": "<p>我先来：</p><p>1. 每天晚上必须喝一罐冰可乐，不喝就睡不着<br>2. 上厕所必须带手机，没手机上不出来<br>3. 看到手机右上角有红点必须点掉<br>4. 睡前刷B站，说好刷十分钟结果两小时过去了</p><p>知道这些习惯不好但就是改不了啊！你们有没有什么类似的习惯？</p>",
+      "category": "general",
+      "tags": [
+        "生活",
+        "吐槽"
+      ],
+      "likes": 104,
+      "views": 1900,
+      "postrank": "69",
+      "authorIndex": 5
+    },
+    {
+      "title": "偶然听到一首歌听哭了",
+      "content": "<p>今天下班地铁上随机播到赵雷的《我记得》，以前也听过但没太大感觉，今天不知道为什么突然就听懂了。</p><p>『我带着比身体重的行李，游入尼罗河底，经过几道闪电，看到一堆光圈』——原来是在描述出生过程。</p><p>整首歌是讲灵魂轮回的，每一世的母亲都在不同时空等着你。直接给我听破防了，在地铁上偷偷抹眼泪。</p>",
+      "category": "general",
+      "tags": [
+        "生活",
+        "音乐",
+        "情感"
+      ],
+      "likes": 87,
+      "views": 1560,
+      "postrank": "69",
+      "authorIndex": 8
+    },
+    {
+      "title": "分享一下我家的原木风装修",
+      "content": "<p>去年年底装修完的，全程自己设计+找工长半包，建筑面积110平，硬装花了18w。</p><p>最满意的几个地方：<br>1. 全屋通铺木纹砖，视觉上很统一<br>2. 客厅做了满墙书柜，储物和展示两用<br>3. 厨房做了高低台面，洗菜不用弯腰<br>4. 阳台封了做休闲区，放了躺椅和绿植</p><p>装修是个修行工程，期间和工长吵了好几次，还好最后效果还行。有人想看详细清单吗？</p>",
+      "category": "general",
+      "tags": [
+        "生活",
+        "家居"
+      ],
+      "likes": 49,
+      "views": 876,
+      "postrank": "69",
+      "authorIndex": 9
+    },
+    {
+      "title": "王者荣耀现在的elo机制真是够了",
+      "content": "<p>星耀二打到星耀一再掉回星耀二，反复横跳五次了。</p><p>连胜之后必给你匹四个牛鬼蛇神队友：对抗路0-8、打野不带惩戒、射手全程单带。我玩中单真的尽力了，每把输出35%以上，但还是赢不了。</p><p>感觉这个游戏就是在考验你的心态，不是考验你的技术。准备卸载了，等S32赛季再看看吧。</p>",
+      "category": "general",
+      "tags": [
+        "游戏",
+        "手游"
+      ],
+      "likes": 92,
+      "views": 2100,
+      "postrank": "69",
+      "authorIndex": 10
+    },
+    {
+      "title": "深夜里的一段胡思乱想",
+      "content": "<p>凌晨两点还没睡，躺在床上想了很多有的没的。</p><p>小时候觉得长大了就能做自己想做的事，现在长大了发现『想做的事』本身就是个奢侈品。每天上班下班做饭刷手机睡觉，周末一眨眼就过去了。一年又一年，好像什么都没做，又好像每天都在做同样的事。</p><p>可能这就是成年人的常态吧。明天还要早起开会，先睡了。晚安世界。</p>",
+      "category": "general",
+      "tags": [
+        "生活",
+        "情感"
+      ],
+      "likes": 134,
+      "views": 2560,
+      "postrank": "69",
+      "authorIndex": 11
+    },
+    {
+      "title": "双十一什么都没买，感觉自己亏了",
+      "content": "<p>看着周围同事都在收快递，我愣是一样没买。不是不想买，是实在想不出需要什么。</p><p>但是看到大家都买了我没买，又感觉亏了一个亿。这种心理正常吗？有没有和我一样的？</p>",
+      "category": "general",
+      "tags": [
+        "生活",
+        "吐槽"
+      ],
+      "likes": 76,
+      "views": 1430,
+      "postrank": "69",
+      "authorIndex": 15
+    },
+    {
+      "title": "新手养狗一个月心得",
+      "content": "<p>上个月领养了一只三个月大的柯基，取名「土豆」。这一个月真的是痛并快乐着：</p><p>优点：每天回家都摇着尾巴迎接你，治愈力满分<br>缺点：拆家能力超乎想象，已经咬坏三双拖鞋一个沙发腿了</p><p>养狗真的要有心理准备，和养孩子差不多。但看到他可爱的脸又气不起来了。</p>",
+      "category": "general",
+      "tags": [
+        "生活",
+        "宠物"
+      ],
+      "likes": 58,
+      "views": 987,
+      "postrank": "69",
+      "authorIndex": 12
+    },
+    {
+      "title": "大家有没有推荐的B站UP主",
+      "content": "<p>最近B站刷腻了，想换点新鲜的关注。我平时喜欢看知识科普类的，比如XX、XX之类的。</p><p>美食探店也行，最好是那种不是在市中心的大店，而是小巷子里面的苍蝇馆子那种探店。</p><p>游戏杂谈也可以推荐！最近关注了几个讲游戏开发幕后故事的，挺有意思。</p>",
+      "category": "general",
+      "tags": [
+        "生活",
+        "视频"
+      ],
+      "likes": 43,
+      "views": 654,
+      "postrank": "69",
+      "authorIndex": 14
+    },
+    {
+      "title": "在公司年会上抽到了大奖",
+      "content": "<p>今年公司年会抽奖，我居然抽到了一等奖——一台PS5！</p><p>当时整个人都懵了，因为我从小到大抽奖从来没中过。同事都说我今年要转运了。</p><p>回家开了几把《蜘蛛侠2》，画质确实比我的老PS4好太多了。开心！大家年会都抽到了什么？</p>",
+      "category": "general",
+      "tags": [
+        "游戏",
+        "生活"
+      ],
+      "likes": 132,
+      "views": 2100,
+      "postrank": "78",
+      "authorIndex": 13
+    },
+    {
+      "title": "租房遇到的离谱房东",
+      "content": "<p>搬出来租房子快一年了，遇到了一个极品房东：</p><p>1. 热水器坏了让我自己找人修，说「反正你用坏了你负责」<br>2. 冬天暖气不开，说「年轻人多盖点被子就好了」<br>3. 合同到期不退押金，理由是「墙皮有点发黄」</p><p>我真的服了，押金2500块呢。大家租房遇到过什么离谱事？最后押金要回来了吗？</p>",
+      "category": "general",
+      "tags": [
+        "生活",
+        "吐槽"
+      ],
+      "likes": 98,
+      "views": 1870,
+      "postrank": "69",
+      "authorIndex": 16
+    },
+    {
+      "title": "最近迷上了拼图",
+      "content": "<p>买了一幅1000片的宫崎骏《千与千寻》拼图，花了一个周末才拼完。</p><p>拼图真的会上瘾，一开始只想拼个边框，结果一坐就是三个小时。腰酸背痛但是停不下来。</p><p>拼完那一刻的成就感无敌了，已经下单了两幅新的。有人推荐好看的拼图吗？</p>",
+      "category": "general",
+      "tags": [
+        "生活",
+        "兴趣"
+      ],
+      "likes": 47,
+      "views": 823,
+      "postrank": "69",
+      "authorIndex": 17
+    },
+    {
+      "title": "地铁上看到一个很暖的瞬间",
+      "content": "<p>今天早高峰地铁上挤得不行，一个老奶奶带着一大袋菜上了车，没地方扶，站都站不稳。</p><p>旁边一个戴着耳机的年轻小哥看到了，二话不说把座位让给了她，自己背着重重的双肩包站到了下车。</p><p>老奶奶一直在说谢谢，小哥摆摆手说没事。虽然是很小的事，但是一整天心情都变好了。希望好人一生平安。</p>",
+      "category": "general",
+      "tags": [
+        "生活",
+        "情感"
+      ],
+      "likes": 145,
+      "views": 2200,
+      "postrank": "78",
+      "authorIndex": 18
+    },
+    {
+      "title": "ChatGPT帮我写了一份周报",
+      "content": "<p>上周偷懒试了让ChatGPT帮我写周报，把我的工作内容简单列了几点输入进去，结果生成的周报比我平时自己写的还专业。</p><p>用词正式又不浮夸，数据展示方式也很清晰。稍微改了几个细节就直接交了。</p><p>老板居然还回复说「这周写得不错」😂 从此打开了新世界的大门。</p>",
+      "category": "general",
+      "tags": [
+        "知识",
+        "AI",
+        "编程"
+      ],
+      "likes": 88,
+      "views": 1650,
+      "postrank": "69",
+      "authorIndex": 17
+    },
+    {
+      "title": "分享一个超级好用的效率工具",
+      "content": "<p>最近发现一个叫 Arc 的浏览器，用了就回不去了。</p><p>它的侧边栏设计太适合多标签用户了，空间管理功能可以把不同项目的工作区分开，再也不会在20个标签页里迷失方向了。</p><p>还有它的分屏功能，一边看文档一边写代码特别方便。基于Chromium的，Chrome插件全兼容。强烈推荐给经常需要多任务处理的打工人。</p>",
+      "category": "general",
+      "tags": [
+        "知识",
+        "数码",
+        "效率"
+      ],
+      "likes": 64,
+      "views": 1100,
+      "postrank": "78",
+      "authorIndex": 19
+    },
+    {
+      "title": "今年过年不回家了",
+      "content": "<p>因为工作原因今年过年回不了家了，一个人在出租屋里过年。</p><p>虽然和爸妈视频的时候说「没事没事」，但是挂掉电话之后看着空荡荡的房间还是有点难受。去超市买速冻饺子的时候看到别人都是一家人在采购年货，心里更不是滋味了。</p><p>有没有今年也不回家的朋友？一起抱团取暖吧。</p>",
+      "category": "general",
+      "tags": [
+        "生活",
+        "情感"
+      ],
+      "likes": 168,
+      "views": 2900,
+      "postrank": "69",
+      "authorIndex": 16
+    },
+    {
+      "title": "推荐几个冷门但超好用的APP",
+      "content": "<p>分享几个身边人很少知道但真的很实用的APP：</p><p>📱 吾记 - 极简日记APP，没有花里胡哨的功能，就是写日记<br>📱 生辰 - 把你的生命可视化，提醒你珍惜时间<br>📱 鹅说 - 每天推送一个冷知识，内容质量很高<br>📱 看理想 - 文化类音频平台，梁文道他们的内容很棒<br>📱 一个木函 - 集成了N多小工具，什么二维码生成、表情制作都有</p><p>你们有什么压箱底的APP推荐吗？</p>",
+      "category": "general",
+      "tags": [
+        "知识",
+        "数码",
+        "生活"
+      ],
+      "likes": 55,
+      "views": 1340,
+      "postrank": "69",
+      "authorIndex": 15
+    },
+    {
+      "title": "有没有人和我一样觉得过年越来越没意思了",
+      "content": "<p>小的时候过年可开心了，新衣服、压岁钱、放鞭炮、走亲戚吃好吃的。</p><p>现在过年感觉就是换个地方玩手机。春晚越来越不好看，亲戚聚会就是各种灵魂拷问「工资多少」「有对象没」「什么时候买房」。</p><p>年味真的越来越淡了，是我长大了还是真的变了？</p>",
+      "category": "general",
+      "tags": [
+        "生活",
+        "情感",
+        "吐槽"
+      ],
+      "likes": 156,
+      "views": 3200,
+      "postrank": "69",
+      "authorIndex": 14
+    },
+    {
+      "title": "花了三个月练出了腹肌",
+      "content": "<p>从去年九月开始健身，每周去四次健身房，控制饮食，今天终于看到了腹肌线条！</p><p>分享一下我的经验：<br>1. 三分练七分吃，控制碳水摄入是关键<br>2. 腹肌不需要专门练太多，复合动作就够了<br>3. 坚持比强度重要，每天动一点好过一周猛练一天<br>4. 找个健身搭子互相监督</p><p>虽然还不是很明显，但是看到成果真的很开心！继续加油！</p>",
+      "category": "general",
+      "tags": [
+        "生活",
+        "健身"
+      ],
+      "likes": 112,
+      "views": 2100,
+      "postrank": "78",
+      "authorIndex": 12
+    },
+    {
+      "title": "发现了一部被严重低估的国产剧",
+      "content": "<p>最近刷了一部20年的老剧《毛骗》终结篇，看完直呼神作！</p><p>虽然制作粗糙、演员都是素人、服化道一言难尽，但是剧本真的是天花板级别的。反转再反转，每集都在你意想不到的地方给你惊喜。</p><p>豆瓣评分9.7不是没有道理的。如果你能忍受前几集的廉价感，后面绝对会真香。</p>",
+      "category": "general",
+      "tags": [
+        "生活",
+        "影视"
+      ],
+      "likes": 71,
+      "views": 1150,
+      "postrank": "69",
+      "authorIndex": 13
+    },
+    {
+      "title": "第一次尝试做蛋糕翻车了",
+      "content": "<p>看网上做蛋糕的视频觉得好简单，决定自己试试。</p><p>结果：蛋白没打发起来，蛋糕胚塌了；奶油涂得坑坑洼洼；裱花挤出来像一坨💩。</p><p>最后的成品虽然丑得不行，但是味道居然还可以！我室友吃了两块说「比外面卖的好吃」（应该是安慰我的）。</p><p>下次再接再厉，争取做一个能看的蛋糕出来。</p>",
+      "category": "general",
+      "tags": [
+        "生活",
+        "美食"
+      ],
+      "likes": 83,
+      "views": 1430,
+      "postrank": "69",
+      "authorIndex": 19
+    }
+  ]
+}

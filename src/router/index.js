@@ -93,6 +93,12 @@ const routes = [
     component: () => import('../pages/HeroesPage.vue')
   },
   {
+    path: '/generate',
+    name: 'Generate',
+    component: () => import('../pages/GeneratePage.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/adminpower',
     name: 'AdminPanel',
     component: () => import('../pages/AdminPanel.vue'),

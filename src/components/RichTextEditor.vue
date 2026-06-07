@@ -21,6 +21,7 @@
       <button type="button" @click="insertMention" title="提及用户" class="mention-button"><span class="toolbar-icon">@</span></button>
       <div class="toolbar-divider"></div>
       <button type="button" @click="insertBilibili" title="插入B站视频" class="bilibili-button"><span class="toolbar-icon">B</span></button>
+      <button type="button" @click="insertGit" title="插入仓库引用" class="git-button"><span class="toolbar-icon">Git</span></button>
     </div>
 
     <div class="editor-content" ref="editorRef"></div>
@@ -38,6 +39,23 @@
           <p v-if="bilibiliError" class="bilibili-modal-error">{{ bilibiliError }}</p>
         </div>
       </div>
+
+      <div v-if="showGitModal" class="git-modal-overlay" @click.self="cancelGit">
+        <div class="git-modal">
+          <h3 class="git-modal-title">插入仓库引用</h3>
+          <p class="git-modal-desc">请输入 GitHub 或 Gitee 仓库链接</p>
+          <input ref="gitInputRef" v-model="gitInput" type="text" class="git-modal-input" placeholder="例如：https://github.com/FishMoies/Overwatch-Gaming" @keydown.enter="confirmGit" @keydown.escape="cancelGit" :disabled="gitLoading" />
+          <div v-if="gitLoading" class="git-modal-loading">
+            <span class="git-loading-spinner"></span>
+            <span>正在获取仓库信息...</span>
+          </div>
+          <div class="git-modal-actions">
+            <button class="git-modal-cancel" @click="cancelGit" :disabled="gitLoading">取消</button>
+            <button class="git-modal-confirm" @click="confirmGit" :disabled="gitLoading">插入仓库</button>
+          </div>
+          <p v-if="gitError" class="git-modal-error">{{ gitError }}</p>
+        </div>
+      </div>
     </Teleport>
 
     <div v-if="showCharCount" class="char-count">{{ charCount }}/{{ maxLength }}</div>
@@ -45,12 +63,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
+import { ref, onMounted, onUnmounted, watch, computed, nextTick } from 'vue'
 import { Editor } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import { UserMention, createSimpleMentionSuggestion } from './MentionExtension.js'
 import { BilibiliNode } from './BilibiliNode.js'
+import { GitNode } from './GitNode.js'
 import userService from '../services/user.js'
+import { gitApi } from '../services/api.js'
 
 const props = defineProps({
   modelValue: { type: String, default: '' },
@@ -66,10 +86,19 @@ const emit = defineEmits(['update:modelValue', 'change', 'mention'])
 const editorRef = ref(null)
 const editor = ref(null)
 const charCount = computed(() => editor.value ? editor.value.getText().length : 0)
+
+// Bilibili modal state
 const showBilibiliModal = ref(false)
 const bilibiliInput = ref('')
 const bilibiliError = ref('')
 const bilibiliInputRef = ref(null)
+
+// Git modal state
+const showGitModal = ref(false)
+const gitInput = ref('')
+const gitError = ref('')
+const gitLoading = ref(false)
+const gitInputRef = ref(null)
 
 const searchUsers = (query) => {
   if (!query || query.trim() === '') return userService.searchUsers('').slice(0, 5)
@@ -87,7 +116,7 @@ onMounted(async () => {
 
 const initEditor = () => {
   if (!editorRef.value) return
-  const extensions = [StarterKit.configure({ heading: { levels: [1, 2, 3] } }), BilibiliNode]
+  const extensions = [StarterKit.configure({ heading: { levels: [1, 2, 3] } }), BilibiliNode, GitNode]
   if (props.enableMention) {
     extensions.push(UserMention.configure({ HTMLAttributes: { class: 'user-mention' }, suggestion: mentionSuggestion }))
   }
@@ -103,6 +132,7 @@ const initEditor = () => {
 }
 
 const insertMention = () => { if (editor.value) editor.value.chain().focus().insertContent('@').run() }
+
 const insertBilibili = () => {
   bilibiliInput.value = ''; bilibiliError.value = ''; showBilibiliModal.value = true
   setTimeout(() => bilibiliInputRef.value?.focus(), 50)
@@ -117,6 +147,57 @@ const confirmBilibili = () => {
   showBilibiliModal.value = false; bilibiliInput.value = ''; bilibiliError.value = ''
 }
 const cancelBilibili = () => { showBilibiliModal.value = false; bilibiliInput.value = ''; bilibiliError.value = '' }
+
+// Git 仓库引用
+const insertGit = () => {
+  gitInput.value = ''; gitError.value = ''; gitLoading.value = false; showGitModal.value = true
+  nextTick(() => gitInputRef.value?.focus())
+}
+
+const confirmGit = async () => {
+  if (!editor.value) return
+  const trimmed = gitInput.value.trim()
+  if (!trimmed) { gitError.value = '请输入仓库链接'; return }
+
+  // 验证链接格式
+  const isValid = /(?:https?:\/\/)?(?:github\.com|gitee\.com)\/[^/\s?#]+\/[^/\s?#]+/.test(trimmed)
+  if (!isValid) { gitError.value = '无效的仓库链接，仅支持 GitHub 和 Gitee'; return }
+
+  gitLoading.value = true
+  gitError.value = ''
+
+  try {
+    const res = await gitApi.fetchRepoInfo(trimmed)
+    if (!res.success) {
+      gitError.value = res.message || '获取仓库信息失败'
+      return
+    }
+
+    const { title, url, platform, contributors } = res.data
+
+    editor.value.chain().focus().insertGit({
+      url,
+      platform,
+      title,
+      contributors: JSON.stringify(contributors)
+    }).run()
+
+    showGitModal.value = false
+    gitInput.value = ''
+    gitError.value = ''
+  } catch (e) {
+    gitError.value = '网络错误，请稍后重试'
+  } finally {
+    gitLoading.value = false
+  }
+}
+
+const cancelGit = () => {
+  if (gitLoading.value) return
+  showGitModal.value = false
+  gitInput.value = ''
+  gitError.value = ''
+}
 
 watch(() => props.modelValue, (nv) => { if (editor.value && editor.value.getHTML() !== nv) editor.value.commands.setContent(nv, false) })
 watch(() => props.editable, (nv) => editor.value?.setEditable(nv))
@@ -159,6 +240,8 @@ defineExpose({
 .editor-toolbar .mention-button:hover { background: #4facfe; color: white; border-color: #4facfe; }
 .editor-toolbar .bilibili-button { background: #fb7299; color: white !important; border-color: #fb7299; width: 36px; font-weight: bold; }
 .editor-toolbar .bilibili-button:hover { background: #f25d8c; }
+.editor-toolbar .git-button { background: #2d8a4e; color: white !important; border-color: #2d8a4e; width: 36px; font-weight: bold; }
+.editor-toolbar .git-button:hover { background: #36a85e; }
 .toolbar-divider { width: 1px; height: 24px; background: #2a2a4a; margin: 0 4px; }
 .toolbar-icon { font-family: 'SmileySans Oblique', sans-serif; font-weight: 600; }
 .editor-content { min-height: 200px; max-height: 400px; overflow-y: auto; padding: 16px; }
@@ -175,6 +258,68 @@ defineExpose({
 .tiptap-editor blockquote { border-left: 3px solid #4facfe; margin: 1em 0; padding-left: 1em; color: #a0aec0; font-style: italic; }
 .tiptap-editor hr { border: none; border-top: 2px solid #2a2a4a; margin: 2em 0; }
 .tiptap-editor .is-empty::before { content: attr(data-placeholder); color: #6c757d; float: left; height: 0; pointer-events: none; }
+
+/* Git 卡片 */
+git-card.git-card {
+  display: block;
+  border: 1px solid #2d8a4e;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 8px 0;
+  background: #0d2818;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+git-card.git-card:hover {
+  border-color: #36a85e;
+}
+.git-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.git-platform-icon {
+  font-size: 1.1em;
+}
+.git-card-title {
+  font-weight: 600;
+  color: #4ade80;
+  font-size: 1em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.git-card-body {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.git-contributors {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.git-contributor-avatar {
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 50%;
+  object-fit: cover;
+  display: inline-block;
+  vertical-align: middle;
+}
+.git-contributor-name {
+  font-size: 0.85em;
+  color: #a0aec0;
+  margin-right: 2px;
+}
+.git-contributor-more {
+  font-size: 0.82em;
+  color: #6c757d;
+  margin-left: 2px;
+}
 
 /* 用户提及 */
 .user-mention { background-color: #252545; color: #4facfe; padding: 2px 6px; border-radius: 4px; font-weight: 500; cursor: pointer; border: 1px solid #4facfe; }
@@ -207,6 +352,26 @@ defineExpose({
 .bilibili-modal-confirm { padding: 10px 24px; border: none; border-radius: 8px; background: #fb7299; color: white; font-family: 'MapleMono CN Regular', monospace; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
 .bilibili-modal-confirm:hover { background: #f25d8c; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(251,114,153,0.3); }
 .bilibili-modal-error { color: #dc3545; font-size: 0.85rem; margin: 12px 0 0; font-family: 'MapleMono CN Regular', monospace; }
+
+/* Git 弹窗 */
+.git-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000; }
+.git-modal { background: #1a1a2e; border-radius: 16px; padding: 32px; width: 90%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: modalSlideIn 0.2s ease; border: 1px solid #2d8a4e; }
+.git-modal-title { font-family: 'SmileySans Oblique', sans-serif; font-size: 1.5rem; color: #4ade80; margin: 0 0 8px; }
+.git-modal-desc { font-family: 'MapleMono CN Regular', monospace; color: #a0aec0; font-size: 0.9rem; margin: 0 0 20px; }
+.git-modal-input { width: 100%; padding: 12px 16px; border: 2px solid #2a2a4a; border-radius: 10px; font-family: 'MapleMono CN Regular', monospace; font-size: 1rem; outline: none; transition: border-color 0.2s; box-sizing: border-box; background: #0a0a18; color: #e0e0e0; }
+.git-modal-input:focus { border-color: #2d8a4e; }
+.git-modal-input:disabled { opacity: 0.6; }
+.git-modal-loading { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: #4ade80; font-size: 0.9rem; }
+.git-loading-spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #2d8a4e; border-top-color: transparent; border-radius: 50%; animation: gitSpinner 0.6s linear infinite; }
+@keyframes gitSpinner { to { transform: rotate(360deg); } }
+.git-modal-actions { display: flex; gap: 12px; margin-top: 20px; justify-content: flex-end; }
+.git-modal-cancel { padding: 10px 24px; border: 2px solid #2a2a4a; border-radius: 8px; background: transparent; color: #a0aec0; font-family: 'MapleMono CN Regular', monospace; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; }
+.git-modal-cancel:hover { background: #252545; border-color: #4facfe; color: #e0e0e0; }
+.git-modal-cancel:disabled { opacity: 0.5; cursor: not-allowed; }
+.git-modal-confirm { padding: 10px 24px; border: none; border-radius: 8px; background: #2d8a4e; color: white; font-family: 'MapleMono CN Regular', monospace; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.git-modal-confirm:hover { background: #36a85e; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(45,138,78,0.3); }
+.git-modal-confirm:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+.git-modal-error { color: #dc3545; font-size: 0.85rem; margin: 12px 0 0; font-family: 'MapleMono CN Regular', monospace; }
 
 @media (max-width: 768px) {
   .editor-toolbar { gap: 2px; padding: 8px; }
