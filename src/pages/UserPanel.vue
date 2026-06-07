@@ -3,10 +3,9 @@ import { ref, reactive, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth.js';
 import { authApi } from '../services/api.js';
+import pop from '../utils/pop.js';
 import postService from '../services/post.js';
 import { useTeamStore } from '../stores/team.js';
-
-import pop from '../utils/pop.js';
 import ProfileHeader from './UserPanel/ProfileHeader.vue';
 import OverviewTab from './UserPanel/OverviewTab.vue';
 import TeamTab from './UserPanel/TeamTab.vue';
@@ -148,18 +147,23 @@ async function handleChangePassword(data) {
 async function handleDeleteAccount(password) {
   if (!auth.currentUser) return
   try {
-    const res = await authApi.changePassword(password, '__verify__')
-    if (!res.success) {
-      pop.toast('密码错误', 'error')
+    // 先验证密码（不修改密码）
+    const verifyRes = await authApi.verifyPassword(password)
+    if (!verifyRes.success) {
+      pop.toast(verifyRes.message || '密码错误', 'error')
       return
     }
+    // 验证通过后删除账户
     const delRes = await authApi.deleteUser()
     if (delRes.success) {
       auth.logout()
+      pop.toast('账户已注销', 'success')
       router.push({ name: 'Home' })
+    } else {
+      pop.toast(delRes.message || '删除失败', 'error')
     }
   } catch {
-    pop.toast('删除失败', 'error')
+    pop.toast('网络错误，请检查服务器是否正在运行', 'error')
   }
 }
 
@@ -228,8 +232,8 @@ async function handleChangeRole(roles) {
   }
 }
 
-function viewPost(id) {
-  router.push({ name: 'PostDetail', params: { id } })
+function viewPost(pid) {
+  router.push({ name: 'PostDetail', params: { pid } })
 }
 
 async function deletePost(pid) {

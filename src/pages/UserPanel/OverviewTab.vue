@@ -39,7 +39,7 @@
           <span class="info-label">📅 注册时间</span>
           <span class="info-value">{{ formatDate(user.createdAt) }}</span>
         </div>
-        <div class="info-row">
+        <div class="info-row" v-if="user.loginTime">
           <span class="info-label">🔑 最后登录</span>
           <span class="info-value">{{ formatDate(user.loginTime) }}</span>
         </div>

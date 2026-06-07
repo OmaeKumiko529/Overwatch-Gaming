@@ -146,6 +146,15 @@ export const authApi = {
       body: { targetUid, newRank },
       auth: true
     })
+  },
+
+  // 验证密码（用于注销账户等场景的密码确认，不修改密码）
+  verifyPassword(password) {
+    return request('/auth/verify-password', {
+      method: 'POST',
+      body: { password },
+      auth: true
+    })
   }
 }
 

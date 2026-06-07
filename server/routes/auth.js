@@ -410,4 +410,31 @@ router.put('/password', authMiddleware, async (req, res) => {
   }
 })
 
+// 验证密码（用于注销账户等场景的密码确认，不修改密码）
+router.post('/verify-password', authMiddleware, async (req, res) => {
+  try {
+    await getDb()
+    const userId = req.user.id
+    const { password } = req.body
+
+    if (!password) {
+      return res.json({ success: false, message: '密码不能为空' })
+    }
+
+    const user = getOne('SELECT * FROM users WHERE id = ?', [userId])
+    if (!user) {
+      return res.json({ success: false, message: '用户不存在' })
+    }
+
+    if (!await bcrypt.compare(password, user.password_hash)) {
+      return res.json({ success: false, message: '密码错误' })
+    }
+
+    res.json({ success: true })
+  } catch (error) {
+    console.error('验证密码失败:', error)
+    res.status(500).json({ success: false, message: '验证密码失败' })
+  }
+})
+
 export default router
