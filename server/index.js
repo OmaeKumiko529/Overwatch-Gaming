@@ -56,6 +56,7 @@ import announcementsRoutes from './routes/announcements.js'
 import migrateRoutes from './routes/migrate.js'
 import adminRoutes from './routes/admin.js'
 import heroesRoutes from './routes/heroes.js'
+import preferenceRoutes from './routes/preference.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -94,6 +95,7 @@ app.use('/api/announcements', announcementsRoutes)
 app.use('/api/migrate', migrateRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/heroes', heroesRoutes)
+app.use('/api/preference', preferenceRoutes)
 
 // 健康检查
 app.get('/api/health', (req, res) => {

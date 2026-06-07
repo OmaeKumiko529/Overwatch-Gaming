@@ -25,6 +25,7 @@ function mapPost(p) {
     parentId: p.parent_id,
     postrank: p.postrank || '69',
     mentions: p.mentions ? JSON.parse(typeof p.mentions === 'string' ? p.mentions : '[]') : [],
+    tags: p.tags ? JSON.parse(typeof p.tags === 'string' ? p.tags : '[]') : [],
     createdAt: p.created_at,
     updatedAt: p.updated_at
   }
@@ -176,7 +177,7 @@ router.get('/user/:uid', (req, res) => {
 router.post('/', authMiddleware, (req, res) => {
   try {
     const userId = req.user.id
-    const { title, content, parentId, mentions } = req.body
+    const { title, content, parentId, mentions, tags } = req.body
     const username = req.user.username
 
     // 服务端校验
@@ -223,8 +224,8 @@ router.post('/', authMiddleware, (req, res) => {
     }
 
     const result = insert(
-      'INSERT INTO posts (user_id, username, title, content, category, context, parent_id, pid, postrank, mentions) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [userId, username, title, content, parentId ? 'comment' : 'general', context, parentId || null, pid, '69', JSON.stringify(mentions || [])]
+      'INSERT INTO posts (user_id, username, title, content, category, context, parent_id, pid, postrank, mentions, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [userId, username, title, content, parentId ? 'comment' : 'general', context, parentId || null, pid, '69', JSON.stringify(mentions || []), JSON.stringify(tags || [])]
     )
 
     const newPost = {
@@ -240,6 +241,7 @@ router.post('/', authMiddleware, (req, res) => {
       parentId: parentId || null,
       postrank: '69',
       mentions: mentions || [],
+      tags: tags || [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
@@ -292,12 +294,13 @@ router.put('/:pid', authMiddleware, (req, res) => {
     if (!post) return res.json({ success: false, message: '帖子不存在' })
     if (post.user_id !== userId) return res.json({ success: false, message: '无权更新此帖子' })
 
-    const { title, content } = req.body
+    const { title, content, tags } = req.body
     const updates = []
     const params = []
 
     if (title !== undefined) { updates.push('title = ?'); params.push(title) }
     if (content !== undefined) { updates.push('content = ?'); params.push(content) }
+    if (tags !== undefined) { updates.push('tags = ?'); params.push(JSON.stringify(tags)) }
 
     if (updates.length === 0) return res.json({ success: false, message: '没有需要更新的字段' })
 

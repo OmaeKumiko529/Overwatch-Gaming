@@ -158,6 +158,9 @@ function initSchema() {
       if (!colNames.includes('userrank')) {
         db.run("ALTER TABLE users ADD COLUMN userrank INTEGER NOT NULL DEFAULT 0")
       }
+      if (!colNames.includes('preference')) {
+        db.run("ALTER TABLE users ADD COLUMN preference TEXT NOT NULL DEFAULT '{\"total\":0}'")
+      }
     }
   } catch {}
 
@@ -173,6 +176,9 @@ function initSchema() {
       }
       if (!colNames.includes('views')) {
         db.run("ALTER TABLE posts ADD COLUMN views INTEGER NOT NULL DEFAULT 0")
+      }
+      if (!colNames.includes('tags')) {
+        db.run("ALTER TABLE posts ADD COLUMN tags TEXT NOT NULL DEFAULT '[]'")
       }
     }
   } catch {}

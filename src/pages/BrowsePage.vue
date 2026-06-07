@@ -7,6 +7,7 @@
           <select v-model="sortBy" class="control-select" @change="applyFilters">
             <option value="latest">最新发布</option>
             <option value="popular">最多点赞</option>
+            <option value="preference">偏好推荐</option>
           </select>
           <select v-model="selectedPostrank" class="control-select" @change="applyFilters">
             <option value="">全部帖子</option>
@@ -66,6 +67,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import postService from '../services/post.js'
+import { preferenceService } from '../services/preference.js'
 import { getPostRankInfo } from '../constants/rankMap.js'
 import { buildRouterLinkPost } from '../utils/encode.js'
 
@@ -75,15 +77,32 @@ const sortBy = ref('latest')
 const selectedPostrank = ref('')
 const displayLimit = ref(12)
 const perPage = 12
+const userPreference = ref(null)
 
 function getPostRankColor(code) { return getPostRankInfo(code).color }
 function getPostRankLabel(code) { return getPostRankInfo(code).cn }
+
+// 获取当前登录用户的 UID
+function getCurrentUserUid() {
+  try {
+    const sessionJson = sessionStorage.getItem('currentUser') || localStorage.getItem('currentUser')
+    if (sessionJson) {
+      const session = JSON.parse(sessionJson)
+      return session.uid || session.id || null
+    }
+  } catch {}
+  return null
+}
 
 const filteredPosts = computed(() => {
   let list = allPosts.value
   if (selectedPostrank.value) list = list.filter(p => p.postrank === selectedPostrank.value)
   if (sortBy.value === 'popular') list = [...list].sort((a, b) => b.likes - a.likes)
-  else list = [...list].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  else if (sortBy.value === 'preference' && userPreference.value) {
+    list = preferenceService.sortByPreference(userPreference.value, list)
+  } else {
+    list = [...list].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  }
   return list
 })
 
@@ -93,6 +112,12 @@ const hasMore = computed(() => displayLimit.value < filteredPosts.value.length)
 async function loadData() {
   const posts = await postService.getAllPosts()
   allPosts.value = posts.filter(p => p.parentId === null || p.parentId === undefined).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  
+  // 加载当前用户的偏好数据
+  const uid = getCurrentUserUid()
+  if (uid) {
+    userPreference.value = await preferenceService.getUserPreference(uid)
+  }
 }
 function applyFilters() { displayLimit.value = perPage }
 function showMore() { displayLimit.value += perPage }

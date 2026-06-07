@@ -15,7 +15,8 @@ export const postService = {
       content: postData.content,
       category: postData.category || 'general',
       parentId: postData.parentId || null,
-      mentions: postData.mentions || []
+      mentions: postData.mentions || [],
+      tags: postData.tags || []
     })
 
     if (res.success) {

@@ -29,6 +29,42 @@
           />
         </div>
         
+        <div class="form-group">
+          <label>帖子标签</label>
+          <div class="tags-area">
+            <!-- 已选标签 -->
+            <div v-if="tags.length > 0" class="tags-list">
+              <span v-for="(tag, index) in tags" :key="index" class="tag-chip">
+                {{ tag }}
+                <button type="button" class="tag-remove" @click="removeTag(index)">&times;</button>
+              </span>
+            </div>
+            <!-- 预设标签 -->
+            <div class="preset-tags">
+              <button
+                type="button"
+                v-for="preset in presetTags"
+                :key="preset"
+                class="preset-tag"
+                :class="{ active: tags.includes(preset) }"
+                @click="togglePresetTag(preset)"
+              >
+                {{ preset }}
+              </button>
+            </div>
+            <!-- 自定义标签输入 -->
+            <div class="custom-tag-input-wrapper">
+              <input
+                type="text"
+                v-model="customTagInput"
+                class="form-input tag-input"
+                placeholder="输入自定义标签后按回车添加"
+                @keydown.enter.prevent="addCustomTag"
+              />
+            </div>
+          </div>
+        </div>
+
         <div v-if="mentionedUsers.length > 0" class="mentioned-users">
           <h3 class="mentioned-users-title">提及的用户</h3>
           <div class="mentioned-users-list">
@@ -71,6 +107,36 @@ const formData = reactive({
 const isSubmitting = ref(false)
 const mentionedUsers = ref([])
 const allUsers = ref([])
+
+// 标签功能
+const presetTags = ['知识', '游戏', '生活']
+const tags = ref([])
+const customTagInput = ref('')
+
+function togglePresetTag(tag) {
+  const index = tags.value.indexOf(tag)
+  if (index === -1) {
+    tags.value.push(tag)
+  } else {
+    tags.value.splice(index, 1)
+  }
+}
+
+function addCustomTag() {
+  const text = customTagInput.value.trim()
+  if (!text) return
+  if (tags.value.includes(text)) {
+    pop.toast('标签已存在', 'info')
+    customTagInput.value = ''
+    return
+  }
+  tags.value.push(text)
+  customTagInput.value = ''
+}
+
+function removeTag(index) {
+  tags.value.splice(index, 1)
+}
 
 onMounted(() => {
   if (!auth.isLoggedIn) {
@@ -162,7 +228,8 @@ const handleCreatePost = async () => {
       mentions: mentionedUsers.value.map(user => ({
         userId: user.id,
         username: user.username
-      }))
+      })),
+      tags: tags.value
     }
     
     const result = await postService.createPost(postData, currentUser.id, currentUser.username)
@@ -173,6 +240,7 @@ const handleCreatePost = async () => {
       formData.title = ''
       formData.content = ''
       mentionedUsers.value = []
+      tags.value = []
       
       setTimeout(() => {
         router.push('/post/' + encodeURIComponent(result.post.pid))
@@ -283,6 +351,84 @@ const goBack = () => {
 
 .rich-text-editor-wrapper {
   min-height: 250px;
+}
+
+.tags-area {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #4facfe;
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-family: 'MapleMono CN Regular', monospace;
+}
+
+.tag-remove {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.tag-remove:hover {
+  opacity: 1;
+}
+
+.preset-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.preset-tag {
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: 2px solid #2a2a4a;
+  background: transparent;
+  color: #a0aec0;
+  font-family: 'MapleMono CN Regular', monospace;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.preset-tag:hover {
+  border-color: #4facfe;
+  color: #e0e0e0;
+}
+
+.preset-tag.active {
+  background: #4facfe;
+  border-color: #4facfe;
+  color: #fff;
+}
+
+.custom-tag-input-wrapper {
+  width: 100%;
+}
+
+.tag-input {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .mentioned-users {

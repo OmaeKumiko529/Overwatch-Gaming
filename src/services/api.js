@@ -351,6 +351,20 @@ export const announcementsApi = {
   }
 }
 
+// ========== Preference API ==========
+export const preferenceApi = {
+  record(tags) {
+    return request('/preference/record', {
+      method: 'POST',
+      body: { tags },
+      auth: true
+    })
+  },
+  get(uid) {
+    return request(`/preference/${encodeURIComponent(uid)}`)
+  }
+}
+
 // ========== Admin API ==========
 export const adminApi = {
   getTables() {
@@ -413,4 +427,4 @@ export function clearLoginSession() {
   } catch {}
 }
 
-export default { authApi, postsApi, teamsApi, notificationsApi, adminApi, persistLoginSession, clearLoginSession }
+export default { authApi, postsApi, teamsApi, notificationsApi, preferenceApi, adminApi, persistLoginSession, clearLoginSession }

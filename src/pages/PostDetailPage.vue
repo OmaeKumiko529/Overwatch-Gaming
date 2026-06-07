@@ -67,6 +67,13 @@
           </div>
         </div>
 
+        <!-- 帖子标签 -->
+        <div v-if="post.tags && post.tags.length > 0" class="post-tags">
+          <div class="post-tags-list">
+            <span v-for="(tag, index) in post.tags" :key="index" class="post-tag-chip">{{ tag }}</span>
+          </div>
+        </div>
+
         <div class="post-stats">
           <div class="stat-item"><span class="stat-icon">❤️</span><span class="stat-value">{{ post.likes }}</span><span class="stat-label">点赞</span></div>
           <div class="stat-item"><span class="stat-icon">👁️</span><span class="stat-value">{{ post.views || 0 }}</span><span class="stat-label">浏览</span></div>
@@ -146,6 +153,7 @@ import { getPostRankInfo, canViewPostContent, canCommentOnPost } from '../consta
 import pop from '../utils/pop.js';
 import postService from '../services/post.js';
 import { authApi } from '../services/api.js';
+import { preferenceService } from '../services/preference.js';
 import { decodeParam, encodePid, buildRouterLinkUser, buildRouterLinkPost } from '../utils/encode.js';
 import { processContent } from '../utils/contentFilter.js';
 
@@ -206,6 +214,11 @@ const loadPostDetail = async () => {
       childPosts.value = foundPost.childPosts || []
       isLiked.value = foundPost.isLikedByUser || false
       childPosts.value.forEach(c => { commentLikes.value[c.pid] = c.likes || 0; likedComments.value[c.pid] = c.isLikedByUser || false; if (c.userId) loadUserAvatar(c.userId) })
+      // 记录偏好标签（登录用户浏览帖子时）
+      if (auth.isLoggedIn && foundPost.tags && foundPost.tags.length > 0) {
+        preferenceService.recordTags(foundPost.tags)
+      }
+
       if (isComment.value) {
         const pc = extractParentContext(post.value.context)
         if (pc) { const rp = extractRootPid(pc); if (rp) { parentPost.value = await postService.getPostByPid(rp); if (parentPost.value?.userId) loadUserAvatar(parentPost.value.userId) } }
@@ -361,7 +374,6 @@ onMounted(() => loadPostDetail())
 .post-meta { font-size: 0.88rem; color: #a0aec0; }
 
 .post-body { margin-bottom: 30px; padding: 28px 28px 28px 32px; background: #252545; border-radius: 14px; border: 1px solid #2a2a4a; position: relative; }
-.post-body::before { content: ''; position: absolute; left: 0; top: 12px; bottom: 12px; width: 4px; border-radius: 0 4px 4px 0; background: linear-gradient(180deg, #4facfe, #667eea); }
 .post-body.restricted { background: #1a1a2e; border: 2px dashed #4a5568; }
 .post-body.restricted::before { background: linear-gradient(180deg, #4a5568, #6c757d); }
 .restricted-message { text-align: center; padding: 24px; color: #a0aec0; }
@@ -408,6 +420,12 @@ onMounted(() => loadPostDetail())
 .rank-option { padding: 7px 16px; border: 1.5px solid #2a2a4a; border-radius: 100px; background: #1a1a2e; font-family: 'MapleMono CN Regular', monospace; font-size: 0.88rem; cursor: pointer; transition: all 0.2s ease; color: #a0aec0; }
 .rank-option:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-color: #4facfe; }
 .rank-option.active { background: #4facfe; color: white; border-color: #4facfe; }
+
+.post-tags { background: #252545; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; border: 1px solid #2a2a4a; position: relative; overflow: hidden; }
+.post-tags-title { font-size: 0.92rem; font-weight: 600; color: #a0aec0; margin: 0 0 12px; display: flex; align-items: center; gap: 6px; }
+.post-tags-icon { font-weight: 700; }
+.post-tags-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.post-tag-chip { display: inline-flex; align-items: center; background: linear-gradient(135deg, #28a745, #20c997); color: #fff; padding: 4px 14px; border-radius: 20px; font-size: 0.82rem; font-family: 'MapleMono CN Regular', monospace; font-weight: 500; box-shadow: 0 2px 8px rgba(40,167,69,0.3); }
 
 .post-mentions { background: #252545; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; border: 1px solid #2a2a4a; position: relative; overflow: hidden; }
 .post-mentions::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #4facfe, #667eea); }
