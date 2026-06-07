@@ -83,6 +83,7 @@ function initSchema() {
       content TEXT NOT NULL,
       category TEXT NOT NULL DEFAULT 'general',
       likes INTEGER NOT NULL DEFAULT 0,
+      views INTEGER NOT NULL DEFAULT 0,
       context TEXT DEFAULT '#',
       parent_id INTEGER,
       pid TEXT UNIQUE,
@@ -169,6 +170,9 @@ function initSchema() {
       }
       if (!colNames.includes('postrank')) {
         db.run("ALTER TABLE posts ADD COLUMN postrank TEXT NOT NULL DEFAULT '69'")
+      }
+      if (!colNames.includes('views')) {
+        db.run("ALTER TABLE posts ADD COLUMN views INTEGER NOT NULL DEFAULT 0")
       }
     }
   } catch {}

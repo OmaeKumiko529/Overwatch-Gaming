@@ -20,6 +20,7 @@ function mapPost(p) {
     content: p.content,
     category: p.category,
     likes: p.likes,
+    views: p.views || 0,
     context: p.context,
     parentId: p.parent_id,
     postrank: p.postrank || '69',
@@ -391,6 +392,24 @@ router.delete('/:pid/like', authMiddleware, (req, res) => {
   } catch (error) {
     console.error('取消点赞失败:', error)
     res.status(500).json({ success: false, message: '取消点赞失败' })
+  }
+})
+
+// 增加浏览量
+router.post('/:pid/views', (req, res) => {
+  try {
+    const pid = req.params.pid
+
+    const post = getOne('SELECT * FROM posts WHERE pid = ?', [pid])
+    if (!post) return res.json({ success: false, message: '帖子不存在' })
+
+    run("UPDATE posts SET views = views + 1, updated_at = datetime('now', 'localtime') WHERE pid = ?", [pid])
+
+    const updated = getOne('SELECT views FROM posts WHERE pid = ?', [pid])
+    res.json({ success: true, views: updated.views })
+  } catch (error) {
+    console.error('增加浏览量失败:', error)
+    res.status(500).json({ success: false, message: '增加浏览量失败' })
   }
 })
 

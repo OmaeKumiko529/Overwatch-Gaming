@@ -129,6 +129,11 @@ export const postService = {
   async setPostRank(pid, postrank) {
     const res = await postsApi.setPostRank(pid, postrank)
     return res
+  },
+
+  async incrementView(pid) {
+    const res = await postsApi.incrementView(pid)
+    return res
   }
 }
 

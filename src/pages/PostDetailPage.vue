@@ -69,6 +69,7 @@
 
         <div class="post-stats">
           <div class="stat-item"><span class="stat-icon">❤️</span><span class="stat-value">{{ post.likes }}</span><span class="stat-label">点赞</span></div>
+          <div class="stat-item"><span class="stat-icon">👁️</span><span class="stat-value">{{ post.views || 0 }}</span><span class="stat-label">浏览</span></div>
           <div class="stat-item"><span class="stat-icon">💬</span><span class="stat-value">{{ childPosts.length }}</span><span class="stat-label">评论</span></div>
           <div v-if="post.mentions && post.mentions.length > 0" class="stat-item"><span class="stat-icon">@</span><span class="stat-value">{{ post.mentions.length }}</span><span class="stat-label">提及</span></div>
         </div>
@@ -199,6 +200,7 @@ const loadPostDetail = async () => {
     const foundPost = await postService.getPostByPid(pid.value)
     if (foundPost) {
       post.value = foundPost; isLiked.value = false; likedComments.value = {}; commentLikes.value = {}
+      postService.incrementView(pid.value)
       if (foundPost.userId) loadUserAvatar(foundPost.userId)
       if (foundPost.mentions) foundPost.mentions.forEach(m => loadUserAvatar(m.userId))
       childPosts.value = foundPost.childPosts || []

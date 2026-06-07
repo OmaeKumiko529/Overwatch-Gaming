@@ -219,6 +219,12 @@ export const postsApi = {
     })
   },
 
+  incrementView(pid) {
+    return request(`/posts/${encodeURIComponent(pid)}/views`, {
+      method: 'POST'
+    })
+  },
+
   addComment(pid, content) {
     return request(`/posts/${encodeURIComponent(pid)}/comment`, {
       method: 'POST',
