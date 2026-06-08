@@ -1,12 +1,16 @@
 # Overwatch Gaming - 论坛模板
 
-![License](https://img.shields.io/badge/License-MIT-blue?logo=github)
-![Vue](https://img.shields.io/badge/Vue-3.x-green?logo=vue.js)
-![Express](https://img.shields.io/badge/Backend-Express+SQLite-brightgreen?logo=express)
-![Status](https://img.shields.io/badge/Status-Development-orange)
-![Made with Love](https://img.shields.io/badge/Made%20with-%E2%9D%A4%20Love%20and%20Vue.js-white)
+![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
+![Vue](https://img.shields.io/badge/Vue-3.x-green?style=for-the-badge)
+![Express](https://img.shields.io/badge/-Express+SQLite-brightgreen?style=for-the-badge)
+![NODE.JS](https://img.shields.io/badge/-NODE.JS-green?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Development-orange?style=for-the-badge)
+![Made with Love](https://img.shields.io/badge/Made%20with-%E2%9D%A4%20Love%20and%20Vue.js-white?style=for-the-badge)
 
 这是一个以守望先锋为主题的基于 Vue 3 + Express + SQLite 的轻量级论坛模板，专为快速搭建社区系统设计。
+
+![首页](docs/HomePage.png)
+[点击此处查看模板网站](http://owbbs.omaekumiko529.online/)
 
 该模板支持完整的帖子线程模型、JWT 认证、通知系统和后台管理面板，可直接用于二次开发或学习全栈架构。此项目使用 MIT 许可证开源。public 目录下包含的守望先锋相关美术资源（英雄职责图标）来自第三方的版权财产，仅供演示用途，不适用 MIT 许可证，商业使用或再分发需要用自有素材替换。
 
@@ -16,7 +20,7 @@
 
 后端使用 Express 4 搭建 RESTful API，sql.js 实现 SQLite 数据库的读写与持久化（WebAssembly 编译的 SQLite，无需安装数据库服务），bcryptjs 做密码哈希，jsonwebtoken 签发 JWT 认证令牌，express-rate-limit 对敏感接口施加频率限制。项目早期依赖 Supabase 作为后端服务，经过一次数据迁移后改为自建的 Express + SQLite 架构，相关迁移逻辑实现在 server/migrate-v2.js 和 tools/migrate-localstorage.js 中。
 
-**新增模块**：支持 Git 仓库信息嵌入（GitHub/Gitee）、个性化推荐系统（基于标签偏好的帖子排序）、种子数据生成器（管理员一键注入测试数据）。
+![通过阿里云服务器部署的网站后台](<docs/KUMIKO API.png>)
 
 ## 项目文件结构
 
@@ -189,8 +193,10 @@ Express Server (:3001)
 
 ## SQL 数据库设计与规划
 
-### 表结构概览
 
+![可通过前端自带的SQL可视化界面实时查询](docs/SQL.png)
+
+### 表结构概览
 项目共包含 **8 张业务表**，统一在 `server/db.js` 的 `initSchema()` 中创建：
 
 #### 1. users — 用户账户
