@@ -120,9 +120,10 @@ function handleImageError(e) {
 /* 右侧 */
 .info-section {
   width: 55%;
-  height: calc(100vh - 60px);
+  height: calc(100vh - 60px + 100px);
   padding: 40px;
-  margin-right: 80px;
+  margin-right: 100px;
+  margin-top: -100px;
   box-sizing: border-box;
   overflow: hidden;
 }
