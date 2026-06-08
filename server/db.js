@@ -9,42 +9,42 @@ const dbPath = path.join(__dirname, 'data.db')
 
 let db = null
 let SQL = null
-let saveTimer = null
 
-// 保存数据库到文件（失败不抛异常）
+// 保存数据库到文件（失败抛异常，让调用方能感知）
 function saveDb() {
-  if (!db) return
+  if (!db) {
+    console.warn('[DB] saveDb 跳过：数据库未初始化')
+    return
+  }
   try {
     const data = db.export()
     const buffer = Buffer.from(data)
     fs.writeFileSync(dbPath, buffer)
+    console.log('[DB] 数据已持久化到磁盘')
   } catch (e) {
-    // 磁盘写入失败不抛异常——数据库内存状态已更新，下次写入会重试
-    console.error('saveDb 写入磁盘失败:', e.message)
+    console.error('[DB] saveDb 写入磁盘失败:', e.message)
+    throw new Error(`数据库写入磁盘失败: ${e.message}`)
   }
-}
-
-// 防抖异步写入（避免高并发时频繁同步 I/O）
-function scheduleSave() {
-  clearTimeout(saveTimer)
-  saveTimer = setTimeout(saveDb, 300)
 }
 
 // 初始化数据库
 export async function getDb() {
   if (db) return db
 
+  console.log('[DB] 正在初始化数据库...')
   SQL = await initSqlJs()
 
   // 如果存在现有数据库文件，加载它
   if (fs.existsSync(dbPath)) {
     const fileBuffer = fs.readFileSync(dbPath)
     db = new SQL.Database(fileBuffer)
+    console.log('[DB] 已加载现有数据库文件:', dbPath)
   } else {
     db = new SQL.Database()
+    console.log('[DB] 已创建新的内存数据库')
   }
 
-  // 启用 WAL 模式（通过 PRAGMA）
+  // 启用外键约束
   db.run('PRAGMA foreign_keys = ON')
 
   // 创建表结构
@@ -57,6 +57,7 @@ export async function getDb() {
 }
 
 function initSchema() {
+  console.log('[DB] 初始化表结构...')
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -151,15 +152,19 @@ function initSchema() {
       const colNames = userCols[0].values.map(v => v[1])
       if (!colNames.includes('is_admin')) {
         db.run("ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0")
+        console.log('[DB] 迁移: users 表添加 is_admin 列')
       }
       if (!colNames.includes('uid')) {
         db.run("ALTER TABLE users ADD COLUMN uid TEXT UNIQUE")
+        console.log('[DB] 迁移: users 表添加 uid 列')
       }
       if (!colNames.includes('userrank')) {
         db.run("ALTER TABLE users ADD COLUMN userrank INTEGER NOT NULL DEFAULT 0")
+        console.log('[DB] 迁移: users 表添加 userrank 列')
       }
       if (!colNames.includes('preference')) {
         db.run("ALTER TABLE users ADD COLUMN preference TEXT NOT NULL DEFAULT '{\"total\":0}'")
+        console.log('[DB] 迁移: users 表添加 preference 列')
       }
     }
   } catch {}
@@ -170,15 +175,19 @@ function initSchema() {
       const colNames = postCols[0].values.map(v => v[1])
       if (!colNames.includes('pid')) {
         db.run("ALTER TABLE posts ADD COLUMN pid TEXT UNIQUE")
+        console.log('[DB] 迁移: posts 表添加 pid 列')
       }
       if (!colNames.includes('postrank')) {
         db.run("ALTER TABLE posts ADD COLUMN postrank TEXT NOT NULL DEFAULT '69'")
+        console.log('[DB] 迁移: posts 表添加 postrank 列')
       }
       if (!colNames.includes('views')) {
         db.run("ALTER TABLE posts ADD COLUMN views INTEGER NOT NULL DEFAULT 0")
+        console.log('[DB] 迁移: posts 表添加 views 列')
       }
       if (!colNames.includes('tags')) {
         db.run("ALTER TABLE posts ADD COLUMN tags TEXT NOT NULL DEFAULT '[]'")
+        console.log('[DB] 迁移: posts 表添加 tags 列')
       }
     }
   } catch {}
@@ -223,7 +232,9 @@ function initSchema() {
   try { db.run('CREATE INDEX IF NOT EXISTS idx_post_likes_post_id ON post_likes(post_id)') } catch {}
   try { db.run('CREATE INDEX IF NOT EXISTS idx_post_likes_user_id ON post_likes(user_id)') } catch {}
 
+  // 初始建表后立即落盘
   saveDb()
+  console.log('[DB] 表结构初始化完成')
 }
 
 // 确保 Admin 管理员用户存在
@@ -293,19 +304,33 @@ export function getAll(sql, params = []) {
   return rows
 }
 
-// 工具函数：执行写操作
+// 工具函数：执行写操作（同步写入磁盘，不延迟）
 export function run(sql, params = []) {
   db.run(sql, params)
-  scheduleSave()
-  return { changes: db.getRowsModified() }
+  const changes = db.getRowsModified()
+  console.log(`[DB] run: "${sql.substring(0, 60)}..." 影响行数: ${changes}`)
+  // 立即持久化到磁盘
+  saveDb()
+  return { changes }
 }
 
-// 工具函数：执行写操作并返回 lastInsertRowid
+// 工具函数：执行写操作并返回 lastInsertRowid（同步写入磁盘，不延迟）
 export function insert(sql, params = []) {
   db.run(sql, params)
   const result = db.exec("SELECT last_insert_rowid() as id")
-  scheduleSave()
   const lastId = result.length > 0 ? result[0].values[0][0] : null
+
+  // 验证写入是否成功
+  if (lastId === null || lastId === undefined) {
+    const errorMsg = `[DB] insert 失败: "${sql.substring(0, 60)}..." 返回的 lastInsertRowid 为空`
+    console.error(errorMsg)
+    throw new Error(errorMsg)
+  }
+
+  console.log(`[DB] insert: "${sql.substring(0, 60)}..." lastInsertRowid: ${lastId}`)
+  // 立即持久化到磁盘
+  saveDb()
+
   return { lastInsertRowid: lastId, changes: db.getRowsModified() }
 }
 
@@ -313,12 +338,15 @@ export function insert(sql, params = []) {
 export function transaction(fn) {
   try {
     db.run('BEGIN TRANSACTION')
+    console.log('[DB] 事务开始')
     fn()
     db.run('COMMIT')
-    scheduleSave()
+    console.log('[DB] 事务提交')
+    saveDb()
     return true
   } catch (error) {
     db.run('ROLLBACK')
+    console.error('[DB] 事务回滚:', error.message)
     throw error
   }
 }

@@ -53,9 +53,6 @@ server/.env
 *.psd
 *.psb
 
-# 设计参考截图目录（非应用资源）
-public/Nsc/
-
 # 开发工具脚本（非生产资源）
 tools/
 server/migrate-v2.js

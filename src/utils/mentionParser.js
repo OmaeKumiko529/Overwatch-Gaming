@@ -52,6 +52,7 @@ export function extractMentionsFromText(textContent) {
 }
 
 // 获取唯一的提及用户列表
+// 获取唯一的提及用户列表
 export function getUniqueMentions(mentions) {
   const uniqueMap = new Map()
   
