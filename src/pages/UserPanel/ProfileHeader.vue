@@ -14,7 +14,7 @@
         <div class="profile-header-info">
           <div class="profile-name-row">
             <userrankBadge :userId="user.id" />
-            <h1 class="profile-name">{{ user.username }}</h1>
+          <h1 class="profile-name">{{ user.displayName || user.username }}</h1>
           </div>
           <div class="profile-stats">
             <div class="stat-item">

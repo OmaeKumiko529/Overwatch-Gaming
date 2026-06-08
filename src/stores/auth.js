@@ -43,6 +43,7 @@ export const useAuthStore = defineStore('auth', () => {
   // ========== 计算属性 ==========
   const isLoggedIn = computed(() => currentUser.value !== null)
   const currentUsername = computed(() => currentUser.value?.username || null)
+  const currentDisplayName = computed(() => currentUser.value?.displayName || currentUser.value?.username || null)
   const currentUid = computed(() => currentUser.value?.uid || null)
   const userrank = computed(() => Number(currentUser.value?.userrank ?? 0))
   const isAdmin = computed(() => userrank.value >= 3)

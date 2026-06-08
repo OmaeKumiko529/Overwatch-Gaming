@@ -38,7 +38,7 @@
           <div class="author-details">
             <div class="author-name">
               <userrankBadge :userId="post.userId" />
-              <span class="author-username">{{ post.username }}</span>
+              <span class="author-username">{{ post.displayName || post.username }}</span>
               <button v-if="post.userId" class="view-profile-button" @click="viewUserProfile(post.userId)">查看个人资料</button>
             </div>
             <div class="post-meta">发布于 {{ formatRelativeTime(post.createdAt) }}</div>
@@ -61,7 +61,7 @@
           <div class="post-mentions-list">
             <div v-for="mention in post.mentions" :key="mention.userId" class="post-mention-item">
               <img :src="getUserAvatar(mention.userId)" :alt="mention.username" class="post-mention-avatar" @error="handleAvatarError" />
-              <span class="post-mention-name">@{{ mention.username }}</span>
+              <span class="post-mention-name">@{{ mention.displayName || mention.username }}</span>
               <button class="post-mention-profile-button" @click="viewUserProfile(mention.userId)">查看资料</button>
             </div>
           </div>
@@ -103,7 +103,7 @@
             <h4 class="parent-post-title-text">{{ parentPost.title }}</h4>
             <div class="parent-post-author">
               <div class="parent-post-avatar"><img :src="getUserAvatar(parentPost.userId)" :alt="parentPost.username" class="avatar-image-small" @error="handleAvatarError" /></div>
-              <div class="parent-post-author-info"><span class="parent-post-author-name">{{ parentPost.username }}</span><span class="parent-post-time">{{ formatRelativeTime(parentPost.createdAt) }}</span></div>
+              <div class="parent-post-author-info"><span class="parent-post-author-name">{{ parentPost.displayName || parentPost.username }}</span><span class="parent-post-time">{{ formatRelativeTime(parentPost.createdAt) }}</span></div>
             </div>
             <div class="parent-post-content-preview">{{ getPlainTextPreview(parentPost.content, 150) }}</div>
             <div class="parent-post-actions"><button class="parent-post-view-button" @click="goToParentPost(parentPost.pid)">查看原帖</button></div>
@@ -125,14 +125,14 @@
               <div class="comment-header">
                 <div class="comment-author">
                   <div class="comment-avatar"><img :src="getUserAvatar(childPost.userId)" :alt="childPost.username" class="avatar-image-tiny" @error="handleAvatarError" /></div>
-                  <div class="comment-author-info"><span class="comment-author-name">{{ childPost.username }}</span><span class="comment-time">{{ formatRelativeTime(childPost.createdAt) }}</span></div>
+                  <div class="comment-author-info"><span class="comment-author-name">{{ childPost.displayName || childPost.username }}</span><span class="comment-time">{{ formatRelativeTime(childPost.createdAt) }}</span></div>
                 </div>
                 <button v-if="isCommentAuthor(childPost) || isPostAuthor" class="comment-action-btn danger" @click="deleteComment(childPost.pid)">🗑️ 删除</button>
               </div>
               <div class="comment-content" v-html="formatCommentContent(childPost.content)"></div>
               <div class="comment-footer">
                 <button class="comment-action-btn" :class="{ 'liked': likedComments[childPost.pid] }" @click="likeComment(childPost.pid)"><span>{{ likedComments[childPost.pid] ? '❤️' : '🤍' }}</span><span>{{ commentLikes[childPost.pid] ?? childPost.likes ?? 0 }}</span></button>
-                <button class="comment-action-btn" @click="replyToComment(childPost.pid, childPost.username)">💬 回复</button>
+                <button class="comment-action-btn" @click="replyToComment(childPost.pid, childPost.displayName || childPost.username)">💬 回复</button>
               </div>
               <div class="comment-pid" v-if="childPost.pid"><small>PID: {{ childPost.pid }}</small></div>
             </div>

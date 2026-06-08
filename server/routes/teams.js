@@ -170,7 +170,7 @@ router.get('/:id', (req, res) => {
     if (!team) return res.json({ success: false, message: '战队不存在' })
 
     const members = getAll(`
-      SELECT u.id, u.username, u.role, u.avatar, tm.joined_at
+      SELECT u.id, u.username, u.nickname, u.role, u.avatar, tm.joined_at
       FROM team_members tm
       JOIN users u ON tm.user_id = u.id
       WHERE tm.team_id = ?
@@ -188,6 +188,8 @@ router.get('/:id', (req, res) => {
         members: members.map(m => ({
           id: m.id,
           username: m.username,
+          nickname: m.nickname || null,
+          displayName: m.nickname || m.username,
           role: JSON.parse(m.role || '["flexible"]'),
           avatar: m.avatar || '/Head.png',
           joinedAt: m.joined_at

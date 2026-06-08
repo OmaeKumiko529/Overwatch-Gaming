@@ -30,7 +30,7 @@
             <div class="member-avatar">
               <img :src="member.avatar || '/Head.png'" :alt="member.username" @error="onAvatarError" />
             </div>
-            <div class="member-name">{{ member.username }}</div>
+            <div class="member-name">{{ member.displayName || member.username }}</div>
             <div class="member-badges">
               <span v-if="member.id === team.creatorId" class="badge creator">创建者</span>
               <span v-else-if="member.id === currentUserId" class="badge self">您</span>

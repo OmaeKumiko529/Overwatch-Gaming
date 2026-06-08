@@ -11,6 +11,10 @@
           <span class="btn-icon">🔒</span>
           <span class="btn-text">修改密码</span>
         </button>
+        <button class="action-btn logout-btn" @click="$emit('edit-nickname')">
+          <span class="btn-icon">✏️</span>
+          <span class="btn-text">修改昵称</span>
+        </button>
         <button class="action-btn delete-btn" @click="$emit('delete-account')">
           <span class="btn-icon">🗑️</span>
           <span class="btn-text">注销账户</span>
@@ -21,7 +25,7 @@
 </template>
 
 <script setup>
-defineEmits(['logout', 'change-password', 'delete-account'])
+defineEmits(['logout', 'change-password', 'delete-account', 'edit-nickname'])
 </script>
 
 <style scoped>

@@ -41,6 +41,7 @@ const showCreateTeam = ref(false);
 const showJoinTeam = ref(false);
 const showLeaveConfirm = ref(false);
 const showChangeRole = ref(false);
+const showEditNickname = ref(false);
 
 // Modal state
 const passwordData = reactive({ currentPassword: '', newPassword: '', confirmNewPassword: '' })
@@ -48,6 +49,7 @@ const teamData = reactive({ teamName: '' })
 const joinTeamName = ref('')
 const leaveTeamMessage = ref('')
 const deletePassword = ref('')
+const nicknameInput = ref('')
 
 const tabs = computed(() => {
   const items = [
@@ -248,6 +250,29 @@ async function deletePost(pid) {
   }
 }
 
+async function handleEditNickname() {
+  if (!auth.currentUser) return
+  nicknameInput.value = userInfo.value.nickname || ''
+  showEditNickname.value = true
+}
+
+async function saveNickname() {
+  if (!auth.currentUser) return
+  const newNickname = nicknameInput.value.trim()
+  const result = await auth.updateUser(auth.currentUser.id, { nickname: newNickname || null })
+  if (result.success) {
+    userInfo.value = { ...userInfo.value, ...result.user }
+    if (auth.currentUser && Number(auth.currentUser.id) === Number(userInfo.value.id)) {
+      auth.currentUser.nickname = result.user.nickname
+      auth.currentUser.displayName = result.user.displayName
+    }
+    pop.toast(newNickname ? '昵称修改成功' : '昵称已清除', 'success')
+    showEditNickname.value = false
+  } else {
+    pop.toast(result.message || '修改失败', 'error')
+  }
+}
+
 function handleMemberClick(id) {
   router.push({ name: 'UserProfile', params: { uid: id } })
 }
@@ -320,6 +345,7 @@ watch(userInfo, (newVal) => {
         :loading="loadingPosts"
         :is-owner="isViewingOwnProfile"
         :username="userInfo.username || ''"
+        :display-name="userInfo.displayName || userInfo.username || ''"
         :total-likes="totalLikes"
         @create-post="router.push({ name: 'CreatePost' })"
         @view-post="viewPost"
@@ -330,6 +356,7 @@ watch(userInfo, (newVal) => {
         @logout="handleLogout"
         @change-password="showChangePassword = true"
         @delete-account="showDeleteConfirm = true"
+        @edit-nickname="handleEditNickname"
       />
     </div>
 
@@ -340,6 +367,28 @@ watch(userInfo, (newVal) => {
     <ModalTeamJoin v-if="showJoinTeam" @close="showJoinTeam = false" @submit="handleJoinTeam" />
     <ModalTeamLeave v-if="showLeaveConfirm" :message="leaveTeamMessage" @close="showLeaveConfirm = false" @confirm="handleLeaveTeam" />
     <ModalChangeRole v-if="showChangeRole" @close="showChangeRole = false" @submit="handleChangeRole" />
+
+    <!-- Nickname Edit Modal -->
+    <div v-if="showEditNickname" class="modal-overlay" @click.self="showEditNickname = false">
+      <div class="modal-content">
+        <h3 class="modal-title">修改昵称</h3>
+        <p class="modal-hint">昵称显示在用户名位置，留空则显示用户名。</p>
+        <div class="modal-body">
+          <input
+            v-model="nicknameInput"
+            type="text"
+            class="nickname-input"
+            placeholder="输入新的昵称（可选）"
+            maxlength="50"
+            @keydown.enter="saveNickname"
+          />
+        </div>
+        <div class="modal-actions">
+          <button class="modal-btn cancel-btn" @click="showEditNickname = false">取消</button>
+          <button class="modal-btn confirm-btn" @click="saveNickname">保存</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -418,5 +467,103 @@ watch(userInfo, (newVal) => {
   .tab-label {
     display: none;
   }
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #1a1a2e;
+  border: 1px solid #2a2a4a;
+  border-radius: 16px;
+  padding: 28px;
+  width: 90%;
+  max-width: 420px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+.modal-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #e0e0e0;
+  margin: 0 0 8px;
+}
+
+.modal-hint {
+  font-size: 0.9rem;
+  color: #a0aec0;
+  margin: 0 0 20px;
+}
+
+.modal-body {
+  margin-bottom: 24px;
+}
+
+.nickname-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #2a2a4a;
+  border-radius: 10px;
+  background: #0a0a18;
+  color: #e0e0e0;
+  font-family: 'MapleMono CN Regular', monospace;
+  font-size: 1rem;
+  box-sizing: border-box;
+  transition: border-color 0.3s;
+}
+
+.nickname-input:focus {
+  outline: none;
+  border-color: #4facfe;
+}
+
+.nickname-input::placeholder {
+  color: #6c757d;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.modal-btn {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 10px;
+  font-family: 'MapleMono CN Regular', monospace;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cancel-btn {
+  background: #252545;
+  color: #a0aec0;
+  border: 1px solid #2a2a4a;
+}
+
+.cancel-btn:hover {
+  background: #2a2a4a;
+  color: #e0e0e0;
+}
+
+.confirm-btn {
+  background: linear-gradient(135deg, #4facfe, #667eea);
+  color: white;
+}
+
+.confirm-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79,172,254,0.3);
 }
 </style>

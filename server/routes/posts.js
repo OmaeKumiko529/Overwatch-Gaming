@@ -16,6 +16,8 @@ function mapPost(p) {
     pid: p.pid || String(p.id),
     userId: p.user_id,
     username: p.username,
+    userNickname: p.user_nickname || null,
+    displayName: p.user_nickname || p.username,
     title: p.title,
     content: p.content,
     category: p.category,
@@ -49,7 +51,7 @@ router.get('/', optionalAuth, (req, res) => {
     const maxLimit = Math.min(Number(limit) || 20, 100)
     const userrank = req.user ? Number(req.user.userrank) : 0
 
-    let sql = 'SELECT * FROM posts WHERE parent_id IS NULL'
+    let sql = 'SELECT p.*, u.nickname as user_nickname FROM posts p LEFT JOIN users u ON p.user_id = u.id WHERE p.parent_id IS NULL'
     const params = []
 
     if (category) {
@@ -97,7 +99,7 @@ router.get('/:pid', optionalAuth, (req, res) => {
     const userrank = req.user ? Number(req.user.userrank) : 0
     const userId = req.user ? req.user.id : null
 
-    const post = getOne('SELECT * FROM posts WHERE pid = ?', [pid])
+    const post = getOne('SELECT p.*, u.nickname as user_nickname FROM posts p LEFT JOIN users u ON p.user_id = u.id WHERE p.pid = ?', [pid])
     if (!post) return res.json({ success: false, message: '帖子不存在' })
 
     // 黑帖权限检查：content 对无权用户隐藏
@@ -118,7 +120,7 @@ router.get('/:pid', optionalAuth, (req, res) => {
     const parentContext = post.context
     let childPosts = []
     if (parentContext) {
-      childPosts = getAll("SELECT * FROM posts WHERE context LIKE ? AND id != ? ORDER BY created_at ASC", [`${parentContext}/%`, post.id])
+      childPosts = getAll("SELECT c.*, u.nickname as user_nickname FROM posts c LEFT JOIN users u ON c.user_id = u.id WHERE c.context LIKE ? AND c.id != ? ORDER BY c.created_at ASC", [`${parentContext}/%`, post.id])
         .map(mapPost)
     }
 
@@ -158,7 +160,7 @@ router.get('/user/:uid', (req, res) => {
     }
     if (!user) return res.json({ success: false, posts: [] })
 
-    let sql = 'SELECT * FROM posts WHERE user_id = ?'
+    let sql = 'SELECT p.*, u.nickname as user_nickname FROM posts p LEFT JOIN users u ON p.user_id = u.id WHERE p.user_id = ?'
     const params = [user.id]
 
     if (mainOnly === 'true') sql += ' AND parent_id IS NULL'

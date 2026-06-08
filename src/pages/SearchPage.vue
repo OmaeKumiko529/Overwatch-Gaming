@@ -152,7 +152,7 @@ const performSearch = async () => {
         pid: post.pid,
         title: post.title,
         content: post.content,
-        author: post.username,
+        author: post.displayName || post.username,
         date: new Date(post.createdAt).toLocaleDateString('zh-CN'),
         rankInfo: { icon: getPostRankIcon(post.postrank) }
       }))

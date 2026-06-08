@@ -1,7 +1,7 @@
 <template>
   <div class="posts-tab">
     <div class="posts-header">
-      <h2 class="posts-title">{{ isOwner ? '我的帖子' : `${username}的帖子` }}</h2>
+      <h2 class="posts-title">{{ isOwner ? '我的帖子' : `${displayName || username}的帖子` }}</h2>
       <div class="posts-actions">
         <button v-if="isOwner" class="create-btn" @click="$emit('create-post')">
           <span>📝</span>
@@ -20,7 +20,7 @@
     </div>
 
     <div v-else-if="posts.length === 0" class="state-message">
-      <p class="empty-text">{{ isOwner ? '您还没有发布过任何帖子' : `${username}还没有发布过任何帖子` }}</p>
+    <p class="empty-text">{{ isOwner ? '您还没有发布过任何帖子' : `${displayName || username}还没有发布过任何帖子` }}</p>
       <button v-if="isOwner" class="create-btn-empty" @click="$emit('create-post')">
         <span>发布第一篇帖子</span>
       </button>
@@ -60,6 +60,7 @@ defineProps({
   loading: { type: Boolean, default: false },
   isOwner: { type: Boolean, default: false },
   username: { type: String, default: '' },
+  displayName: { type: String, default: '' },
   totalLikes: { type: Number, default: 0 }
 })
 

@@ -23,7 +23,7 @@
       <div class="info-list">
         <div class="info-row">
           <span class="info-label">📛 用户名</span>
-          <span class="info-value">{{ user.username }}</span>
+          <span class="info-value">{{ user.displayName || user.username }}</span>
         </div>
         <div class="info-row">
           <span class="info-label">⭐ 信任等级</span>

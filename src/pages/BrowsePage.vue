@@ -33,7 +33,7 @@
             <p v-else class="post-summary">{{ renderPreview(post.content, 100) }}</p>
             <div class="card-footer">
               <div class="post-meta">
-                <span class="meta author"><span class="meta-icon">👤</span> {{ post.username }}</span>
+                <span class="meta author"><span class="meta-icon">👤</span> {{ post.displayName || post.username }}</span>
                 <span class="meta likes"><span class="meta-icon">❤️</span> {{ post.likes }}</span>
                 <span class="meta views"><span class="meta-icon">👁️</span> {{ post.views || 0 }}</span>
                 <span class="meta comments"><span class="meta-icon">💬</span> {{ post.childPosts?.length || 0 }}</span>

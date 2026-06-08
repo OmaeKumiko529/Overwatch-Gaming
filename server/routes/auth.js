@@ -48,6 +48,8 @@ function mapUser(user) {
     id: user.id,
     uid: user.uid || null,
     username: user.username,
+    nickname: user.nickname || null,
+    displayName: user.nickname || user.username,
     email: user.email,
     role: JSON.parse(user.role || '["flexible"]'),
     userrank: user.userrank !== undefined ? Number(user.userrank) : 0,
@@ -83,8 +85,8 @@ router.post('/register', registerLimiter, async (req, res) => {
     if (username.length < 2 || username.length > 20) {
       return res.json({ success: false, message: '用户名长度必须在2-20个字符之间' })
     }
-    if (!/^[a-zA-Z0-9_\u4e00-\u9fa5]+$/.test(username)) {
-      return res.json({ success: false, message: '用户名只能包含字母、数字、下划线和中文' })
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      return res.json({ success: false, message: '用户名只能包含数字、字母、下划线' })
     }
     if (!email || typeof email !== 'string') {
       return res.json({ success: false, message: '邮箱不能为空' })
@@ -199,13 +201,15 @@ router.get('/me', authMiddleware, async (req, res) => {
 router.get('/users', async (req, res) => {
   try {
     await getDb()
-    const users = getAll('SELECT id, uid, username, email, role, userrank, avatar, team_id, created_at, updated_at FROM users')
+    const users = getAll('SELECT id, uid, username, nickname, email, role, userrank, avatar, team_id, created_at, updated_at FROM users')
     res.json({
       success: true,
       users: users.map(u => ({
         id: u.id,
         uid: u.uid || null,
         username: u.username,
+        nickname: u.nickname || null,
+        displayName: u.nickname || u.username,
         email: maskEmail(u.email),
         role: JSON.parse(u.role || '["flexible"]'),
         userrank: Number(u.userrank || 0),
@@ -228,11 +232,11 @@ router.get('/users/:uid', async (req, res) => {
     await getDb()
     const param = req.params.uid
     // 尝试按 uid 查询（字符串），否则按 id 查询（数字）
-    let user = getOne('SELECT id, uid, username, email, role, userrank, avatar, team_id, created_at, updated_at FROM users WHERE uid = ?', [param])
+    let user = getOne('SELECT id, uid, username, nickname, email, role, userrank, avatar, team_id, created_at, updated_at FROM users WHERE uid = ?', [param])
     if (!user) {
       const id = Number(param)
       if (!isNaN(id)) {
-        user = getOne('SELECT id, uid, username, email, role, userrank, avatar, team_id, created_at, updated_at FROM users WHERE id = ?', [id])
+        user = getOne('SELECT id, uid, username, nickname, email, role, userrank, avatar, team_id, created_at, updated_at FROM users WHERE id = ?', [id])
       }
     }
     if (!user) {
@@ -258,7 +262,7 @@ router.put('/update', authMiddleware, async (req, res) => {
     const userId = req.user.id
     const updates = req.body
 
-    const allowedFields = ['email', 'avatar', 'username']
+    const allowedFields = ['email', 'avatar', 'username', 'nickname']
     const setClauses = []
     const params = []
 

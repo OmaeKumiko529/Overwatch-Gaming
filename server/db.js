@@ -62,6 +62,7 @@ function initSchema() {
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT NOT NULL UNIQUE,
+      nickname TEXT,
       email TEXT NOT NULL UNIQUE,
       password_hash TEXT NOT NULL,
       role TEXT NOT NULL DEFAULT '["flexible"]',
@@ -165,6 +166,10 @@ function initSchema() {
       if (!colNames.includes('preference')) {
         db.run("ALTER TABLE users ADD COLUMN preference TEXT NOT NULL DEFAULT '{\"total\":0}'")
         console.log('[DB] 迁移: users 表添加 preference 列')
+      }
+      if (!colNames.includes('nickname')) {
+        db.run("ALTER TABLE users ADD COLUMN nickname TEXT")
+        console.log('[DB] 迁移: users 表添加 nickname 列')
       }
     }
   } catch {}
