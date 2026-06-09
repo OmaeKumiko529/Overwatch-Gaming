@@ -76,9 +76,6 @@ function handleImageError(e) {
 }
 
 // 视差移动 - 左右上下浮动效果
-let leftChar = null
-let rightChar = null
-
 function handleMouseMove(e) {
   const x = e.clientX
   const y = e.clientY
@@ -86,6 +83,9 @@ function handleMouseMove(e) {
   const h = window.innerHeight
   const xOffset = (x / w - 0.5) * 20
   const yOffset = (y / h - 0.5) * 20
+
+  const leftChar = document.querySelector('.support-gallery .char-left')
+  const rightChar = document.querySelector('.support-gallery .char-right')
 
   if (leftChar) {
     leftChar.style.transform =
@@ -98,8 +98,6 @@ function handleMouseMove(e) {
 }
 
 onMounted(() => {
-  leftChar = document.querySelector('.support-gallery .char-left')
-  rightChar = document.querySelector('.support-gallery .char-right')
   window.addEventListener('mousemove', handleMouseMove)
 })
 
