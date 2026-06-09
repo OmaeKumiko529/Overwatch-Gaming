@@ -4,6 +4,7 @@ import rateLimit from 'express-rate-limit'
 import { getDb, getOne, getAll, insert, run } from '../db.js'
 import { generateToken, authMiddleware } from '../middleware/auth.js'
 import { generateUid } from '../utils/identifiers.js'
+import { validateUsername, validateEmail, validatePassword, validateRoles } from '../utils/validators.js'
 
 const router = Router()
 
@@ -79,33 +80,14 @@ router.post('/register', registerLimiter, async (req, res) => {
     const { username, email, password } = req.body
 
     // 服务端输入校验
-    if (!username || typeof username !== 'string') {
-      return res.json({ success: false, message: '用户名不能为空' })
-    }
-    if (username.length < 2 || username.length > 20) {
-      return res.json({ success: false, message: '用户名长度必须在2-20个字符之间' })
-    }
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-      return res.json({ success: false, message: '用户名只能包含数字、字母、下划线' })
-    }
-    if (!email || typeof email !== 'string') {
-      return res.json({ success: false, message: '邮箱不能为空' })
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return res.json({ success: false, message: '邮箱格式不正确' })
-    }
-    if (email.length > 100) {
-      return res.json({ success: false, message: '邮箱长度不能超过100个字符' })
-    }
-    if (!password || typeof password !== 'string') {
-      return res.json({ success: false, message: '密码不能为空' })
-    }
-    if (password.length < 6) {
-      return res.json({ success: false, message: '密码长度至少为6位' })
-    }
-    if (password.length > 128) {
-      return res.json({ success: false, message: '密码长度不能超过128位' })
-    }
+    const usernameCheck = validateUsername(username)
+    if (!usernameCheck.valid) return res.json(usernameCheck)
+
+    const emailCheck = validateEmail(email)
+    if (!emailCheck.valid) return res.json(emailCheck)
+
+    const passwordCheck = validatePassword(password)
+    if (!passwordCheck.valid) return res.json(passwordCheck)
 
     // 检查用户名是否存在
     const existing = getOne('SELECT id FROM users WHERE username = ? OR email = ?', [username, email])
@@ -308,23 +290,8 @@ router.put('/role', authMiddleware, async (req, res) => {
     const userId = req.user.id
     const { roles } = req.body
 
-    const ALL_VALID_ROLES = ['heavy', 'damage', 'support', 'flexible']
-    if (!Array.isArray(roles) || roles.length === 0) {
-      return res.json({ success: false, message: '至少选择一个职责' })
-    }
-    for (const role of roles) {
-      if (!ALL_VALID_ROLES.includes(role)) {
-        return res.json({ success: false, message: `无效的职责选项: ${role}` })
-      }
-    }
-    const hasFlexible = roles.includes('flexible')
-    const hasOtherRoles = roles.some(r => r !== 'flexible')
-    if (hasFlexible && hasOtherRoles) {
-      return res.json({ success: false, message: '灵活选项不能与其他职责同时选择' })
-    }
-    if (!hasFlexible && roles.length > 2) {
-      return res.json({ success: false, message: '最多只能选择2个职责' })
-    }
+    const rolesCheck = validateRoles(roles)
+    if (!rolesCheck.valid) return res.json(rolesCheck)
 
     const roleJson = JSON.stringify(roles)
     run("UPDATE users SET role = ?, updated_at = datetime('now', 'localtime') WHERE id = ?", [roleJson, userId])

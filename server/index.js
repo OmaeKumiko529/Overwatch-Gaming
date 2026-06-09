@@ -1,64 +1,17 @@
-import dotenv from 'dotenv'
-import path from 'path'
-import fs from 'fs'
-import { fileURLToPath } from 'url'
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const envPath = path.join(__dirname, '.env')
-
-  console.log('         _______                   _____                    _____                    _____                    _____                   _______                   _____  ')
-  console.log('        /::\\    \\                 /\\    \\                  /\\    \\                  /\\    \\                  /\\    \\                 /::\\    \\                 /\\    \\ ')
-  console.log('       /::::\\    \\               /::\\____\\                /::\\    \\                /::\\    \\                /::\\    \\               /::::\\    \\               /::\\____\\')
-  console.log('      /::::::\\    \\             /::::|   |               /::::\\    \\              /::::\\    \\              /::::\\    \\             /::::::\\    \\             /:::/    /')
-  console.log('     /::::::::\\    \\           /:::::|   |              /::::::\\    \\            /::::::\\    \\            /::::::\\    \\           /::::::::\\    \\           /:::/    / ')
-  console.log('    /:::/~~\\:::\\    \\         /::::::|   |             /:::/\\:::\\    \\          /:::/\\:::\\    \\          /:::/\\:::\\    \\         /:::/~~\\:::\\    \\         /:::/    /  ')
-  console.log('   /:::/    \\:::\\    \\       /:::/|::|   |            /:::/__\\:::\\    \\        /:::/__\\:::\\    \\        /:::/__\\:::\\    \\       /:::/    \\:::\\    \\       /:::/    /   ')
-  console.log('  /:::/    / \\:::\\    \\     /:::/ |::|   |           /::::\\   \\:::\\    \\      /::::\\   \\:::\\    \\       \\:::\\   \\:::\\    \\     /:::/    / \\:::\\    \\     /:::/    /    ')
-  console.log(' /:::/____/   \\:::\\____\\   /:::/  |::|___|______    /::::::\\   \\:::\\    \\    /::::::\\   \\:::\\    \\    ___\\:::\\   \\:::\\    \\   /:::/____/   \\:::\\____\\   /:::/    /     ')
-  console.log('|:::|    |     |:::|    | /:::/   |::::::::\\    \\  /:::/\\:::\\   \\:::\\    \\  /:::/\\:::\\   \\:::\\    \\  /\\   \\:::\\   \\:::\\    \\ |:::|    |     |:::|    | /:::/    /      ')
-  console.log("|:::|____|     |:::|    |/:::/    |:::::::::\\____\\/:::/  \\:::\\   \\:::\\____\\/:::/__\\:::\\   \\:::\\____\\/::\\   \\:::\\   \\:::\\____\\|:::|____|     |:::|____|/:::/____/       ")
-  console.log(' \\:::\\    \\   /:::/    / \\::/    / ~~~~~/:::/    /\\::/    \\:::\\  /:::/    /\\:::\\   \\:::\\   \\::/    /\\:::\\   \\:::\\   \\::/    / \\:::\\   _\\___/:::/    / \\:::\\    \\       ')
-  console.log('  \\:::\\    \\ /:::/    /   \\/____/      /:::/    /  \\/____/ \\:::\\/:::/    /  \\:::\\   \\:::\\   \\/____/  \\:::\\   \\:::\\   \\/____/   \\:::\\ |::| /:::/    /   \\:::\\    \\      ')
-  console.log('   \\:::\\    /:::/    /                /:::/    /            \\::::::/    /    \\:::\\   \\:::\\    \\       \\:::\\   \\:::\\    \\        \\:::\\|::|/:::/    /     \\:::\\    \\     ')
-  console.log('    \\:::\\__/:::/    /                /:::/    /              \\::::/    /      \\:::\\   \\:::\\____\\       \\:::\\   \\:::\\____\\        \\::::::::::/    /       \\:::\\    \\    ')
-  console.log('     \\::::::::/    /                /:::/    /               /:::/    /        \\:::\\   \\::/    /        \\:::\\  /:::/    /         \\::::::::/    /         \\:::\\    \\   ')
-  console.log('      \\::::::/    /                /:::/    /               /:::/    /          \\:::\\   \\/____/          \\:::\\/:::/    /           \\::::::/    /           \\:::\\    \\  ')
-  console.log('       \\::::/    /                /:::/    /               /:::/    /            \\:::\\    \\               \\::::::/    /             \\::::/____/             \\:::\\    \\ ')
-  console.log('        \\::/____/                /:::/    /               /:::/    /              \\:::\\____\\               \\::::/    /               |::|    |               \\:::\\____\\')
-  console.log('         ~~                      \\::/    /                \\::/    /                \\::/    /                \\::/    /                |::|____|                \\::/    /')
-  console.log('                                  \\/____/                  \\/____/                  \\/____/                  \\/____/                  ~~                       \\/____/')
-
-
-// 如果 .env 文件不存在，引导用户交互式创建
-if (!fs.existsSync(envPath)) {
-
-  // 动态导入 setup-env（ESM 中 await import 可同步风格使用）
-  const { setupEnv } = await import('./setup-env.js')
-  await setupEnv()
-
-  // 重新加载环境变量
-  dotenv.config({ path: envPath, override: true })
-  console.log('环境变量已重新加载')
-  console.log('')
-} else {
-  dotenv.config({ path: envPath })
-}
-
+import { printBanner } from './utils/banner.js'
+import { ensureEnv } from './bootstrap/env.js'
 import express from 'express'
 import cors from 'cors'
 import rateLimit from 'express-rate-limit'
+import path from 'path'
+import fs from 'fs'
+import { fileURLToPath } from 'url'
 import { getDb } from './db.js'
-import authRoutes from './routes/auth.js'
-import postsRoutes from './routes/posts.js'
-import teamsRoutes from './routes/teams.js'
-import notificationsRoutes from './routes/notifications.js'
-import announcementsRoutes from './routes/announcements.js'
-import migrateRoutes from './routes/migrate.js'
-import adminRoutes from './routes/admin.js'
-import heroesRoutes from './routes/heroes.js'
-import preferenceRoutes from './routes/preference.js'
-import seedRoutes from './routes/seed.js'
-import gitRoutes from './routes/git.js'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+// 加载环境变量（首次运行自动引导创建 .env）
+await ensureEnv()
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -88,18 +41,15 @@ app.use(limiter)
 
 app.use(express.json({ limit: '10mb' }))
 
-// 路由（各路由内部自行初始化数据库）
-app.use('/api/auth', authRoutes)
-app.use('/api/posts', postsRoutes)
-app.use('/api/teams', teamsRoutes)
-app.use('/api/notifications', notificationsRoutes)
-app.use('/api/announcements', announcementsRoutes)
-app.use('/api/migrate', migrateRoutes)
-app.use('/api/admin', adminRoutes)
-app.use('/api/heroes', heroesRoutes)
-app.use('/api/preference', preferenceRoutes)
-app.use('/api/seed', seedRoutes)
-app.use('/api/git', gitRoutes)
+// 路由自动注册 - 扫描 routes 目录，按文件名自动挂载 /api/{name}
+const routesDir = path.join(__dirname, 'routes')
+const routeFiles = fs.readdirSync(routesDir).filter(f => f.endsWith('.js'))
+for (const file of routeFiles) {
+  const routeName = file.replace('.js', '')
+  const { default: router } = await import(`./routes/${file}`)
+  app.use(`/api/${routeName}`, router)
+  console.log(`[Routes] 已挂载 /api/${routeName}`)
+}
 
 // 健康检查
 app.get('/api/health', (req, res) => {
@@ -123,7 +73,8 @@ async function start() {
     await getDb()
     console.log('数据库已初始化')
     app.listen(PORT, () => {
-      console.log(`Server is running on: http://localhost:${PORT}`)
+      printBanner()
+      console.log(`\nServer is running on: http://localhost:${PORT}`)
       console.log(`SQL server data on: server/data.db`)
     })
   } catch (error) {

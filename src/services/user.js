@@ -1,50 +1,6 @@
 // 用户管理服务 - 通过后端 API 管理用户数据
 import { authApi } from './api.js'
 
-// 职责选项
-const ROLE_OPTIONS = {
-  HEAVY: 'heavy',      // 重装
-  DAMAGE: 'damage',    // 输出
-  SUPPORT: 'support',  // 支援
-  FLEXIBLE: 'flexible' // 灵活
-}
-
-// 所有有效职责
-const ALL_VALID_ROLES = Object.values(ROLE_OPTIONS)
-
-// 验证角色数组是否有效
-const validateRoles = (roles) => {
-  if (!Array.isArray(roles)) {
-    return { valid: false, message: '职责必须是数组' }
-  }
-
-  if (roles.length === 0) {
-    return { valid: false, message: '至少选择一个职责' }
-  }
-
-  // 检查是否包含无效角色
-  for (const role of roles) {
-    if (!ALL_VALID_ROLES.includes(role)) {
-      return { valid: false, message: `无效的职责选项: ${role}` }
-    }
-  }
-
-  // 检查灵活与其他职责的互斥性
-  const hasFlexible = roles.includes(ROLE_OPTIONS.FLEXIBLE)
-  const hasOtherRoles = roles.some(role => role !== ROLE_OPTIONS.FLEXIBLE)
-
-  if (hasFlexible && hasOtherRoles) {
-    return { valid: false, message: '灵活选项不能与其他职责同时选择' }
-  }
-
-  // 检查非灵活职责数量
-  if (!hasFlexible && roles.length > 2) {
-    return { valid: false, message: '最多只能选择2个职责' }
-  }
-
-  return { valid: true }
-}
-
 // 缓存用户列表（避免频繁 API 请求）
 let cachedUsers = null
 let cacheExpiry = 0
