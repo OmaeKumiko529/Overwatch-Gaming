@@ -121,11 +121,13 @@ onUnmounted(() => {
   height: 100vh;
   background: #ffffff;
   color: rgb(0, 0, 0);
+  overflow: hidden;
 }
 
 .container {
   display: flex;
   height: 100%;
+  overflow: hidden;
 }
 
 /* 左侧 */
@@ -163,11 +165,13 @@ onUnmounted(() => {
 /* 右侧 */
 .info-section {
   width: 55%;
-  height: calc(100vh - 60px + 100px);
-  padding: 40px;
-  margin-right: 100px;
-  margin-top: -100px;
+  height: 100vh;
+  padding: 4vh 3vw;
+  margin-right: 3vw;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   overflow: hidden;
 }
 
@@ -181,36 +185,42 @@ onUnmounted(() => {
 
 /* 标题 */
 .english-title {
-  font-size: 96px;
+  font-size: clamp(2rem, 5vw, 6rem);
   font-family: "SmileySans-Oblique", sans-serif;
   font-weight: 700;
-  margin-top: 100px;
+  margin-top: 2vh;
   justify-content: flex-end;
   display: flex;
-  align-items: center; /* 关键：垂直居中 */
-  gap: 10px; /* 图片和文字间距 */
+  align-items: center;
+  gap: 0.5vw;
+}
+
+.english-title img {
+  height: clamp(1.8rem, 4vw, 5rem);
+  width: auto;
 }
 
 .cn-title {
-  font-size: 24px;
-  margin-top: 10px;
+  font-size: clamp(0.9rem, 1.3vw, 1.6rem);
+  margin-top: 0.5vh;
   color: #000000;
   text-align: right;
 }
 
 .desc-text {
   margin-top: 0px;
-  margin-bottom: 30px;
+  margin-bottom: 2vh;
   line-height: 1.6;
   color: #818181;
   text-align: right;
+  font-size: clamp(0.75rem, 0.9vw, 1.05rem);
 }
 
-/* ✅ 核心：网格布局 - 调整为更适合22个英雄 */
+/* ✅ 核心：网格布局 */
 .hero-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
-  gap: 15px 30px;
+  grid-template-columns: repeat(auto-fill, minmax(clamp(55px, 5.5vw, 95px), 1fr));
+  gap: clamp(6px, 1vh, 1.2vh) clamp(10px, 2vw, 2.5vw);
 }
 
 /* 单个英雄 */
@@ -228,7 +238,8 @@ onUnmounted(() => {
 
 /* 头像 */
 .hero-item img {
-  width: 100px;
+  width: 100%;
+  max-width: clamp(55px, 6.5vw, 100px);
   height: auto;
   border-radius: 14px;
   object-fit: cover;
