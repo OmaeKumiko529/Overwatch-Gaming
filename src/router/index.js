@@ -1,5 +1,6 @@
 // Vue Router配置文件（含路由懒加载）
 import { createRouter, createWebHashHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/auth.js'
 
 const routes = [
   {
@@ -42,7 +43,6 @@ const routes = [
         const sessionJson = sessionStorage.getItem('currentUser') || localStorage.getItem('currentUser');
         if (sessionJson) {
           const user = JSON.parse(sessionJson);
-          // 重定向使用 uid（注意 URL 编码）
           const encodedUid = encodeURIComponent(user.uid || user.id);
           return '/user/' + encodedUid;
         }
@@ -127,28 +127,31 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  if (to.meta.requiresAuth) {
-    try {
-      const sessionJson = sessionStorage.getItem('currentUser') || localStorage.getItem('currentUser');
-      if (!sessionJson) {
-        next('/login')
-        return
-      }
+  if (!to.meta.requiresAuth) {
+    next()
+    return
+  }
 
-      // 检查管理员权限
-      if (to.meta.requiresAdmin) {
-        const session = JSON.parse(sessionJson);
-        const userrank = Number(session.userrank ?? 0);
-        if (userrank < 3) {
-          next('/')
-          return
-        }
-      }
-    } catch {
-      next('/login')
+  // 延迟加载 auth store（避免循环依赖）
+  const authStore = useAuthStore()
+  authStore.loadSession()
+
+  const sessionJson = sessionStorage.getItem('currentUser') || localStorage.getItem('currentUser')
+  if (!sessionJson) {
+    next('/login')
+    return
+  }
+
+  // 检查管理员权限
+  if (to.meta.requiresAdmin) {
+    const session = JSON.parse(sessionJson)
+    const userrank = Number(session.userrank ?? 0)
+    if (userrank < 3) {
+      next('/')
       return
     }
   }
+
   next()
 })
 

@@ -2,39 +2,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authApi, persistLoginSession, clearLoginSession } from '../services/api.js'
-
-// 职责选项
-const ROLE_OPTIONS = {
-  HEAVY: 'heavy',
-  DAMAGE: 'damage',
-  SUPPORT: 'support',
-  FLEXIBLE: 'flexible'
-}
-
-const ALL_VALID_ROLES = Object.values(ROLE_OPTIONS)
-
-const validateRoles = (roles) => {
-  if (!Array.isArray(roles)) {
-    return { valid: false, message: '职责必须是数组' }
-  }
-  if (roles.length === 0) {
-    return { valid: false, message: '至少选择一个职责' }
-  }
-  for (const role of roles) {
-    if (!ALL_VALID_ROLES.includes(role)) {
-      return { valid: false, message: `无效的职责选项: ${role}` }
-    }
-  }
-  const hasFlexible = roles.includes(ROLE_OPTIONS.FLEXIBLE)
-  const hasOtherRoles = roles.some(role => role !== ROLE_OPTIONS.FLEXIBLE)
-  if (hasFlexible && hasOtherRoles) {
-    return { valid: false, message: '灵活选项不能与其他职责同时选择' }
-  }
-  if (!hasFlexible && roles.length > 2) {
-    return { valid: false, message: '最多只能选择2个职责' }
-  }
-  return { valid: true }
-}
+import { ROLE_OPTIONS, validateRoles } from '../constants/roles.js'
 
 export const useAuthStore = defineStore('auth', () => {
   // ========== 状态 ==========
