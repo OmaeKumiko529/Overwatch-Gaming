@@ -9,7 +9,7 @@ import { useAuthStore } from '../stores/auth.js'
 import HeroSection from './HomePages/HeroSection.vue'
 import RolesSection from './HomePages/RolesSection.vue'
 import SupportGallery from './HomePages/SupportGallery.vue'
-import BlankSection from './HomePages/BlankSection.vue'
+import DamageGallery from './HomePages/DamageGallery.vue'
 import TankGallery from './HomePages/TankGallery.vue'
 
 const router = useRouter()
@@ -95,10 +95,7 @@ onUnmounted(() => {
 
     <!-- 第五屏 -->
     <section class="home-section">
-      <BlankSection 
-        title="第五屏"
-        description="这里是你要的第三个空白页面，可以放页脚或联系方式"
-      />
+      <DamageGallery />
     </section>
   </div>
 </template>

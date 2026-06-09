@@ -26,12 +26,12 @@
         <div class="hero-grid">
           <div 
             v-for="hero in supportHeroes"
-            :key="hero.name"
+            :key="hero.imageIndex"
             class="hero-item"
           >
             <img 
               :src="getHeroImage(hero)"
-              :alt="hero.name"
+              :alt="`Support ${hero.imageIndex}`"
               @error="handleImageError"
             >
           </div>
@@ -44,28 +44,29 @@
 </template>
 
 <script setup>
+import { onMounted, onUnmounted } from 'vue'
 
 // ✅ 完全沿用你的数据
 const supportHeroes = [
-  { name: "飞天猫", imageIndex: 1 },
-  { name: "瑞稀", imageIndex: 2 },
-  { name: "无漾", imageIndex: 3 },
-  { name: "安娜", imageIndex: 4 },
-  { name: "朱诺", imageIndex: 5 },
-  { name: "伊拉锐", imageIndex: 6 },
-  { name: "雾子", imageIndex: 7 },
-  { name: "莫伊拉", imageIndex: 8 },
-  { name: "生命之梭", imageIndex: 9 },
-  { name: "天使", imageIndex: 10 },
-  { name: "卢西奥", imageIndex: 11 },
-  { name: "禅雅塔", imageIndex: 12 },
-  { name: "布丽吉塔", imageIndex: 13 },
-  { name: "巴蒂斯特", imageIndex: 14 }
+  { imageIndex: 1 },
+  { imageIndex: 2 },
+  { imageIndex: 3 },
+  { imageIndex: 4 },
+  { imageIndex: 5 },
+  { imageIndex: 6 },
+  { imageIndex: 7 },
+  { imageIndex: 8 },
+  { imageIndex: 9 },
+  { imageIndex: 10 },
+  { imageIndex: 11 },
+  { imageIndex: 12 },
+  { imageIndex: 13 },
+  { imageIndex: 14 }
 ]
 
 // ✅ 完全沿用你的路径规则
 function getHeroImage(hero) {
-  const fileName = `0w+ (${hero.imageIndex}).png`
+  const fileName = `0w+ (${hero.imageIndex}).jpg`
   return `/Nsc/${encodeURI(fileName)}`
 }
 
@@ -73,6 +74,38 @@ function getHeroImage(hero) {
 function handleImageError(e) {
   e.target.style.opacity = 0.3
 }
+
+// 视差移动 - 左右上下浮动效果
+let leftChar = null
+let rightChar = null
+
+function handleMouseMove(e) {
+  const x = e.clientX
+  const y = e.clientY
+  const w = window.innerWidth
+  const h = window.innerHeight
+  const xOffset = (x / w - 0.5) * 20
+  const yOffset = (y / h - 0.5) * 20
+
+  if (leftChar) {
+    leftChar.style.transform =
+      `translateX(${xOffset * 2}px) translateY(${yOffset}px)`
+  }
+  if (rightChar) {
+    rightChar.style.transform =
+      `translateX(${xOffset * 1}px) translateY(${yOffset * 0.5}px)`
+  }
+}
+
+onMounted(() => {
+  leftChar = document.querySelector('.support-gallery .char-left')
+  rightChar = document.querySelector('.support-gallery .char-right')
+  window.addEventListener('mousemove', handleMouseMove)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('mousemove', handleMouseMove)
+})
 </script>
 
 <style scoped>
@@ -108,6 +141,7 @@ function handleImageError(e) {
   bottom: 0;
   left: 0;
   height: 95%;
+  z-index: 2;
 }
 
 .char-right {
@@ -115,6 +149,7 @@ function handleImageError(e) {
   bottom: 0;
   right: 10%;
   height: 80%;
+  z-index: 2;
 }
 
 /* 右侧 */

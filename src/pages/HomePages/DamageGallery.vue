@@ -1,37 +1,37 @@
 <template>
-  <div class="tank-gallery">
+  <div class="damage-gallery">
     <div class="container">
 
       <!-- 左侧角色插图区域（不动） -->
       <div class="character-section">
-        <img src="/public/ow_icon.svg" alt="守望先锋标志" class="logo-bg">
-        <img src="/t/dc.png" alt="左侧重装角色" class="char-left">
-        <img src="/t/lb.png" alt="右侧重装角色" class="char-right">
+        <img src="/ow_icon.svg" alt="守望先锋标志" class="logo-bg">
+        <img src="/c/mkl.png" alt="左侧输出角色" class="char-left">
+        <img src="/c/sg.png" alt="右侧输出角色" class="char-right">
       </div>
 
       <!-- 右侧信息区域（重写） -->
       <div class="info-section">
 
         <div class="english-title">
-             <img src="/t/96px-职责：重装_图标.png">
-             <span>Tanks</span>
+             <img src="/c/96px-职责：输出_图标.png">
+             <span>Damage</span>
         </div>
-        <div class="cn-title">重装</div>
+        <div class="cn-title">输出</div>
         <div class="desc-text">
-          集防御与推进于一体的角色<br>
-          负责对敌方的压制与战线维持
+          集高伤害与灵活机动于一体的角色<br>
+          负责对敌方的击杀与火力压制
         </div>
 
         <!-- 英雄网格 -->
         <div class="hero-grid">
           <div 
-            v-for="hero in tankHeroes"
+            v-for="hero in damageHeroes"
             :key="hero.imageIndex"
             class="hero-item"
           >
             <img 
               :src="getHeroImage(hero)"
-              :alt="`Tank ${hero.imageIndex}`"
+              :alt="`Damage ${hero.imageIndex}`"
               @error="handleImageError"
             >
           </div>
@@ -46,8 +46,8 @@
 <script setup>
 import { onMounted, onUnmounted } from 'vue'
 
-// ✅ 完全沿用你的数据
-const tankHeroes = [
+// ✅ 22个输出英雄
+const damageHeroes = [
   { imageIndex: 1 },
   { imageIndex: 2 },
   { imageIndex: 3 },
@@ -61,13 +61,21 @@ const tankHeroes = [
   { imageIndex: 11 },
   { imageIndex: 12 },
   { imageIndex: 13 },
-  { imageIndex: 14 }
+  { imageIndex: 14 },
+  { imageIndex: 15 },
+  { imageIndex: 16 },
+  { imageIndex: 17 },
+  { imageIndex: 18 },
+  { imageIndex: 19 },
+  { imageIndex: 20 },
+  { imageIndex: 21 },
+  { imageIndex: 22 }
 ]
 
-// ✅ 完全沿用你的路径规则
+// ✅ 路径规则：/c/0wc (1).jpg ~ /c/0wc (22).jpg
 function getHeroImage(hero) {
-  const fileName = `0wt (${hero.imageIndex}).jpg`
-  return `/t/${encodeURI(fileName)}`
+  const fileName = `0wc (${hero.imageIndex}).jpg`
+  return `/c/${encodeURI(fileName)}`
 }
 
 // 简单兜底（避免破图）
@@ -98,8 +106,8 @@ function handleMouseMove(e) {
 }
 
 onMounted(() => {
-  leftChar = document.querySelector('.tank-gallery .char-left')
-  rightChar = document.querySelector('.tank-gallery .char-right')
+  leftChar = document.querySelector('.damage-gallery .char-left')
+  rightChar = document.querySelector('.damage-gallery .char-right')
   window.addEventListener('mousemove', handleMouseMove)
 })
 
@@ -109,7 +117,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.tank-gallery {
+.damage-gallery {
   height: 100vh;
   background: #ffffff;
   color: rgb(0, 0, 0);
@@ -139,7 +147,7 @@ onUnmounted(() => {
 .char-left {
   position: absolute;
   bottom: 0;
-  left: -10%;
+  left: 0%;
   height: 90%;
   z-index: 2;
 }
@@ -147,7 +155,7 @@ onUnmounted(() => {
 .char-right {
   position: absolute;
   bottom: 0;
-  right: -10%;
+  right: 20%;
   height: 75%;
   z-index: 2;
 }
@@ -198,11 +206,11 @@ onUnmounted(() => {
   text-align: right;
 }
 
-/* ✅ 核心：网格布局 */
+/* ✅ 核心：网格布局 - 调整为更适合22个英雄 */
 .hero-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-  gap: 20px 50px;
+  grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+  gap: 15px 30px;
 }
 
 /* 单个英雄 */
@@ -220,7 +228,7 @@ onUnmounted(() => {
 
 /* 头像 */
 .hero-item img {
-  width: 120px;
+  width: 100px;
   height: auto;
   border-radius: 14px;
   object-fit: cover;
