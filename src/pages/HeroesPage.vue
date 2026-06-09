@@ -24,7 +24,7 @@ async function loadHeroes() {
   loading.value = true
   error.value = ''
   try {
-    const res = await heroesApi.getAllHeroes(activeRole.value)
+    const res = await heroesApi.getAllHeroes()
     if (res.success) {
       heroes.value = res.heroes
     } else {
@@ -56,7 +56,7 @@ async function selectHero(hero) {
 function onRoleChange(role) {
   activeRole.value = role
   selectedHero.value = null
-  loadHeroes()
+  // 客户端过滤，无需重新请求 API
 }
 
 function formatTime(seconds) {

@@ -82,11 +82,14 @@ function authorName(uid) {
   if (!uid) return '未知用户'
   const user = userCache.value[String(uid)]
   if (user) return user.username
-  // 单次懒加载（不阻塞渲染）
+  // 触发懒加载（不阻塞渲染），但返回 uid 作为临时显示
   userService.getUserById(uid).then(u => {
-    if (u) userCache.value[String(u.id)] = u
+    if (u) {
+      userCache.value[String(u.id)] = u
+      if (u.uid) userCache.value[u.uid] = u
+    }
   })
-  return '未知用户'
+  return uid || '未知用户'
 }
 
 function formatTime(dateString) {

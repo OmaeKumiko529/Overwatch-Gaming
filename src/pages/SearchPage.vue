@@ -91,6 +91,7 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
+import { debounce } from '../utils/helpers.js'
 import { useRoute, useRouter } from 'vue-router'
 import postService from '../services/post.js'
 import { authApi } from '../services/api.js'
@@ -116,9 +117,14 @@ onMounted(() => {
   }
 })
 
+const debouncedUpdateUrl = debounce(() => {
+  const query = { ...route.query, q: searchQuery.value }
+  router.replace({ query })
+}, 300)
+
 watch(searchQuery, (newQuery) => {
   if (newQuery.trim() !== '') {
-    updateUrl()
+    debouncedUpdateUrl()
   }
 })
 

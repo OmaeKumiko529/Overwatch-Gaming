@@ -225,8 +225,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue';
-import auth from '../services/auth.js';
+import { ref, computed, onMounted, watch } from 'vue';
+import { useAuthStore } from '../stores/auth.js';
 import teamService from '../services/team.js';
 import userService from '../services/user.js';
 
@@ -250,14 +250,18 @@ const joiningTeamId = ref(null);
 const showDetailsModal = ref(false);
 const teamMembers = ref([]);
 
+const authStore = useAuthStore();
+
 // 计算属性：用户是否已在战队中
 const isUserInTeam = computed(() => {
-  const currentUser = auth.getCurrentUser();
+  const currentUser = authStore.currentUser;
   if (!currentUser) return false;
-  
-  const users = userService.getAllUsers();
-  const user = users.find(u => u.id === currentUser.id);
-  return user && user.teamId;
+  return currentUser.teamId ? true : false;
+});
+
+// 搜索输入自动过滤
+watch(searchQuery, () => {
+  filterTeams();
 });
 
 // 加载战队列表
@@ -265,42 +269,30 @@ const loadTeams = () => {
   loading.value = true;
   
   try {
-    // 获取所有战队
     const allTeams = teamService.getAllTeams();
-
-    // 获取所有用户以获取创建者名称
     const users = userService.getAllUsers();
     
-    // 处理战队数据，添加额外信息
     const processedTeams = allTeams.map(team => {
-      // 查找创建者
       const creator = users.find(user => user.id === team.creatorId);
-      
-      // 计算成员数量
       const memberCount = users.filter(user => user.teamId === team.id).length;
       
-      // 解析战队名称，提取显示名称和标签
       const fullName = team.name || '';
       let displayName = fullName;
       let tag = '';
       
-      // 如果名称包含#号，分割显示名称和标签
       const hashIndex = fullName.lastIndexOf('#');
       if (hashIndex > -1) {
         displayName = fullName.substring(0, hashIndex);
         tag = fullName.substring(hashIndex + 1);
       }
       
-      // 如果没有displayName字段，使用解析的显示名称
       const teamDisplayName = team.displayName || displayName;
       
       return {
         ...team,
         creatorName: creator ? creator.username : '未知',
         memberCount,
-        // 确保有描述字段
         description: team.description || '一个专注于守望先锋的战队',
-        // 添加解析后的字段
         displayName: teamDisplayName,
         tag: tag || '0000'
       };
@@ -308,8 +300,6 @@ const loadTeams = () => {
     
     teams.value = processedTeams;
     filteredTeams.value = [...processedTeams];
-    
-    // 默认按名称排序
     sortTeams();
     
   } catch (error) {
@@ -325,16 +315,14 @@ const loadTeams = () => {
 const filterTeams = () => {
   if (!searchQuery.value.trim()) {
     filteredTeams.value = [...teams.value];
-    return;
+  } else {
+    const query = searchQuery.value.toLowerCase().trim();
+    filteredTeams.value = teams.value.filter(team => 
+      team.name.toLowerCase().includes(query) || 
+      team.tag.toLowerCase().includes(query) ||
+      (team.description && team.description.toLowerCase().includes(query))
+    );
   }
-  
-  const query = searchQuery.value.toLowerCase().trim();
-  filteredTeams.value = teams.value.filter(team => 
-    team.name.toLowerCase().includes(query) || 
-    team.tag.toLowerCase().includes(query) ||
-    (team.description && team.description.toLowerCase().includes(query))
-  );
-  
   sortTeams();
 };
 
@@ -410,7 +398,7 @@ const closeJoinModal = () => {
 const confirmJoinTeam = async () => {
   if (!selectedTeam.value) return;
   
-  const currentUser = auth.getCurrentUser();
+  const currentUser = authStore.currentUser;
   if (!currentUser) {
     joinMessage.value = '用户未登录';
     isJoinError.value = true;
@@ -420,7 +408,6 @@ const confirmJoinTeam = async () => {
   joiningTeamId.value = selectedTeam.value.id;
   
   try {
-    // 使用完整的战队名称（已经包含#号）
     const fullTeamName = selectedTeam.value.name;
     const result = teamService.joinTeam(fullTeamName, currentUser.id);
     
@@ -428,9 +415,8 @@ const confirmJoinTeam = async () => {
       joinMessage.value = '成功加入战队！';
       isJoinError.value = false;
       
-      // 立即关闭模态框并刷新页面，然后返回用户面板
       closeJoinModal();
-      loadTeams(); // 重新加载战队列表
+      loadTeams();
       message.value = '已成功加入战队，正在返回用户面板...';
       isError.value = false;
       window.location.hash = 'user';
@@ -452,7 +438,6 @@ const showTeamDetails = async (team) => {
   selectedTeam.value = team;
   
   try {
-    // 加载战队成员
     const users = userService.getAllUsers();
     const members = users.filter(user => user.teamId === team.id);
     teamMembers.value = members;
@@ -472,10 +457,13 @@ const closeDetailsModal = () => {
   teamMembers.value = [];
 };
 
-// 从详情模态框显示加入确认
+// 从详情模态框显示加入确认（修复：先保存引用再关闭）
 const showJoinConfirmFromDetails = () => {
+  const team = selectedTeam.value;
   closeDetailsModal();
-  showJoinConfirm(selectedTeam.value);
+  if (team) {
+    showJoinConfirm(team);
+  }
 };
 
 // 导航函数
@@ -485,13 +473,11 @@ const goBack = () => {
 
 const goToCreateTeam = () => {
   window.location.hash = 'user';
-  // 用户面板会自动显示创建战队模态框
 };
 
 // 初始化
 onMounted(() => {
-  // 检查登录状态
-  const currentUser = auth.getCurrentUser();
+  const currentUser = authStore.currentUser;
   if (!currentUser) {
     message.value = '请先登录';
     isError.value = true;
@@ -538,7 +524,6 @@ onMounted(() => {
   text-align: center;
 }
 
-/* 筛选区域 */
 .filter-section {
   display: flex;
   justify-content: space-between;
@@ -617,7 +602,6 @@ onMounted(() => {
   border-color: #007bff;
 }
 
-/* 战队列表容器 */
 .teams-container {
   margin-bottom: 40px;
 }
@@ -673,7 +657,6 @@ onMounted(() => {
   background-color: #218838;
 }
 
-/* 战队网格 */
 .teams-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -827,7 +810,6 @@ onMounted(() => {
   animation: spin 1s linear infinite;
 }
 
-/* 页面操作按钮 */
 .page-actions {
   text-align: center;
   margin-top: 30px;
@@ -851,7 +833,6 @@ onMounted(() => {
   background-color: #545b62;
 }
 
-/* 模态框样式 */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -1064,16 +1045,6 @@ onMounted(() => {
   background-color: #0056b3;
 }
 
-.delete-button {
-  background-color: #dc3545;
-  color: white;
-}
-
-.delete-button:hover {
-  background-color: #c82333;
-}
-
-/* 消息样式 */
 .message {
   padding: 15px;
   border-radius: 8px;
@@ -1095,7 +1066,6 @@ onMounted(() => {
   border: 1px solid #f5c6cb;
 }
 
-/* 响应式设计 */
 @media (max-width: 768px) {
   .filter-section {
     flex-direction: column;
@@ -1125,13 +1095,3 @@ onMounted(() => {
   }
 }
 </style>
-
-.search-box {
-  display: flex;
-  flex: 1;
-  max-width: 400px;
-}
-
-.search-input {
-  flex: 1;
-  padding

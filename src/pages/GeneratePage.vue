@@ -51,24 +51,19 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth.js'
 
-const seedData = { users: [], posts: [] }
+const auth = useAuthStore()
+const injecting = ref(false)
+const result = ref(null)
+
+const seedStats = ref({ users: 0, posts: 0 })
 
 onMounted(async () => {
   try {
     const resp = await fetch('/seed-data.json')
     const data = await resp.json()
-    seedData.users = data.users
-    seedData.posts = data.posts
-    seedStatsInit.value = { users: data.users.length, posts: data.posts.length }
+    seedStats.value = { users: data.users.length, posts: data.posts.length }
   } catch {}
 })
-
-const auth = useAuthStore()
-const injecting = ref(false)
-const result = ref(null)
-
-const seedStatsInit = ref({ users: 0, posts: 0 })
-const seedStats = computed(() => seedStatsInit.value)
 
 const isAdmin = computed(() => auth.isAdmin || Number(auth.currentUser?.userrank || 0) >= 3)
 
