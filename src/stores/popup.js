@@ -27,8 +27,10 @@ export const usePopupStore = defineStore('popup', () => {
   const closeOnOverlay = ref(true)
   const hideButtons = ref(false)  // 纯展示模式，无按钮，点击空白/延迟关闭
 
-  // Promise 相关
+  // Promise 相关（声明在顶部，避免变量提升问题）
   let _resolve = null
+  let _onConfirm = null
+  let _onCancel = null
 
   // ======== 计算属性 ========
   const iconDisplay = computed(() => {
@@ -112,9 +114,6 @@ export const usePopupStore = defineStore('popup', () => {
       _resolve = resolve
     })
   }
-
-  let _onConfirm = null
-  let _onCancel = null
 
   function close() {
     visible.value = false

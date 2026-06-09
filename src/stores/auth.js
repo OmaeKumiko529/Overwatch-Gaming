@@ -149,7 +149,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function updateUser(userId, updates) {
     const res = await authApi.updateUser(updates)
     if (res.success) {
-      if (currentUser.value && currentUser.value.id === userId) {
+      if (currentUser.value && String(currentUser.value.id) === String(userId)) {
         const merged = { ...currentUser.value, ...res.user }
         currentUser.value = merged
         persistLoginSession(merged)
@@ -160,9 +160,10 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function deleteUser(userId) {
+    // 后端 /auth/delete 只删除当前登录用户，userId 参数仅用于前端状态清理
     const res = await authApi.deleteUser()
     if (res.success) {
-      if (currentUser.value && currentUser.value.id === userId) {
+      if (currentUser.value && String(currentUser.value.id) === String(userId)) {
         logout()
       }
       return { success: true }
@@ -175,9 +176,10 @@ export const useAuthStore = defineStore('auth', () => {
     const validation = validateRoles(roles)
     if (!validation.valid) return { success: false, message: validation.message }
 
+    // 后端 /auth/role 只更新当前登录用户，userId 参数仅用于前端状态更新
     const res = await authApi.updateRole(roles)
     if (res.success) {
-      if (currentUser.value && currentUser.value.id === userId) {
+      if (currentUser.value && String(currentUser.value.id) === String(userId)) {
         currentUser.value.role = roles
         persistLoginSession(currentUser.value)
       }

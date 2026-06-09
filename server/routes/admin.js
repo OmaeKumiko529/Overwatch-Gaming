@@ -31,8 +31,11 @@ function getPrimaryKey(tableName) {
   return tablePrimaryKeys[tableName] || 'id'
 }
 
-// 获取表的所有列信息
+// 获取表的所有列信息（tableName 必须经过白名单校验）
 function getTableInfo(tableName) {
+  if (!ALLOWED_TABLES.includes(tableName)) {
+    return null
+  }
   try {
     const result = getAll(`PRAGMA table_info('${tableName}')`)
     return result.map(r => ({
@@ -278,26 +281,18 @@ router.post('/sql', adminMiddleware, (req, res) => {
       return res.json({ success: false, message: '请提供 SQL 查询语句' })
     }
 
-    const trimmed = query.trim().toUpperCase()
-    if (!trimmed.startsWith('SELECT') && !trimmed.startsWith('PRAGMA')) {
-      return res.json({ success: false, message: '仅允许执行 SELECT 或 PRAGMA 查询' })
-    }
-
-    // 禁止危险关键字
-    const dangerous = ['DROP', 'DELETE', 'INSERT', 'UPDATE', 'ALTER', 'CREATE', 'EXEC', 'ATTACH']
-    for (const keyword of dangerous) {
-      if (trimmed.includes(keyword) && !trimmed.startsWith('PRAGMA')) {
-        // 对于 SELECT 中混入的危险关键字检测
-        if (trimmed.startsWith('SELECT')) {
-          const upperQuery = trimmed
-          // 只允许 SELECT 开头的纯查询
-        }
-      }
-    }
-
     // 使用正则严格检查：只允许 SELECT 或 PRAGMA 开头
     if (!/^\s*(SELECT|PRAGMA)\b/i.test(query)) {
       return res.json({ success: false, message: '仅允许执行 SELECT 或 PRAGMA 查询' })
+    }
+
+    // 禁止危险关键字混入（防止 SELECT 语句中嵌入 DROP/INSERT/UPDATE/DELETE 等）
+    const dangerous = ['DROP', 'DELETE', 'INSERT', 'UPDATE', 'ALTER', 'CREATE', 'EXEC', 'ATTACH']
+    const upperQuery = query.trim().toUpperCase()
+    for (const keyword of dangerous) {
+      if (upperQuery.includes(keyword)) {
+        return res.json({ success: false, message: `查询中包含危险关键字: ${keyword}` })
+      }
     }
 
     const result = getAll(query)

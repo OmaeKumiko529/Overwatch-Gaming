@@ -1,6 +1,6 @@
 // 战队 Store - 管理战队 CRUD 操作
 import { defineStore } from 'pinia'
-import { teamsApi } from '../services/api.js'
+import { teamsApi, authApi } from '../services/api.js'
 
 export const useTeamStore = defineStore('team', () => {
   async function getAllTeams() {
@@ -27,7 +27,6 @@ export const useTeamStore = defineStore('team', () => {
 
     // 需要获取用户信息来查找 teamId
     try {
-      const { authApi } = await import('../services/api.js')
       const userRes = await authApi.getUserById(userId)
       if (userRes.success && userRes.user.teamId) {
         const team = res.teams.find(t => t.id === userRes.user.teamId)

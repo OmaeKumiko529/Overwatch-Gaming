@@ -89,11 +89,11 @@ function handleMouseMove(e) {
 
   if (leftChar) {
     leftChar.style.transform =
-      `translateX(${xOffset * 2}px) translateY(${yOffset}px)`
+      `translateX(${xOffset * 3}px) translateY(${yOffset * 1.5}px)`
   }
   if (rightChar) {
     rightChar.style.transform =
-      `translateX(${xOffset * 1}px) translateY(${yOffset * 0.5}px)`
+      `translateX(${xOffset * 1.8}px) translateY(${yOffset * 0.8}px)`
   }
 }
 
