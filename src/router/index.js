@@ -3,6 +3,11 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 
 const routes = [
   {
+    path: '/error/:code',
+    name: 'Error',
+    component: () => import('../pages/ErrorPage.vue')
+  },
+  {
     path: '/',
     name: 'Home',
     component: () => import('../pages/HomePage.vue')
@@ -33,12 +38,13 @@ const routes = [
     path: '/user',
     name: 'User',
     redirect: to => {
-      // 使用懒加载方式获取登录状态
       try {
         const sessionJson = sessionStorage.getItem('currentUser') || localStorage.getItem('currentUser');
         if (sessionJson) {
           const user = JSON.parse(sessionJson);
-          return { name: 'UserProfile', params: { uid: user.id } };
+          // 重定向使用 uid（注意 URL 编码）
+          const encodedUid = encodeURIComponent(user.uid || user.id);
+          return '/user/' + encodedUid;
         }
       } catch {}
       return '/login';
@@ -57,9 +63,14 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/post/:id',
+    path: '/post/:pid',
     name: 'PostDetail',
     component: () => import('../pages/PostDetailPage.vue')
+  },
+  {
+    path: '/browse',
+    name: 'Browse',
+    component: () => import('../pages/BrowsePage.vue')
   },
   {
     path: '/search',
@@ -70,6 +81,33 @@ const routes = [
     path: '/notifications',
     name: 'Notifications',
     component: () => import('../pages/NotificationPage.vue')
+  },
+  {
+    path: '/announcements',
+    name: 'Announcements',
+    component: () => import('../pages/AnnouncementPage.vue')
+  },
+  {
+    path: '/heroes',
+    name: 'Heroes',
+    component: () => import('../pages/HeroesPage.vue')
+  },
+  {
+    path: '/generate',
+    name: 'Generate',
+    component: () => import('../pages/GeneratePage.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/adminpower',
+    name: 'AdminPanel',
+    component: () => import('../pages/AdminPanel.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true, hideNavBar: true }
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    redirect: '/error/404'
   }
 ]
 
@@ -95,6 +133,16 @@ router.beforeEach((to, from, next) => {
       if (!sessionJson) {
         next('/login')
         return
+      }
+
+      // 检查管理员权限
+      if (to.meta.requiresAdmin) {
+        const session = JSON.parse(sessionJson);
+        const userrank = Number(session.userrank ?? 0);
+        if (userrank < 3) {
+          next('/')
+          return
+        }
       }
     } catch {
       next('/login')

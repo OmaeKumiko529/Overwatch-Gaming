@@ -1,10 +1,5 @@
-// 本地存储键名
-const STORAGE_KEYS = {
-  USERS: 'users',
-  CURRENT_USER: 'currentUser',
-  TEAMS: 'teams',
-  POSTS: 'posts'
-};
+// 用户管理服务 - 通过后端 API 管理用户数据
+import { authApi } from './api.js'
 
 // 职责选项
 const ROLE_OPTIONS = {
@@ -12,219 +7,111 @@ const ROLE_OPTIONS = {
   DAMAGE: 'damage',    // 输出
   SUPPORT: 'support',  // 支援
   FLEXIBLE: 'flexible' // 灵活
-};
+}
 
 // 所有有效职责
-const ALL_VALID_ROLES = Object.values(ROLE_OPTIONS);
+const ALL_VALID_ROLES = Object.values(ROLE_OPTIONS)
 
 // 验证角色数组是否有效
 const validateRoles = (roles) => {
   if (!Array.isArray(roles)) {
-    return { valid: false, message: '职责必须是数组' };
+    return { valid: false, message: '职责必须是数组' }
   }
-  
+
   if (roles.length === 0) {
-    return { valid: false, message: '至少选择一个职责' };
+    return { valid: false, message: '至少选择一个职责' }
   }
-  
+
   // 检查是否包含无效角色
   for (const role of roles) {
     if (!ALL_VALID_ROLES.includes(role)) {
-      return { valid: false, message: `无效的职责选项: ${role}` };
+      return { valid: false, message: `无效的职责选项: ${role}` }
     }
   }
-  
+
   // 检查灵活与其他职责的互斥性
-  const hasFlexible = roles.includes(ROLE_OPTIONS.FLEXIBLE);
-  const hasOtherRoles = roles.some(role => role !== ROLE_OPTIONS.FLEXIBLE);
-  
+  const hasFlexible = roles.includes(ROLE_OPTIONS.FLEXIBLE)
+  const hasOtherRoles = roles.some(role => role !== ROLE_OPTIONS.FLEXIBLE)
+
   if (hasFlexible && hasOtherRoles) {
-    return { valid: false, message: '灵活选项不能与其他职责同时选择' };
+    return { valid: false, message: '灵活选项不能与其他职责同时选择' }
   }
-  
+
   // 检查非灵活职责数量
   if (!hasFlexible && roles.length > 2) {
-    return { valid: false, message: '最多只能选择2个职责' };
+    return { valid: false, message: '最多只能选择2个职责' }
   }
-  
-  return { valid: true };
-};
 
-// 用户管理服务
+  return { valid: true }
+}
+
+// 缓存用户列表（避免频繁 API 请求）
+let cachedUsers = null
+let cacheExpiry = 0
+const CACHE_TTL = 5 * 60 * 1000 // 5分钟缓存
+
+// 用户管理服务（对接后端 API）
 export const userService = {
-  // 获取所有用户
-  getAllUsers() {
+  // 从后端获取所有用户
+  async getAllUsers() {
     try {
-      const usersJson = localStorage.getItem(STORAGE_KEYS.USERS);
-      return usersJson ? JSON.parse(usersJson) : [];
+      // 如果缓存有效，直接返回
+      if (cachedUsers && Date.now() < cacheExpiry) {
+        return cachedUsers
+      }
+      const res = await authApi.getAllUsers()
+      if (res.success && Array.isArray(res.users)) {
+        cachedUsers = res.users
+        cacheExpiry = Date.now() + CACHE_TTL
+        return res.users
+      }
+      return []
     } catch (error) {
-      console.error('读取用户数据失败:', error);
-      return [];
+      console.error('获取用户列表失败:', error)
+      return []
     }
   },
 
-  // 保存所有用户
-  saveAllUsers(users) {
+  // 根据用户ID获取用户信息（ID 或 UID）
+  async getUserById(userIdOrUid) {
     try {
-      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
-      return true;
-    } catch (error) {
-      console.error('保存用户数据失败:', error);
-      return false;
+      const res = await authApi.getUserById(userIdOrUid)
+      if (res.success && res.user) {
+        return res.user
+      }
+      // 缓存中查找
+      const users = await this.getAllUsers()
+      return users.find(u => String(u.id) === String(userIdOrUid) || u.uid === userIdOrUid) || null
+    } catch {
+      return null
     }
   },
 
-  // 根据用户ID获取用户信息
-  getUserById(userId) {
-    const users = this.getAllUsers();
-    const user = users.find(u => u.id === Number(userId));
-    
-    if (!user) {
-      return null;
-    }
-    
-    // 返回用户信息（不包含密码）
-    return {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      role: Array.isArray(user.role) ? user.role : [user.role || 'flexible'],
-      avatar: user.avatar || '/Head.png', // 头像字段，默认为默认头像
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-      teamId: user.teamId || null
-    };
-  },
-
-  // 更新用户信息
-  updateUser(userId, updates) {
-    const users = this.getAllUsers();
-    const userIndex = users.findIndex(user => user.id === userId);
-    
-    if (userIndex === -1) {
-      return { success: false, message: '用户不存在' };
-    }
-    
-    // 更新用户信息
-    users[userIndex] = {
-      ...users[userIndex],
-      ...updates,
-      updatedAt: new Date().toISOString()
-    };
-    
-    // 保存更新
-    if (this.saveAllUsers(users)) {
-      return { success: true, user: users[userIndex] };
-    } else {
-      return { success: false, message: '更新失败' };
-    }
-  },
-
-  // 删除用户（仅用于测试）
-  deleteUser(userId) {
-    const users = this.getAllUsers();
-    const filteredUsers = users.filter(user => user.id !== userId);
-    
-    if (filteredUsers.length === users.length) {
-      return { success: false, message: '用户不存在' };
-    }
-    
-    if (this.saveAllUsers(filteredUsers)) {
-      return { success: true };
-    } else {
-      return { success: false, message: '删除失败' };
-    }
-  },
-
-  // 更新用户职责（支持单个角色或角色数组）
-  updateUserRole(userId, roleOrRoles) {
-    // 处理单个角色或角色数组
-    const roles = Array.isArray(roleOrRoles) ? roleOrRoles : [roleOrRoles];
-    
-    const users = this.getAllUsers();
-    const userIndex = users.findIndex(user => user.id === userId);
-    
-    if (userIndex === -1) {
-      return { success: false, message: '用户不存在' };
-    }
-    
-    // 验证职责
-    const validation = validateRoles(roles);
-    if (!validation.valid) {
-      return { success: false, message: validation.message };
-    }
-    
-    // 更新用户职责（存储为数组）
-    users[userIndex].role = roles;
-    users[userIndex].updatedAt = new Date().toISOString();
-    
-    if (this.saveAllUsers(users)) {
-      return { success: true, user: users[userIndex] };
-    } else {
-      return { success: false, message: '更新职责失败' };
-    }
-  },
-
-  // 更新用户职责（别名，用于明确支持多选）
-  updateUserRoles(userId, roles) {
-    return this.updateUserRole(userId, roles);
-  },
-
-  // 获取用户所在的战队信息
-  getUserTeam(userId) {
-    const users = this.getAllUsers();
-    const user = users.find(u => u.id === userId);
-    
-    if (!user || !user.teamId) {
-      return null;
-    }
-    
-    // 需要导入teamService，这里先返回null，实际使用时需要依赖注入
-    return null;
-  },
-
-  // 设置用户战队ID
-  setUserTeamId(userId, teamId) {
-    const users = this.getAllUsers();
-    const userIndex = users.findIndex(user => user.id === userId);
-    
-    if (userIndex === -1) {
-      return { success: false, message: '用户不存在' };
-    }
-    
-    users[userIndex].teamId = teamId;
-    users[userIndex].updatedAt = new Date().toISOString();
-    
-    if (this.saveAllUsers(users)) {
-      return { success: true, user: users[userIndex] };
-    } else {
-      return { success: false, message: '更新战队信息失败' };
-    }
-  },
-
-  // 清除用户战队ID
-  clearUserTeamId(userId) {
-    return this.setUserTeamId(userId, null);
-  },
-
-  // 搜索用户（按用户名或邮箱）
+  // 搜索用户（按用户名，前端过滤）
   searchUsers(query) {
-    const users = this.getAllUsers();
-    const lowerQuery = query.toLowerCase();
-    
-    return users.filter(user => 
-      user.username.toLowerCase().includes(lowerQuery) ||
-      user.email.toLowerCase().includes(lowerQuery)
+    if (!cachedUsers) {
+      // 如果缓存未加载，触发异步加载但返回空（调用方会重试）
+      this.getAllUsers()
+      return []
+    }
+    const lowerQuery = query.toLowerCase()
+    return cachedUsers.filter(user =>
+      user.username.toLowerCase().includes(lowerQuery)
     ).map(user => ({
       id: user.id,
+      uid: user.uid,
       username: user.username,
-      email: user.email,
-      role: Array.isArray(user.role) ? user.role : [user.role || 'flexible'],
-      avatar: user.avatar || '/Head.png', // 头像字段，默认为默认头像
-      teamId: user.teamId || null
-    }));
+      avatar: user.avatar || '/Head.png'
+    })).slice(0, 10) // 最多10个建议
+  },
+
+  // 强制刷新用户缓存
+  refreshUsers() {
+    cachedUsers = null
+    cacheExpiry = 0
+    return this.getAllUsers()
   }
-};
+}
 
 // 导出默认实例
-export default userService;
+export default userService

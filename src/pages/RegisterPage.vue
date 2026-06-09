@@ -61,12 +61,12 @@
         </div>
         
         <div class="form-actions">
-          <button type="submit" class="submit-button">注册</button>
+          <button type="submit" class="submit-button" :disabled="isSubmitting">{{ isSubmitting ? '注册中...' : '注册' }}</button>
           <button type="button" class="back-button" @click="goToHome">返回首页</button>
         </div>
         
         <div class="form-footer">
-          <p>已有账号？ <a href="#login" class="login-link">去登录</a></p>
+          <p>已有账号？ <router-link to="/login" class="login-link">去登录</router-link></p>
         </div>
       </form>
       
@@ -80,8 +80,10 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth.js'
 
 const router = useRouter()
+const auth = useAuthStore()
 
 const formData = reactive({
   username: '',
@@ -92,8 +94,11 @@ const formData = reactive({
 
 const message = ref('')
 const isError = ref(false)
+const isSubmitting = ref(false)
 
-const handleRegister = () => {
+const handleRegister = async () => {
+  if (isSubmitting.value) return
+  
   // 验证密码是否匹配
   if (formData.password !== formData.confirmPassword) {
     message.value = '两次输入的密码不一致'
@@ -107,51 +112,40 @@ const handleRegister = () => {
     isError.value = true
     return
   }
-  
-  // 从本地存储获取已注册用户
-  const users = JSON.parse(localStorage.getItem('users') || '[]')
-  
-  // 检查用户名是否已存在
-  const existingUser = users.find(user => user.username === formData.username)
-  if (existingUser) {
-    message.value = '用户名已存在'
-    isError.value = true
-    return
-  }
-  
-  // 检查邮箱是否已存在
-  const existingEmail = users.find(user => user.email === formData.email)
-  if (existingEmail) {
-    message.value = '邮箱已被注册'
-    isError.value = true
-    return
-  }
-  
-  // 创建新用户
-  const newUser = {
-    id: Date.now(),
-    username: formData.username,
-    email: formData.email,
-    password: formData.password,
-    createdAt: new Date().toISOString()
-  }
-  
-  // 保存到本地存储
-  users.push(newUser)
-  localStorage.setItem('users', JSON.stringify(users))
-  
-  // 显示成功消息
-  message.value = '注册成功！即将跳转到登录页面...'
+
+  isSubmitting.value = true
+  message.value = ''
   isError.value = false
-  
-  // 清空表单
-  formData.username = ''
-  formData.email = ''
-  formData.password = ''
-  formData.confirmPassword = ''
-  
-  // 立即跳转到登录页面
-  router.push({ name: 'Login' })
+
+  try {
+    const result = await auth.registerUser({
+      username: formData.username,
+      email: formData.email,
+      password: formData.password
+    })
+    
+    if (result.success) {
+      message.value = '注册成功！正在跳转...'
+      isError.value = false
+      
+      // 清空表单
+      formData.username = ''
+      formData.email = ''
+      formData.password = ''
+      formData.confirmPassword = ''
+      
+      // 跳转到首页
+      setTimeout(() => router.push({ name: 'Home' }), 1000)
+    } else {
+      message.value = result.message || '注册失败'
+      isError.value = true
+    }
+  } catch (err) {
+    message.value = '注册失败，请检查网络连接'
+    isError.value = true
+  } finally {
+    isSubmitting.value = false
+  }
 }
 
 const goToHome = () => {
@@ -224,7 +218,7 @@ const goToHome = () => {
 .register-form {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
 .form-group {
@@ -234,7 +228,7 @@ const goToHome = () => {
 }
 
 .form-group label {
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   font-size: 1.1rem;
   color: #555;
   font-weight: 500;
@@ -245,7 +239,7 @@ const goToHome = () => {
   border: 2px solid #ddd;
   border-radius: 10px;
   font-size: 1rem;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   transition: border-color 0.3s;
 }
 
@@ -267,16 +261,21 @@ const goToHome = () => {
   border: none;
   padding: 16px;
   border-radius: 10px;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   font-size: 1.2rem;
   font-weight: bold;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.submit-button:hover {
+.submit-button:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+}
+
+.submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .back-button {
@@ -286,7 +285,7 @@ const goToHome = () => {
   border: 2px solid #ddd;
   padding: 16px;
   border-radius: 10px;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   font-size: 1.2rem;
   font-weight: bold;
   cursor: pointer;
@@ -305,7 +304,7 @@ const goToHome = () => {
 }
 
 .form-footer p {
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   color: #666;
   font-size: 1rem;
 }
@@ -325,7 +324,7 @@ const goToHome = () => {
   padding: 12px 16px;
   border-radius: 8px;
   text-align: center;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   font-size: 1rem;
 }
 

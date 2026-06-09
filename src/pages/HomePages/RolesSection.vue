@@ -2,7 +2,7 @@
   <div class="section roles-page">
     <div class="content roles-content">
       <h1 class="main-title1">英雄职责</h1>
-      <p class="subtitle1" style="padding-left: 10px; margin-bottom: 40px;">
+      <p class="subtitle1" style="padding-left: 0.521vw; margin-bottom: 3.704vh;">
         三种核心职责
       </p>
       
@@ -41,7 +41,7 @@
         </div>
       </div>
       
-      <p class="role-tip" style="margin-top: 50px; font-size: 1.2rem; color: rgba(255,255,255,0.7);">
+      <p class="role-tip" style="margin-top: 4.63vh; font-size: clamp(0.875rem, 1vw, 1.2rem); color: rgba(255,255,255,0.7);">
         选择自身所擅长职责
       </p>
     </div>
@@ -53,7 +53,7 @@
   height: 100vh;
   overflow: hidden;
   position: relative;
-  padding-top: 60px;
+  padding-top: 5.556vh;
   box-sizing: border-box;
 }
 
@@ -67,12 +67,12 @@
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
-  padding-left: 180px;
+  padding-left: 9.375vw;
   box-sizing: border-box;
   color: white;
   z-index: 1001;
   position: relative;
-  padding-top: 80px;
+  padding-top: 7.407vh;
 }
 
 .roles-content {
@@ -83,7 +83,7 @@
 
 .main-title1 {
   font-family: 'SmileySans Oblique', sans-serif;
-  font-size: 5rem;
+  font-size: clamp(2.5rem, 4.17vw, 5rem);
   margin: 0;
   text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
   color: #ffffff;
@@ -91,9 +91,9 @@
 
 .subtitle1 {
   font-family: 'SmileySans Oblique', sans-serif;
-  font-size: 1.8rem;
+  font-size: clamp(1rem, 1.5vw, 1.8rem);
   color: rgba(255, 255, 255, 0.9);
-  margin-top: 15px;
+  margin-top: 1.389vh;
   text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
   font-weight: bold;
 }
@@ -101,55 +101,56 @@
 .roles-container {
   display: flex;
   justify-content: center;
-  gap: 60px;
-  margin-top: 40px;
+  gap: 3.125vw;
+  margin-top: 3.704vh;
   flex-wrap: wrap;
 }
 
 .role-card {
   background: rgba(255, 255, 255, 0.05);
-  border-radius: 20px;
-  padding: 30px;
-  width: 280px;
+  border-radius: 1.042vw;
+  padding: 1.563vw;
+  width: 14.583vw;
+  min-width: 240px;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: transform 0.3s, box-shadow 0.3s;
 }
 
 .role-card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+  transform: translateY(-0.926vh);
+  box-shadow: 0 1.389vh 2.778vh rgba(0, 0, 0, 0.3);
   border-color: rgba(255, 255, 255, 0.3);
 }
 
 .role-icon {
-  width: 120px;
-  height: 120px;
-  margin: 0 auto 20px;
+  width: 6.25vmin;
+  height: 6.25vmin;
+  margin: 0 auto 1.852vh;
   display: flex;
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 50%;
-  padding: 20px;
+  padding: 1.042vw;
 }
 
 .role-icon img {
-  width: 80px;
-  height: 80px;
+  width: 4.167vmin;
+  height: 4.167vmin;
   object-fit: contain;
 }
 
 .role-title {
   font-family: 'SmileySans Oblique', sans-serif;
-  font-size: 1.8rem;
+  font-size: clamp(1.2rem, 1.5vw, 1.8rem);
   color: #ffffff;
-  margin: 0 0 15px 0;
+  margin: 0 0 1.389vh 0;
 }
 
 .role-description {
   font-family: 'SmileySans Oblique', sans-serif;
-  font-size: 1.1rem;
+  font-size: clamp(0.8rem, 0.92vw, 1.1rem);
   color: rgba(255, 255, 255, 0.8);
   line-height: 1.6;
 }
@@ -157,7 +158,7 @@
 .role-tip {
   font-family: 'SmileySans Oblique', sans-serif;
   text-align: center;
-  max-width: 800px;
+  max-width: 41.667vw;
   margin-left: auto;
   margin-right: auto;
 }

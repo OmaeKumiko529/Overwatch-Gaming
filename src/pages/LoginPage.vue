@@ -45,7 +45,7 @@
         </div>
         
         <div class="form-actions">
-          <button type="submit" class="submit-button">登录</button>
+          <button type="submit" class="submit-button" :disabled="isSubmitting">{{ isSubmitting ? '登录中...' : '登录' }}</button>
           <button type="button" class="back-button" @click="goToHome">返回首页</button>
         </div>
         
@@ -75,8 +75,10 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth.js'
 
 const router = useRouter()
+const auth = useAuthStore()
 
 const loginData = reactive({
   username: '',
@@ -87,76 +89,42 @@ const rememberMe = ref(false)
 const showForgotPassword = ref(false)
 const message = ref('')
 const isError = ref(false)
+const isSubmitting = ref(false)
 
-const handleLogin = () => {
-  // 从本地存储获取用户数据
-  const users = JSON.parse(localStorage.getItem('users') || '[]')
-  
-  // 查找用户（支持用户名或邮箱登录）
-  const user = users.find(u => 
-    u.username === loginData.username || u.email === loginData.username
-  )
-  
-  if (!user) {
-    message.value = '用户不存在'
-    isError.value = true
-    return
-  }
-  
-  // 验证密码
-  if (user.password !== loginData.password) {
-    message.value = '密码错误'
-    isError.value = true
-    return
-  }
-  
-  // 登录成功
-  message.value = '登录成功！'
+const handleLogin = async () => {
+  if (isSubmitting.value) return
+  isSubmitting.value = true
+  message.value = ''
   isError.value = false
-  
-  // 保存登录状态到本地存储
-  const userSession = {
-    id: user.id,
-    username: user.username,
-    email: user.email,
-    loggedIn: true,
-    loginTime: new Date().toISOString()
+
+  try {
+    const result = await auth.login(loginData.username, loginData.password, rememberMe.value)
+    
+    if (result.success) {
+      message.value = '登录成功！'
+      isError.value = false
+      
+      // 清空表单
+      loginData.username = ''
+      loginData.password = ''
+      
+      // 跳转到首页
+      setTimeout(() => router.push({ name: 'Home' }), 500)
+    } else {
+      message.value = result.message || '登录失败'
+      isError.value = true
+    }
+  } catch (err) {
+    message.value = '登录失败，请检查网络连接'
+    isError.value = true
+  } finally {
+    isSubmitting.value = false
   }
-  
-  if (rememberMe.value) {
-    // 长期保存（30天）
-    localStorage.setItem('currentUser', JSON.stringify(userSession))
-  } else {
-    // 会话级保存
-    sessionStorage.setItem('currentUser', JSON.stringify(userSession))
-  }
-  
-  // 清空表单
-  loginData.username = ''
-  loginData.password = ''
-  
-  // 立即跳转到首页
-  router.push({ name: 'Home' })
 }
 
 const goToHome = () => {
   router.push({ name: 'Home' })
 }
-
-// 检查是否已有登录用户
-const checkExistingLogin = () => {
-  const currentUser = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser')
-  if (currentUser) {
-    const user = JSON.parse(currentUser)
-    if (user.loggedIn) {
-      message.value = `欢迎回来，${user.username}！`
-      isError.value = false
-    }
-  }
-}
-
-// 组件挂载时检查
-checkExistingLogin()
 </script>
 
 <style scoped>
@@ -234,7 +202,7 @@ checkExistingLogin()
 }
 
 .form-group label {
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   font-size: 1.1rem;
   color: #555;
   font-weight: 500;
@@ -245,7 +213,7 @@ checkExistingLogin()
   border: 2px solid #ddd;
   border-radius: 10px;
   font-size: 1rem;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   transition: border-color 0.3s;
 }
 
@@ -265,7 +233,7 @@ checkExistingLogin()
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   color: #555;
   cursor: pointer;
 }
@@ -277,7 +245,7 @@ checkExistingLogin()
 }
 
 .forgot-password {
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   color: #f5576c;
   text-decoration: none;
   font-size: 0.95rem;
@@ -300,16 +268,21 @@ checkExistingLogin()
   border: none;
   padding: 16px;
   border-radius: 10px;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   font-size: 1.2rem;
   font-weight: bold;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.submit-button:hover {
+.submit-button:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 10px 20px rgba(245, 87, 108, 0.4);
+}
+
+.submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .back-button {
@@ -319,7 +292,7 @@ checkExistingLogin()
   border: 2px solid #ddd;
   padding: 16px;
   border-radius: 10px;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   font-size: 1.2rem;
   font-weight: bold;
   cursor: pointer;
@@ -338,7 +311,7 @@ checkExistingLogin()
 }
 
 .form-footer p {
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   color: #666;
   font-size: 1rem;
 }
@@ -358,7 +331,7 @@ checkExistingLogin()
   padding: 12px 16px;
   border-radius: 8px;
   text-align: center;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   font-size: 1rem;
 }
 
@@ -422,7 +395,7 @@ checkExistingLogin()
   border: none;
   padding: 10px 20px;
   border-radius: 8px;
-  font-family: 'SmileySans Oblique', sans-serif;
+  font-family: 'MapleMono CN Regular', monospace;
   font-size: 1rem;
   cursor: pointer;
   transition: background-color 0.2s;

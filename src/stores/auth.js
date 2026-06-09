@@ -1,14 +1,7 @@
 // 认证 Store - 管理用户认证、会话和基础数据操作
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-
-// 本地存储键名
-const STORAGE_KEYS = {
-  USERS: 'users',
-  CURRENT_USER: 'currentUser',
-  TEAMS: 'teams',
-  POSTS: 'posts'
-}
+import { authApi, persistLoginSession, clearLoginSession } from '../services/api.js'
 
 // 职责选项
 const ROLE_OPTIONS = {
@@ -50,35 +43,17 @@ export const useAuthStore = defineStore('auth', () => {
   // ========== 计算属性 ==========
   const isLoggedIn = computed(() => currentUser.value !== null)
   const currentUsername = computed(() => currentUser.value?.username || null)
+  const currentDisplayName = computed(() => currentUser.value?.displayName || currentUser.value?.username || null)
+  const currentUid = computed(() => currentUser.value?.uid || null)
+  const userrank = computed(() => Number(currentUser.value?.userrank ?? 0))
+  const isAdmin = computed(() => userrank.value >= 3)
+  const isPlayer = computed(() => userrank.value >= 1)
+  const isTrustedPlayer = computed(() => userrank.value >= 2)
 
-  // ========== LocalStorage 工具方法 ==========
-  function getFromStorage(key) {
-    try {
-      const data = localStorage.getItem(key)
-      return data ? JSON.parse(data) : []
-    } catch (error) {
-      console.error(`读取 ${key} 数据失败:`, error)
-      return []
-    }
-  }
-
-  function saveToStorage(key, data) {
-    try {
-      localStorage.setItem(key, JSON.stringify(data))
-      return true
-    } catch (error) {
-      console.error(`保存 ${key} 数据失败:`, error)
-      return false
-    }
-  }
-
-  // ========== 认证方法 ==========
+  // ========== 会话管理 ==========
   function loadSession() {
     try {
-      let sessionJson = sessionStorage.getItem(STORAGE_KEYS.CURRENT_USER)
-      if (!sessionJson) {
-        sessionJson = localStorage.getItem(STORAGE_KEYS.CURRENT_USER)
-      }
+      const sessionJson = sessionStorage.getItem('currentUser') || localStorage.getItem('currentUser')
       if (sessionJson) {
         const session = JSON.parse(sessionJson)
         if (session.rememberMe) {
@@ -90,8 +65,28 @@ export const useAuthStore = defineStore('auth', () => {
             return null
           }
         }
-        currentUser.value = session
-        return session
+        // 如果有 token，尝试验证
+        if (session.token) {
+          currentUser.value = session
+          // 后台验证 token 是否有效（静默更新用户信息）
+          authApi.getMe().then(res => {
+            if (res.success && res.user) {
+              const merged = { ...session, ...res.user, token: session.token, loggedIn: true, loginTime: session.loginTime, rememberMe: session.rememberMe }
+              currentUser.value = merged
+              persistLoginSession(merged)
+            } else {
+              // token 失效，清除会话
+              console.warn('会话已过期，请重新登录')
+              clearLoginSession()
+              currentUser.value = null
+            }
+          }).catch(() => {})
+          return session
+        }
+        // 无 token，清除无效会话
+        clearLoginSession()
+        currentUser.value = null
+        return null
       }
       return null
     } catch (error) {
@@ -100,88 +95,35 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  function saveSession(session, rememberMe = false) {
-    try {
-      if (rememberMe) {
-        localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(session))
-      } else {
-        sessionStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(session))
-      }
-      return true
-    } catch (error) {
-      console.error('保存会话失败:', error)
-      return false
+  // ========== 认证方法 ==========
+  async function registerUser(userData) {
+    const res = await authApi.register(userData.username, userData.email, userData.password)
+    if (res.success) {
+      const session = res.user
+      persistLoginSession(session)
+      currentUser.value = session
+      return { success: true, user: session }
     }
+    return { success: false, message: res.message || '注册失败' }
   }
 
-  function getAllUsers() {
-    return getFromStorage(STORAGE_KEYS.USERS)
-  }
-
-  function saveAllUsers(users) {
-    return saveToStorage(STORAGE_KEYS.USERS, users)
-  }
-
-  function registerUser(userData) {
-    const users = getAllUsers()
-    if (users.some(user => user.username === userData.username)) {
-      return { success: false, message: '用户名已存在' }
+  async function login(username, password, rememberMe = false) {
+    const res = await authApi.login(username, password, rememberMe)
+    if (res.success) {
+      const session = res.user
+      session.rememberMe = rememberMe
+      session.loginTime = new Date().toISOString()
+      persistLoginSession(session)
+      currentUser.value = session
+      return { success: true, user: session }
     }
-    if (users.some(user => user.email === userData.email)) {
-      return { success: false, message: '邮箱已被注册' }
-    }
-
-    const newUser = {
-      id: Date.now(),
-      username: userData.username,
-      email: userData.email,
-      password: userData.password,
-      role: [ROLE_OPTIONS.FLEXIBLE],
-      avatar: '/Head.png',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }
-
-    users.push(newUser)
-    if (saveAllUsers(users)) {
-      return { success: true, user: newUser }
-    }
-    return { success: false, message: '注册失败，请重试' }
-  }
-
-  function login(username, password, rememberMe = false) {
-    const users = getAllUsers()
-    const user = users.find(u => u.username === username || u.email === username)
-
-    if (!user) return { success: false, message: '用户不存在' }
-    if (user.password !== password) return { success: false, message: '密码错误' }
-
-    const session = {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      role: Array.isArray(user.role) ? user.role : [user.role || 'flexible'],
-      avatar: user.avatar || '/Head.png',
-      loggedIn: true,
-      loginTime: new Date().toISOString(),
-      rememberMe
-    }
-
-    saveSession(session, rememberMe)
-    currentUser.value = session
-    return { success: true, user: session }
+    return { success: false, message: res.message || '登录失败' }
   }
 
   function logout() {
-    try {
-      sessionStorage.removeItem(STORAGE_KEYS.CURRENT_USER)
-      localStorage.removeItem(STORAGE_KEYS.CURRENT_USER)
-      currentUser.value = null
-      return true
-    } catch (error) {
-      console.error('注销失败:', error)
-      return false
-    }
+    clearLoginSession()
+    currentUser.value = null
+    return true
   }
 
   function validatePassword(password) {
@@ -191,89 +133,78 @@ export const useAuthStore = defineStore('auth', () => {
     return { valid: true }
   }
 
-  function getUserById(userId) {
-    const users = getAllUsers()
-    const user = users.find(u => u.id === Number(userId))
-    if (!user) return null
-    return {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      role: Array.isArray(user.role) ? user.role : [user.role || 'flexible'],
-      avatar: user.avatar || '/Head.png',
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-      teamId: user.teamId || null
-    }
+  async function getAllUsers() {
+    const res = await authApi.getAllUsers()
+    return res.success ? res.users : []
   }
 
-  function updateUser(userId, updates) {
-    const users = getAllUsers()
-    const userIndex = users.findIndex(user => user.id === userId)
-    if (userIndex === -1) return { success: false, message: '用户不存在' }
-
-    users[userIndex] = {
-      ...users[userIndex],
-      ...updates,
-      updatedAt: new Date().toISOString()
+  async function getUserById(userIdOrUid) {
+    const res = await authApi.getUserById(userIdOrUid)
+    if (res.success) {
+      return res.user
     }
+    return null
+  }
 
-    if (saveAllUsers(users)) {
+  async function updateUser(userId, updates) {
+    const res = await authApi.updateUser(updates)
+    if (res.success) {
       if (currentUser.value && currentUser.value.id === userId) {
-        currentUser.value = { ...currentUser.value, ...updates }
-        saveSession(currentUser.value, currentUser.value.rememberMe)
+        const merged = { ...currentUser.value, ...res.user }
+        currentUser.value = merged
+        persistLoginSession(merged)
       }
-      return { success: true, user: users[userIndex] }
+      return { success: true, user: res.user }
     }
-    return { success: false, message: '更新失败' }
+    return { success: false, message: res.message || '更新失败' }
   }
 
-  function deleteUser(userId) {
-    const users = getAllUsers()
-    const filteredUsers = users.filter(user => user.id !== userId)
-    if (filteredUsers.length === users.length) return { success: false, message: '用户不存在' }
-
-    if (saveAllUsers(filteredUsers)) {
+  async function deleteUser(userId) {
+    const res = await authApi.deleteUser()
+    if (res.success) {
       if (currentUser.value && currentUser.value.id === userId) {
         logout()
       }
       return { success: true }
     }
-    return { success: false, message: '删除失败' }
+    return { success: false, message: res.message || '删除失败' }
   }
 
-  function updateUserRole(userId, roleOrRoles) {
+  async function updateUserRole(userId, roleOrRoles) {
     const roles = Array.isArray(roleOrRoles) ? roleOrRoles : [roleOrRoles]
-    const users = getAllUsers()
-    const userIndex = users.findIndex(user => user.id === userId)
-    if (userIndex === -1) return { success: false, message: '用户不存在' }
-
     const validation = validateRoles(roles)
     if (!validation.valid) return { success: false, message: validation.message }
 
-    users[userIndex].role = roles
-    users[userIndex].updatedAt = new Date().toISOString()
-
-    if (saveAllUsers(users)) {
+    const res = await authApi.updateRole(roles)
+    if (res.success) {
       if (currentUser.value && currentUser.value.id === userId) {
         currentUser.value.role = roles
-        saveSession(currentUser.value, currentUser.value.rememberMe)
+        persistLoginSession(currentUser.value)
       }
-      return { success: true, user: users[userIndex] }
+      return { success: true, user: res.user }
     }
-    return { success: false, message: '更新职责失败' }
+    return { success: false, message: res.message || '更新职责失败' }
+  }
+
+  // 提升用户等级（仅 OP）
+  async function promoteUser(targetUid, newRank) {
+    const res = await authApi.promoteUser(targetUid, newRank)
+    return res
   }
 
   function initTestData() {
-    const users = getAllUsers()
-    if (users.length === 0) {
-      const testUsers = [
-        { id: 1, username: 'testuser', email: 'test@example.com', password: 'password123', role: 'flexible', avatar: '/Head.png', createdAt: '2024-01-01T00:00:00.000Z', updatedAt: '2024-01-01T00:00:00.000Z' },
-        { id: 2, username: 'demo', email: 'demo@example.com', password: 'demo123', role: 'flexible', avatar: '/Head.png', createdAt: '2024-01-01T00:00:00.000Z', updatedAt: '2024-01-01T00:00:00.000Z' }
-      ]
-      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(testUsers))
-      console.log('测试数据已初始化')
-    }
+    console.log('测试数据由后端管理')
+  }
+
+  // 监听 auth:unauthorized 事件（来自 api.js 的 401 拦截），自动登出
+  if (typeof window !== 'undefined') {
+    window.addEventListener('auth:unauthorized', () => {
+      if (currentUser.value) {
+        clearLoginSession()
+        currentUser.value = null
+        console.warn('认证已过期，已自动登出')
+      }
+    })
   }
 
   // 初始化时加载会话
@@ -283,10 +214,14 @@ export const useAuthStore = defineStore('auth', () => {
     currentUser,
     isLoggedIn,
     currentUsername,
+    currentUid,
+    userrank,
+    isAdmin,
+    isPlayer,
+    isTrustedPlayer,
     ROLE_OPTIONS,
     loadSession,
     getAllUsers,
-    saveAllUsers,
     registerUser,
     login,
     logout,
@@ -295,6 +230,7 @@ export const useAuthStore = defineStore('auth', () => {
     updateUser,
     deleteUser,
     updateUserRole,
+    promoteUser,
     initTestData
   }
 })

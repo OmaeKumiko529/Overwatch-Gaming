@@ -10,8 +10,8 @@
     <div class="content hero-content" style="white-space: pre-wrap;">
       <h1 class="main-title">E426 Overwatch</h1>
 
-      <p class="subtitle" style="padding-left: 10px;">
-        基于Vue.js开发的轻量级守望先锋®团队管理平台<br/><br/>
+      <p class="subtitle" style="padding-left: 0.521vw;">
+        基于Vue.js开发的轻量级守望先锋®论坛<br/><br/>
       </p>
 
       <br>
@@ -47,7 +47,7 @@ const navigateTo = (routeName) => {
   height: 100vh;
   overflow: hidden;
   position: relative;
-  padding-top: 60px;
+  padding-top: 5.556vh;
   box-sizing: border-box;
 }
 
@@ -79,38 +79,38 @@ const navigateTo = (routeName) => {
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
-  padding-left: 180px;
+  padding-left: 9.375vw;
   box-sizing: border-box;
   color: white;
   z-index: 1001;
   position: relative;
-  padding-top: 80px;
+  padding-top: 7.407vh;
 }
 
 .hero-content {
   justify-content: flex-start;
-  padding-top: 320px;
+  padding-top: 29.63vh;
 }
 
 .main-title {
   font-family: "Fugaz One", sans-serif;
-  font-size: 4rem;
+  font-size: clamp(2rem, 3.33vw, 4rem);
   margin: 0;
   text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
 }
 
 .subtitle {
   font-family: 'SmileySans Oblique', sans-serif;
-  font-size: 1.2rem;
+  font-size: clamp(0.875rem, 1vw, 1.2rem);
   color: rgba(255, 255, 255, 0.8);
-  margin-top: 10px;
+  margin-top: 0.926vh;
   text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
 }
 
 .button-container {
   display: flex;
-  gap: 20px;
-  margin-top: 20px;
+  gap: 1.042vw;
+  margin-top: 1.852vh;
 }
 
 .register-button,
@@ -118,8 +118,8 @@ const navigateTo = (routeName) => {
   background: transparent;
   border: 2px solid white;
   color: white;
-  padding: 10px 24px;
-  font-family: 'SmileySans Oblique', sans-serif;
+  padding: 0.6em 1.25vw;
+  font-family: 'MapleMono CN Regular', monospace;
   border-radius: 64px;
   cursor: pointer;
   transition: 0.3s;
@@ -131,6 +131,6 @@ const navigateTo = (routeName) => {
 }
 
 .welcome-message {
-  margin-top: 20px;
+  margin-top: 1.852vh;
 }
 </style>

@@ -1,19 +1,19 @@
 <script setup>
 // 导入Vue Composition API
-import { onMounted } from 'vue'
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import NavBar from './components/NavBar.vue'
+import Popup from './components/Popup.vue'
 
-// 组件挂载时初始化登录状态（由 NavBar 和子页面自行管理）
-onMounted(() => {
-  // 无需在 App 层管理登录状态，各组件通过 Pinia 自动响应
-})
+const route = useRoute()
+const hideNavBar = computed(() => route.meta && route.meta.hideNavBar)
 </script>
 
 <template>
   <!-- 应用根容器 -->
   <div class="app-container">
-    <!-- 导航栏组件 -->
-    <NavBar />
+    <!-- 导航栏组件（某些页面如管理后台隐藏） -->
+    <NavBar v-if="!hideNavBar" />
     
     <!-- 路由出口：Vue Router渲染匹配的页面组件 -->
     <router-view v-slot="{ Component }">
@@ -24,6 +24,8 @@ onMounted(() => {
       </Transition>
     </router-view>
   </div>
+  <!-- 全局弹窗组件 -->
+  <Popup />
 </template>
 
 <style scoped>
@@ -31,6 +33,12 @@ onMounted(() => {
 @font-face {
   font-family: 'SmileySans Oblique';
   src: url('/SmileySans-Oblique.ttf') format('truetype');
+}
+
+/* 自定义字体声明：导入MapleMono CN等宽字体 */
+@font-face {
+  font-family: 'MapleMono CN Regular';
+  src: url('/MapleMono-CN-Regular.ttf') format('truetype');
 }
 
 /* 应用根容器样式 */

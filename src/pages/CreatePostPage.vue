@@ -18,22 +18,6 @@
         </div>
         
         <div class="form-group">
-          <label for="category">分类</label>
-          <select
-            id="category"
-            v-model="formData.category"
-            class="form-select"
-          >
-            <option value="general">一般讨论</option>
-            <option value="team">战队招募</option>
-            <option value="strategy">战术攻略</option>
-            <option value="highlight">精彩集锦</option>
-            <option value="question">问题求助</option>
-            <option value="announcement">公告通知</option>
-          </select>
-        </div>
-        
-        <div class="form-group">
           <label for="content">帖子内容</label>
           <RichTextEditor
             v-model="formData.content"
@@ -45,7 +29,42 @@
           />
         </div>
         
-        <!-- 提及用户显示 -->
+        <div class="form-group">
+          <label>帖子标签</label>
+          <div class="tags-area">
+            <!-- 已选标签 -->
+            <div v-if="tags.length > 0" class="tags-list">
+              <span v-for="(tag, index) in tags" :key="index" class="tag-chip">
+                {{ tag }}
+                <button type="button" class="tag-remove" @click="removeTag(index)">&times;</button>
+              </span>
+            </div>
+            <!-- 预设标签 -->
+            <div class="preset-tags">
+              <button
+                type="button"
+                v-for="preset in presetTags"
+                :key="preset"
+                class="preset-tag"
+                :class="{ active: tags.includes(preset) }"
+                @click="togglePresetTag(preset)"
+              >
+                {{ preset }}
+              </button>
+            </div>
+            <!-- 自定义标签输入 -->
+            <div class="custom-tag-input-wrapper">
+              <input
+                type="text"
+                v-model="customTagInput"
+                class="form-input tag-input"
+                placeholder="输入自定义标签后按回车添加"
+                @keydown.enter.prevent="addCustomTag"
+              />
+            </div>
+          </div>
+        </div>
+
         <div v-if="mentionedUsers.length > 0" class="mentioned-users">
           <h3 class="mentioned-users-title">提及的用户</h3>
           <div class="mentioned-users-list">
@@ -62,10 +81,6 @@
           </button>
           <button type="button" class="back-button" @click="goBack">取消</button>
         </div>
-        
-        <div v-if="message" class="message" :class="{ 'error': isError, 'success': !isError }">
-          {{ message }}
-        </div>
       </form>
     </div>
   </div>
@@ -74,157 +89,167 @@
 <script setup>
 import { ref, reactive, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth.js'
+import pop from '../utils/pop.js'
 import RichTextEditor from '../components/RichTextEditor.vue'
 import { extractMentionsFromHTML } from '../utils/mentionParser.js'
-import userService from '../services/user.js'
+import { authApi } from '../services/api.js'
+import postService from '../services/post.js'
 
 const router = useRouter()
-import auth from '../services/auth.js'
-import postService from '../services/post.js'
+const auth = useAuthStore()
 
 const formData = reactive({
   title: '',
-  category: 'general',
   content: ''
 })
 
-const message = ref('')
-const isError = ref(false)
 const isSubmitting = ref(false)
 const mentionedUsers = ref([])
+const allUsers = ref([])
 
-// 检查用户是否已登录
+// 标签功能
+const presetTags = ['知识', '游戏', '生活']
+const tags = ref([])
+const customTagInput = ref('')
+
+function togglePresetTag(tag) {
+  const index = tags.value.indexOf(tag)
+  if (index === -1) {
+    tags.value.push(tag)
+  } else {
+    tags.value.splice(index, 1)
+  }
+}
+
+function addCustomTag() {
+  const text = customTagInput.value.trim()
+  if (!text) return
+  if (tags.value.includes(text)) {
+    pop.toast('标签已存在', 'info')
+    customTagInput.value = ''
+    return
+  }
+  tags.value.push(text)
+  customTagInput.value = ''
+}
+
+function removeTag(index) {
+  tags.value.splice(index, 1)
+}
+
 onMounted(() => {
-  const currentUser = auth.getCurrentUser()
-  if (!currentUser) {
-    message.value = '请先登录后再发帖'
-    isError.value = true
-    // 立即跳转到登录页面
+  if (!auth.isLoggedIn) {
+    pop.toast('请先登录后再发帖', 'error')
     router.push({ name: 'Login' })
   }
+  loadUsers()
 })
 
-// 监听内容变化，更新提及用户列表
+async function loadUsers() {
+  try {
+    const res = await authApi.getAllUsers()
+    if (res.success) {
+      allUsers.value = res.users
+    }
+  } catch {}
+}
+
 watch(() => formData.content, (newContent) => {
   updateMentionedUsers(newContent)
 })
 
-// 处理提及事件
 const handleMention = (user) => {
-  // 添加用户到提及列表（避免重复）
   if (!mentionedUsers.value.some(u => u.id === user.id)) {
     mentionedUsers.value.push({
       id: user.id,
       username: user.username,
       avatar: user.avatar || '/Head.png'
     })
-    
-    // 显示提示消息
-    message.value = `已提及用户 @${user.username}`
-    isError.value = false
-    
-    // 3秒后清除消息
-    setTimeout(() => {
-      if (message.value === `已提及用户 @${user.username}`) {
-        message.value = ''
-      }
-    }, 3000)
+    pop.toast(`已提及用户 @${user.username}`, 'info')
   }
 }
 
-// 从内容中更新提及用户列表
 const updateMentionedUsers = (htmlContent) => {
   if (!htmlContent) {
     mentionedUsers.value = []
     return
   }
   
-  // 从HTML中提取提及
   const mentions = extractMentionsFromHTML(htmlContent)
   
-  // 获取完整的用户信息
   const updatedMentions = mentions.map(mention => {
-    const user = userService.getUserById(mention.id)
+    const user = allUsers.value.find(u => String(u.id) === mention.id)
     return {
       id: mention.id,
       username: mention.username,
       avatar: user?.avatar || '/Head.png'
     }
-  }).filter(user => user.id) // 过滤掉无效的用户
+  }).filter(user => user.id)
   
-  // 更新提及用户列表
   mentionedUsers.value = updatedMentions
 }
 
 const handleCreatePost = async () => {
-  // 验证表单
   if (!formData.title.trim()) {
-    message.value = '请输入帖子标题'
-    isError.value = true
+    pop.toast('请输入帖子标题', 'error')
     return
   }
   
   if (!formData.content.trim()) {
-    message.value = '请输入帖子内容'
-    isError.value = true
+    pop.toast('请输入帖子内容', 'error')
     return
   }
   
   if (formData.title.length > 100) {
-    message.value = '标题不能超过100个字符'
-    isError.value = true
+    pop.toast('标题不能超过100个字符', 'error')
     return
   }
   
   if (formData.content.length > 5000) {
-    message.value = '内容不能超过5000个字符'
-    isError.value = true
+    pop.toast('内容不能超过5000个字符', 'error')
     return
   }
   
   isSubmitting.value = true
-  message.value = ''
   
   try {
-    const currentUser = auth.getCurrentUser()
+    const currentUser = auth.currentUser
     if (!currentUser) {
-      message.value = '请先登录后再发帖'
-      isError.value = true
+      pop.toast('请先登录后再发帖', 'error')
       router.push({ name: 'Login' })
       return
     }
     
-    // 创建帖子数据，包含提及用户信息
     const postData = {
       title: formData.title.trim(),
-      category: formData.category,
       content: formData.content.trim(),
+      category: 'general',
       mentions: mentionedUsers.value.map(user => ({
         userId: user.id,
         username: user.username
-      }))
+      })),
+      tags: tags.value
     }
     
-    const result = postService.createPost(postData, currentUser.id, currentUser.username)
+    const result = await postService.createPost(postData, currentUser.id, currentUser.username)
     
     if (result.success) {
-      message.value = '帖子发布成功！正在跳转到用户面板...'
-      isError.value = false
+      pop.toast('帖子发布成功！正在跳转...', 'success')
       
-      // 清空表单和提及列表
       formData.title = ''
       formData.content = ''
       mentionedUsers.value = []
+      tags.value = []
       
-      // 立即跳转到用户面板
-      router.push({ name: 'User' })
+      setTimeout(() => {
+        router.push('/post/' + encodeURIComponent(result.post.pid))
+      }, 500)
     } else {
-      message.value = result.message || '发布失败，请重试'
-      isError.value = true
+      pop.toast(result.message || '发布失败，请重试', 'error')
     }
   } catch (error) {
-    message.value = '发布失败：' + error.message
-    isError.value = true
+    pop.toast('发布失败：' + error.message, 'error')
   } finally {
     isSubmitting.value = false
   }
@@ -238,27 +263,30 @@ const goBack = () => {
 <style scoped>
 .create-post-page {
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
+  padding-top: 80px;
+  background: #0f0f1a;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-bottom: 40px;
+  box-sizing: border-box;
 }
 
 .form-container {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  padding: 40px;
+  background: #1a1a2e;
+  border-radius: 16px;
+  padding: 36px;
   width: 100%;
-  max-width: 600px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  animation: slideUp 0.5s ease;
+  max-width: 680px;
+  margin: 0 auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  border: 1px solid #2a2a4a;
+  animation: slideUp 0.4s ease;
 }
 
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -267,101 +295,208 @@ const goBack = () => {
 }
 
 .page-title {
-  text-align: center;
-  color: #333;
-  margin-bottom: 30px;
-  font-size: 2.5em;
-  font-weight: bold;
   font-family: 'SmileySans Oblique', sans-serif;
+  font-size: 1.8rem;
+  color: #4facfe;
+  text-align: center;
+  margin-bottom: 32px;
+  font-weight: bold;
 }
 
 .create-post-form {
   display: flex;
   flex-direction: column;
-  gap: 25px;
+  gap: 20px;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  position: relative;
 }
 
 .form-group label {
-  font-weight: bold;
-  color: #555;
-  font-size: 1.1em;
+  font-family: 'MapleMono CN Regular', monospace;
+  font-size: 1rem;
+  color: #a0aec0;
+  font-weight: 600;
 }
 
 .form-input,
-.form-select,
-.form-textarea {
+.form-select {
   padding: 12px 16px;
-  border: 2px solid #ddd;
-  border-radius: 10px;
-  font-size: 1em;
-  transition: all 0.3s ease;
-  background: white;
+  border: 2px solid #2a2a4a;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: 'MapleMono CN Regular', monospace;
+  transition: border-color 0.2s;
+  background: #0a0a18;
+  color: #e0e0e0;
 }
 
 .form-input:focus,
-.form-select:focus,
-.form-textarea:focus {
+.form-select:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-.form-textarea {
-  resize: vertical;
-  min-height: 150px;
-  font-family: inherit;
-}
-
-.form-select {
-  cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 16px center;
-  background-size: 16px;
-  padding-right: 40px;
+  border-color: #4facfe;
 }
 
 .char-count {
-  text-align: right;
-  font-size: 0.9em;
-  color: #888;
-  margin-top: 4px;
+  position: absolute;
+  right: 12px;
+  bottom: -22px;
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.rich-text-editor-wrapper {
+  min-height: 250px;
+}
+
+.tags-area {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #4facfe;
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-family: 'MapleMono CN Regular', monospace;
+}
+
+.tag-remove {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.tag-remove:hover {
+  opacity: 1;
+}
+
+.preset-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.preset-tag {
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: 2px solid #2a2a4a;
+  background: transparent;
+  color: #a0aec0;
+  font-family: 'MapleMono CN Regular', monospace;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.preset-tag:hover {
+  border-color: #4facfe;
+  color: #e0e0e0;
+}
+
+.preset-tag.active {
+  background: #4facfe;
+  border-color: #4facfe;
+  color: #fff;
+}
+
+.custom-tag-input-wrapper {
+  width: 100%;
+}
+
+.tag-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mentioned-users {
+  background: #252545;
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 8px;
+}
+
+.mentioned-users-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #a0aec0;
+  margin: 0 0 12px 0;
+}
+
+.mentioned-users-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mentioned-user-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #1a1a2e;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  border: 1px solid #2a2a4a;
+}
+
+.mentioned-user-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.mentioned-user-name {
+  color: #4facfe;
+  font-weight: 500;
 }
 
 .form-actions {
   display: flex;
-  gap: 15px;
-  margin-top: 20px;
-}
-
-.submit-button,
-.back-button {
-  flex: 1;
-  padding: 14px;
-  border: none;
-  border-radius: 10px;
-  font-size: 1.1em;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-family: 'SmileySans Oblique', sans-serif;
+  gap: 16px;
+  margin-top: 12px;
 }
 
 .submit-button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  flex: 1;
+  padding: 14px;
+  background: linear-gradient(135deg, #4facfe 0%, #667eea 100%);
   color: white;
+  border: none;
+  border-radius: 10px;
+  font-family: 'MapleMono CN Regular', monospace;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .submit-button:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 10px 20px rgba(79, 172, 254, 0.4);
 }
 
 .submit-button:disabled {
@@ -370,122 +505,22 @@ const goBack = () => {
 }
 
 .back-button {
-  background: #f0f0f0;
-  color: #666;
+  flex: 1;
+  background: transparent;
+  color: #a0aec0;
+  border: 2px solid #2a2a4a;
+  padding: 14px;
+  border-radius: 10px;
+  font-family: 'MapleMono CN Regular', monospace;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
 .back-button:hover {
-  background: #e0e0e0;
-  transform: translateY(-2px);
-}
-
-.message {
-  margin-top: 20px;
-  padding: 12px 16px;
-  border-radius: 10px;
-  text-align: center;
-  font-weight: bold;
-}
-
-.message.success {
-  background: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-}
-
-.message.error {
-  background: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
-}
-
-/* 富文本编辑器样式 */
-.rich-text-editor-wrapper {
-  margin-top: 8px;
-}
-
-/* 提及用户样式 */
-.mentioned-users {
-  margin-top: 20px;
-  padding: 15px;
-  background-color: #f8f9fa;
-  border-radius: 10px;
-  border: 1px solid #e9ecef;
-}
-
-.mentioned-users-title {
-  font-family: 'SmileySans Oblique', sans-serif;
-  font-size: 1.1rem;
-  color: #333;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.mentioned-users-title::before {
-  content: '@';
-  font-size: 1.2rem;
-  color: #4facfe;
-}
-
-.mentioned-users-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.mentioned-user-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background-color: white;
-  border-radius: 20px;
-  border: 1px solid #dee2e6;
-  transition: all 0.2s ease;
-}
-
-.mentioned-user-item:hover {
-  background-color: #e9ecef;
-  transform: translateY(-2px);
-}
-
-.mentioned-user-avatar {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.mentioned-user-name {
-  font-family: 'SmileySans Oblique', sans-serif;
-  font-size: 0.9rem;
-  color: #495057;
-  font-weight: 500;
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .form-container {
-    padding: 30px 20px;
-    margin: 20px;
-  }
-  
-  .page-title {
-    font-size: 2em;
-  }
-  
-  .form-actions {
-    flex-direction: column;
-  }
-  
-  .mentioned-users-list {
-    gap: 8px;
-  }
-  
-  .mentioned-user-item {
-    padding: 4px 10px;
-  }
+  background: #252545;
+  border-color: #4facfe;
+  color: #e0e0e0;
 }
 </style>
