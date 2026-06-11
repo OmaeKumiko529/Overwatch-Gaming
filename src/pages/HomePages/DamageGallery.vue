@@ -20,7 +20,7 @@
       <div class="info-section">
         <div class="info-content">
           <div class="english-title" ref="titleRef">
-            <img src="/c/96px-职责：输出_图标.png">
+            <img src="/96px-职责：输出_图标.webp">
             <span>Damage</span>
           </div>
           <div class="cn-title" ref="cnTitleRef">输出</div>

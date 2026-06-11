@@ -20,7 +20,7 @@
       <div class="info-section">
         <div class="info-content">
           <div class="english-title" ref="titleRef">
-            <img src="/t/96px-职责：重装_图标.png">
+            <img src="/96px-职责：重装_图标.webp">
             <span>Tanks</span>
           </div>
           <div class="cn-title" ref="cnTitleRef">重装</div>

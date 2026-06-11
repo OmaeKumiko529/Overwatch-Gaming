@@ -20,7 +20,7 @@
       <div class="info-section">
         <div class="info-content">
           <div class="english-title" ref="titleRef">
-            <img src="/Nsc/96px-职责：支援_图标.png">
+            <img src="/96px-职责：支援_图标.webp">
             <span>Supports</span>
           </div>
           <div class="cn-title" ref="cnTitleRef">辅助</div>
