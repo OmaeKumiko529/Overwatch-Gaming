@@ -48,12 +48,12 @@ watchEffect(async () => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1;
-  padding: 3px 8px;
+  padding: 2px 8px;
   border: 1.5px solid currentColor;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.85);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.3);
 }
 
 .userrank-badge__icon {

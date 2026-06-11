@@ -1,86 +1,75 @@
 <template>
-  <div class="search-input-container" :class="{ active: isActive }">
-    
-    <!-- 搜索按钮 -->
-    <button v-if="!isActive" class="search-icon-button" @click="openSearch">
-      🔍
+  <div class="search-wrap" :class="{ active: isActive }">
+    <!-- 搜索按钮（未激活时显示） -->
+    <button v-if="!isActive" class="search-trigger" @click="openSearch">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
     </button>
 
-    <!-- 搜索条 -->
-    <div v-if="isActive" class="floating-search">
+    <!-- 搜索条（激活时展开） -->
+    <div v-if="isActive" class="search-bar">
       <input
         ref="searchInput"
         v-model="query"
-        class="floating-input"
+        class="search-input"
         placeholder="搜索用户 / UID / 帖子..."
         @keyup.enter="handleSearch"
         @blur="onBlur"
       />
-
-      <button class="close-button" @click="closeSearch">✕</button>
+      <button class="search-close" @click="closeSearch">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
     </div>
 
     <!-- 实时搜索结果 -->
-    <div class="search-hint" v-if="isActive && query.trim()">
-      <div class="hint-content">
-        <!-- 当有查询输入时 -->
-        <div>
-          <!-- 显示搜索结果 -->
-          <div v-if="searchResults.length > 0">
-            <div class="hint-title">搜索结果 ({{ searchResults.length }})</div>
-            <div class="search-results">
-              <!-- 用户结果 -->
-              <div v-if="userResults.length > 0" class="result-section">
-                <div class="result-section-title">用户</div>
-                <div
-                  v-for="user in userResults"
-                  :key="'user-' + user.id"
-                  class="result-item"
-                  @click="goToUser(user.id)"
-                >
-                  <div class="result-avatar">
-                    <img :src="user.avatar || '/Head.png'" :alt="user.username" />
-                  </div>
-                  <div class="result-info">
-                    <div class="result-name">{{ user.username }}</div>
-                    <div class="result-email">{{ user.email }}</div>
-                  </div>
+    <div class="search-dropdown" v-if="isActive && query.trim()">
+      <div class="dropdown-inner">
+        <div v-if="searchResults.length > 0">
+          <div class="dropdown-title">搜索结果 ({{ searchResults.length }})</div>
+          <div class="dropdown-results">
+            <div v-if="userResults.length > 0" class="dropdown-section">
+              <div class="dropdown-section-title">用户</div>
+              <div
+                v-for="user in userResults"
+                :key="'u-' + user.id"
+                class="dropdown-item"
+                @click="goToUser(user.id)"
+              >
+                <div class="dropdown-avatar">
+                  <img :src="user.avatar || '/Head.png'" :alt="user.username" />
+                </div>
+                <div class="dropdown-info">
+                  <div class="dropdown-name">{{ user.username }}</div>
+                  <div class="dropdown-sub">{{ user.email }}</div>
                 </div>
               </div>
-              
-              <!-- 帖子结果 -->
-              <div v-if="postResults.length > 0" class="result-section">
-                <div class="result-section-title">帖子</div>
-                <div
-                  v-for="post in postResults"
-                  :key="'post-' + post.id"
-                  class="result-item"
-                  @click="goToPost(post.id)"
-                >
-                  <div class="result-icon">📝</div>
-                  <div class="result-info">
-                    <div class="result-name">{{ post.title }}</div>
-                    <div class="result-meta">作者: {{ post.username }} · {{ formatDate(post.createdAt) }}</div>
-                  </div>
+            </div>
+            <div v-if="postResults.length > 0" class="dropdown-section">
+              <div class="dropdown-section-title">帖子</div>
+              <div
+                v-for="post in postResults"
+                :key="'p-' + post.id"
+                class="dropdown-item"
+                @click="goToPost(post.id)"
+              >
+                <div class="dropdown-icon">📝</div>
+                <div class="dropdown-info">
+                  <div class="dropdown-name">{{ post.title }}</div>
+                  <div class="dropdown-sub">作者: {{ post.username }} · {{ formatDate(post.createdAt) }}</div>
                 </div>
               </div>
             </div>
           </div>
-          
-          <!-- 无结果 -->
-          <div v-else-if="query.trim() && !searchTimeout" class="no-results">
-            未找到匹配的用户或帖子
-          </div>
-          
-          <!-- 搜索中 -->
-          <div v-else class="no-results">
-            搜索中...
-          </div>
         </div>
-
+        <div v-else-if="query.trim() && !searchTimeout" class="dropdown-empty">未找到匹配的用户或帖子</div>
+        <div v-else class="dropdown-empty">搜索中...</div>
       </div>
     </div>
-
   </div>
 </template>
 
@@ -98,63 +87,30 @@ const searchInput = ref(null)
 const searchResults = ref([])
 const searchTimeout = ref(null)
 
-// 计算属性：分离用户和帖子结果
-const userResults = computed(() => {
-  return searchResults.value.filter(item => item.type === 'user')
-})
+const userResults = computed(() => searchResults.value.filter(i => i.type === 'user'))
+const postResults = computed(() => searchResults.value.filter(i => i.type === 'post'))
 
-const postResults = computed(() => {
-  return searchResults.value.filter(item => item.type === 'post')
-})
-
-// 实时搜索函数
 const performSearch = async () => {
   const q = query.value.trim()
-  
-  if (!q) {
-    searchResults.value = []
-    return
-  }
-
+  if (!q) { searchResults.value = []; return }
   try {
-    // 并行搜索用户和帖子
     const [users, posts] = await Promise.all([
       userService.searchUsers(q),
       postService.searchPosts(q)
     ])
-
-    // 合并结果并添加类型标识
-    const userResultsWithType = users.map(user => ({
-      ...user,
-      type: 'user'
-    }))
-
-    const postResultsWithType = posts.map(post => ({
-      ...post,
-      type: 'post'
-    }))
-
-    // 合并并限制总结果数量
     searchResults.value = [
-      ...userResultsWithType.slice(0, 5), // 最多5个用户
-      ...postResultsWithType.slice(0, 5)  // 最多5个帖子
+      ...users.map(u => ({ ...u, type: 'user' })).slice(0, 5),
+      ...posts.map(p => ({ ...p, type: 'post' })).slice(0, 5)
     ]
-  } catch (error) {
-    console.error('搜索失败:', error)
+  } catch {
     searchResults.value = []
   }
 }
 
-// 监听查询变化，使用防抖
-watch(query, (newQuery) => {
-  if (searchTimeout.value) {
-    clearTimeout(searchTimeout.value)
-  }
-
-  if (newQuery.trim()) {
-    searchTimeout.value = setTimeout(() => {
-      performSearch()
-    }, 300) // 300ms防抖
+watch(query, (n) => {
+  if (searchTimeout.value) clearTimeout(searchTimeout.value)
+  if (n.trim()) {
+    searchTimeout.value = setTimeout(performSearch, 300)
   } else {
     searchResults.value = []
   }
@@ -162,326 +118,264 @@ watch(query, (newQuery) => {
 
 const openSearch = () => {
   isActive.value = true
-
-  nextTick(() => {
-    searchInput.value?.focus()
-  })
+  nextTick(() => searchInput.value?.focus())
 }
 
 const closeSearch = () => {
   isActive.value = false
   query.value = ''
   searchResults.value = []
-  
-  if (searchTimeout.value) {
-    clearTimeout(searchTimeout.value)
-    searchTimeout.value = null
-  }
+  if (searchTimeout.value) { clearTimeout(searchTimeout.value); searchTimeout.value = null }
 }
 
 const handleSearch = () => {
   const q = query.value.trim()
   if (!q) return
-
-  router.push({
-    path: '/search',
-    query: { q }
-  })
-
+  router.push({ path: '/search', query: { q } })
   closeSearch()
 }
 
-// 跳转到用户页面
-const goToUser = (userId) => {
-  router.push(`/user/${userId}`)
-  closeSearch()
-}
+const goToUser = (id) => { router.push(`/user/${id}`); closeSearch() }
+const goToPost = (id) => { router.push(`/post/${id}`); closeSearch() }
 
-// 跳转到帖子页面
-const goToPost = (postId) => {
-  router.push(`/post/${postId}`)
-  closeSearch()
-}
-
-// 格式化日期
-const formatDate = (dateString) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('zh-CN', {
-    month: 'short',
-    day: 'numeric'
-  })
-}
+const formatDate = (d) => new Date(d).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
 
 const onBlur = (e) => {
   setTimeout(() => {
-    if (!e.relatedTarget || !e.relatedTarget.closest('.search-input-container')) {
-      closeSearch()
-    }
+    if (!e.relatedTarget || !e.relatedTarget.closest('.search-wrap')) closeSearch()
   }, 120)
 }
 
 const handleKey = (e) => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-    e.preventDefault()
-    openSearch()
-  }
-
-  if (e.key === 'Escape') {
-    closeSearch()
-  }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); openSearch() }
+  if (e.key === 'Escape') closeSearch()
 }
 
-onMounted(() => {
-  window.addEventListener('keydown', handleKey)
-})
-
+onMounted(() => window.addEventListener('keydown', handleKey))
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKey)
-  
-  if (searchTimeout.value) {
-    clearTimeout(searchTimeout.value)
-  }
+  if (searchTimeout.value) clearTimeout(searchTimeout.value)
 })
 </script>
 
 <style scoped>
-/* 容器 */
-.search-input-container {
+/* ── 容器：跟随 nav-actions flex 流布局 ── */
+.search-wrap {
   position: relative;
-  height: 40px;
-}
-
-/* 搜索按钮 */
-.search-icon-button {
-  width: 40px;
-  height: 40px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  font-size: 18px;
-}
-
-/* 搜索条（核心） */
-.floating-search {
-  position: absolute;
-  right: 0;
-  top: 0;
-
-  height: 40px;
-  width: 280px;
-
   display: flex;
   align-items: center;
-
-  background: #fff;
-  border-radius: 20px;
-
-  padding: 0 6px;
-
-  border: 1px solid rgba(0,0,0,0.08);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-
-  animation: slideIn 0.2s ease;
+  height: 36px;
+  flex-shrink: 0;
 }
 
-/* 输入框 */
-.floating-input {
+/* ── 搜索触发按钮（圆形） ── */
+.search-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.65);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.search-trigger:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  transform: scale(1.05);
+}
+
+/* ── 搜索条（激活时 inline 展开） ── */
+.search-bar {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  width: 220px;
+  padding: 0 4px 0 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  animation: barIn 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  flex-shrink: 0;
+}
+
+.search-input {
   flex: 1;
-
-  height: 30px;
-  border-radius: 14px;
-
-  padding: 0 10px;
-
+  height: 28px;
   border: none;
   outline: none;
-
-  background: #f5f5f5;
-  font-size: 14px;
+  background: transparent;
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-family: 'MapleMono CN Regular', monospace;
 }
 
-/* 关闭按钮 */
-.close-button {
+.search-input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.search-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 26px;
   height: 26px;
   border: none;
-  background: #eee;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
   border-radius: 50%;
   cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
-/* 下拉提示（关键修复） */
-.search-hint {
+.search-close:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+/* ── 下拉搜索建议 ── */
+.search-dropdown {
   position: absolute;
-  top: 48px;
+  top: 44px;
   right: 0;
-
   width: 280px;
-  max-width: calc(100vw - 20px);
-
-  background: white;
+  max-width: calc(100vw - 24px);
+  background: rgba(30, 35, 50, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-radius: 10px;
-
-  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
-
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   padding: 10px;
-
   animation: fadeIn 0.2s ease;
 }
 
-.hint-title {
-  font-weight: bold;
-  margin-bottom: 6px;
+.dropdown-title {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 8px;
+  font-size: 0.85rem;
 }
 
-.hint-content ul {
-  padding-left: 16px;
-  margin: 0;
-}
-
-.hint-content li {
-  font-size: 13px;
-  margin-bottom: 4px;
-}
-
-/* 搜索结果样式 */
-.search-results {
+.dropdown-results {
   max-height: 300px;
   overflow-y: auto;
 }
 
-.result-section {
-  margin-bottom: 12px;
+.dropdown-section {
+  margin-bottom: 10px;
 }
 
-.result-section:last-child {
+.dropdown-section:last-child {
   margin-bottom: 0;
 }
 
-.result-section-title {
-  font-size: 12px;
+.dropdown-section-title {
+  font-size: 0.7rem;
   font-weight: 600;
-  color: #666;
+  color: rgba(255, 255, 255, 0.35);
   text-transform: uppercase;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   padding-bottom: 4px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.result-item {
+.dropdown-item {
   display: flex;
   align-items: center;
-  padding: 8px;
+  gap: 10px;
+  padding: 7px 8px;
   border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.2s;
-  margin-bottom: 4px;
+  transition: background 0.15s ease;
 }
 
-.result-item:hover {
-  background-color: #f5f5f5;
+.dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 
-.result-item:last-child {
-  margin-bottom: 0;
-}
-
-.result-avatar {
-  width: 32px;
-  height: 32px;
+.dropdown-avatar {
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   overflow: hidden;
-  margin-right: 10px;
   flex-shrink: 0;
 }
 
-.result-avatar img {
+.dropdown-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.result-icon {
-  width: 32px;
-  height: 32px;
+.dropdown-icon {
+  width: 30px;
+  height: 30px;
   border-radius: 6px;
-  background-color: #f0f0f0;
+  background: rgba(255, 255, 255, 0.06);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 10px;
   flex-shrink: 0;
-  font-size: 16px;
+  font-size: 15px;
 }
 
-.result-info {
+.dropdown-info {
   flex: 1;
   min-width: 0;
 }
 
-.result-name {
+.dropdown-name {
+  font-size: 0.85rem;
   font-weight: 500;
-  font-size: 14px;
-  color: #333;
-  margin-bottom: 2px;
+  color: rgba(255, 255, 255, 0.85);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.result-email {
-  font-size: 12px;
-  color: #888;
+.dropdown-sub {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  margin-top: 1px;
 }
 
-.result-meta {
-  font-size: 11px;
-  color: #999;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.no-results {
+.dropdown-empty {
   text-align: center;
-  padding: 20px;
-  color: #999;
-  font-size: 14px;
+  padding: 18px;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.85rem;
 }
 
-/* 动画 */
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* ── 动画 ── */
+@keyframes barIn {
+  from { opacity: 0; transform: translateX(-6px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0 }
-  to { opacity: 1 }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-/* 手机适配 */
+/* ── 手机适配 ── */
 @media (max-width: 480px) {
-  .floating-search {
-    position: fixed;
-    left: 12px;
-    right: 12px;
-    width: auto;
+  .search-bar {
+    width: calc(100vw - 90px);
   }
-
-  .search-hint {
-    left: 12px;
-    right: 12px;
-    width: auto;
+  .search-dropdown {
+    right: 0;
+    left: auto;
+    width: calc(100vw - 50px);
   }
 }
 </style>

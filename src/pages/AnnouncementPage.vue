@@ -1,7 +1,7 @@
 <template>
   <div class="announcement-page">
     <div class="page-header">
-      <h1>全站公告</h1>
+      <h1 class="page-title">📢 全站公告</h1>
       <div v-if="auth.isAdmin" class="admin-actions">
         <button @click="showForm = !showForm" class="btn-publish">
           {{ showForm ? '收起表单' : '发布新公告' }}
@@ -9,27 +9,15 @@
       </div>
     </div>
 
-    <!-- 发布公告表单（仅管理员可见） -->
     <div v-if="showForm && auth.isAdmin" class="publish-form">
-      <h2>发布新公告</h2>
+      <h2 class="form-title">发布新公告</h2>
       <div class="form-group">
         <label for="title">公告标题</label>
-        <input
-          id="title"
-          v-model="form.title"
-          type="text"
-          placeholder="请输入公告标题"
-          maxlength="100"
-        />
+        <input id="title" v-model="form.title" type="text" placeholder="请输入公告标题" maxlength="100" class="form-input" />
       </div>
       <div class="form-group">
         <label for="content">公告内容</label>
-        <textarea
-          id="content"
-          v-model="form.content"
-          placeholder="请输入公告内容..."
-          rows="6"
-        ></textarea>
+        <textarea id="content" v-model="form.content" placeholder="请输入公告内容..." rows="6" class="form-textarea"></textarea>
       </div>
       <div v-if="error" class="error-msg">{{ error }}</div>
       <div class="form-actions">
@@ -39,23 +27,21 @@
       </div>
     </div>
 
-    <!-- 公告列表 -->
-    <div v-if="loading" class="loading">加载中...</div>
-    <div v-else-if="announcements.length === 0" class="empty">
-      暂无公告
-    </div>
+    <div v-if="loading" class="loading-state">加载中...</div>
+    <div v-else-if="announcements.length === 0" class="loading-state">暂无公告</div>
     <div v-else class="announcement-list">
       <div v-for="item in announcements" :key="item.id" class="announcement-card">
-        <div class="announcement-header">
-          <h3 class="announcement-title">{{ item.title }}</h3>
-          <div class="announcement-meta">
-            <span class="author">{{ item.username || '管理员' }}</span>
-            <span class="date">{{ formatDate(item.created_at) }}</span>
+        <div class="card-accent"></div>
+        <div class="card-body">
+          <h3 class="card-title">{{ item.title }}</h3>
+          <div class="card-meta">
+            <span class="card-author">{{ item.username || '管理员' }}</span>
+            <span class="card-date">{{ formatDate(item.created_at) }}</span>
           </div>
-        </div>
-        <div class="announcement-content">{{ item.content }}</div>
-        <div v-if="auth.isAdmin" class="announcement-actions">
-          <button @click="deleteAnnouncement(item.id)" class="btn-delete">删除</button>
+          <div class="card-content">{{ item.content }}</div>
+          <div v-if="auth.isAdmin" class="card-actions">
+            <button @click="deleteAnnouncement(item.id)" class="btn-delete">删除</button>
+          </div>
         </div>
       </div>
     </div>
@@ -75,56 +61,32 @@ const loading = ref(true)
 const submitting = ref(false)
 const showForm = ref(false)
 const error = ref('')
-const form = ref({
-  title: '',
-  content: ''
-})
+const form = ref({ title: '', content: '' })
 
-onMounted(async () => {
-  await loadAnnouncements()
-})
+onMounted(async () => { await loadAnnouncements() })
 
 async function loadAnnouncements() {
   loading.value = true
   try {
     const res = await announcementsApi.getAll()
-    if (res.success) {
-      announcements.value = res.announcements || []
-    }
-  } catch (err) {
-    console.error('获取公告失败:', err)
-  } finally {
-    loading.value = false
-  }
+    if (res.success) announcements.value = res.announcements || []
+  } catch (err) { console.error('获取公告失败:', err) }
+  finally { loading.value = false }
 }
 
 async function submitAnnouncement() {
   error.value = ''
-  if (!form.value.title.trim()) {
-    error.value = '请输入公告标题'
-    return
-  }
-  if (!form.value.content.trim()) {
-    error.value = '请输入公告内容'
-    return
-  }
-
+  if (!form.value.title.trim()) { error.value = '请输入公告标题'; return }
+  if (!form.value.content.trim()) { error.value = '请输入公告内容'; return }
   submitting.value = true
   try {
     const res = await announcementsApi.create(form.value.title.trim(), form.value.content.trim())
     if (res.success) {
-      form.value.title = ''
-      form.value.content = ''
-      showForm.value = false
+      form.value.title = ''; form.value.content = ''; showForm.value = false
       await loadAnnouncements()
-    } else {
-      error.value = res.message || '发布失败'
-    }
-  } catch (err) {
-    error.value = '发布失败，请稍后重试'
-  } finally {
-    submitting.value = false
-  }
+    } else { error.value = res.message || '发布失败' }
+  } catch { error.value = '发布失败，请稍后重试' }
+  finally { submitting.value = false }
 }
 
 async function deleteAnnouncement(id) {
@@ -132,196 +94,177 @@ async function deleteAnnouncement(id) {
   if (!ok) return
   try {
     const res = await announcementsApi.delete(id)
-    if (res.success) {
-      announcements.value = announcements.value.filter(a => a.id !== id)
-      pop.up('删除成功', '公告已删除', 'success')
-    }
-  } catch (err) {
-    console.error('删除公告失败:', err)
-    pop.up('删除失败', '无法删除公告，请稍后重试', 'error')
-  }
+    if (res.success) { announcements.value = announcements.value.filter(a => a.id !== id); pop.up('删除成功', '公告已删除', 'success') }
+  } catch { pop.up('删除失败', '无法删除公告，请稍后重试', 'error') }
 }
 
-function formatDate(dateStr) {
-  if (!dateStr) return ''
-  return dateStr.replace('T', ' ').substring(0, 19)
-}
+function formatDate(d) { if (!d) return ''; return d.replace('T', ' ').substring(0, 19) }
 </script>
 
 <style scoped>
 .announcement-page {
+  min-height: 100vh;
+  background: #0f0f1a;
   max-width: 900px;
   margin: 0 auto;
-  padding: 20px;
-  padding-top: 80px;
+  padding: 80px 20px 40px;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: 28px;
 }
 
-.page-header h1 {
+.page-title {
   margin: 0;
-  font-size: 1.8em;
-  color: #333;
+  font-size: 1.5rem;
+  color: #e0e0e0;
+  font-family: 'SmileySans Oblique', sans-serif;
 }
 
 .btn-publish {
-  padding: 10px 20px;
-  background: #667eea;
+  padding: 10px 24px;
+  background: linear-gradient(135deg, #4facfe, #667eea);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  font-size: 1em;
-  transition: background 0.3s;
+  font-family: 'MapleMono CN Regular', monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
 }
 
-.btn-publish:hover {
-  background: #5a6fd6;
-}
+.btn-publish:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3); }
 
 .publish-form {
-  background: #f8f9fa;
-  padding: 24px;
-  border-radius: 12px;
-  margin-bottom: 30px;
+  background: rgba(20, 25, 45, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 28px;
+  margin-bottom: 28px;
 }
 
-.publish-form h2 {
+.form-title {
   margin: 0 0 20px 0;
-  font-size: 1.3em;
-  color: #333;
+  font-size: 1.15rem;
+  color: #e0e0e0;
+  font-family: 'SmileySans Oblique', sans-serif;
 }
 
-.form-group {
-  margin-bottom: 16px;
-}
+.form-group { margin-bottom: 16px; }
 
 .form-group label {
   display: block;
   margin-bottom: 6px;
   font-weight: 500;
-  color: #555;
+  color: rgba(255, 255, 255, 0.65);
+  font-family: 'MapleMono CN Regular', monospace;
+  font-size: 0.9rem;
 }
 
-.form-group input,
-.form-group textarea {
+.form-input, .form-textarea {
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 1em;
-  font-family: inherit;
+  padding: 12px 16px;
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-family: 'MapleMono CN Regular', monospace;
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
   box-sizing: border-box;
+  outline: none;
+  transition: all 0.25s ease;
 }
 
-.form-group textarea {
-  resize: vertical;
-  min-height: 120px;
+.form-input::placeholder, .form-textarea::placeholder { color: rgba(255, 255, 255, 0.3); }
+
+.form-input:focus, .form-textarea:focus {
+  border-color: rgba(79, 172, 254, 0.5);
+  box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
 }
 
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-}
+.form-textarea { resize: vertical; min-height: 120px; }
+
+.form-actions { display: flex; justify-content: flex-end; }
 
 .btn-submit {
-  padding: 10px 24px;
-  background: #28a745;
+  padding: 10px 28px;
+  background: linear-gradient(135deg, #4facfe, #667eea);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  font-size: 1em;
-  transition: background 0.3s;
+  font-family: 'MapleMono CN Regular', monospace;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
 }
 
-.btn-submit:hover:not(:disabled) {
-  background: #218838;
-}
+.btn-submit:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3); }
+.btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.btn-submit:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+.error-msg { color: #ef4444; margin-bottom: 12px; font-size: 0.9rem; }
 
-.error-msg {
-  color: #dc3545;
-  margin-bottom: 12px;
-  font-size: 0.9em;
-}
+.loading-state { text-align: center; padding: 60px 20px; color: rgba(255, 255, 255, 0.35); font-size: 1rem; }
 
-.loading,
-.empty {
-  text-align: center;
-  padding: 40px;
-  color: #888;
-  font-size: 1.1em;
-}
-
-.announcement-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
+.announcement-list { display: flex; flex-direction: column; gap: 16px; }
 
 .announcement-card {
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  padding: 20px;
-  transition: box-shadow 0.3s;
+  background: rgba(20, 25, 45, 0.88);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: all 0.3s ease;
 }
 
 .announcement-card:hover {
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  border-color: rgba(79, 172, 254, 0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
-.announcement-header {
-  margin-bottom: 12px;
+.card-accent {
+  height: 4px;
+  background: linear-gradient(90deg, #4facfe, #667eea);
 }
 
-.announcement-title {
+.card-body { padding: 20px 24px; }
+
+.card-title {
   margin: 0 0 8px 0;
-  font-size: 1.2em;
-  color: #222;
+  font-size: 1.15rem;
+  color: #e0e0e0;
+  font-family: 'SmileySans Oblique', sans-serif;
 }
 
-.announcement-meta {
-  display: flex;
-  gap: 16px;
-  font-size: 0.85em;
-  color: #888;
-}
+.card-meta { display: flex; gap: 16px; font-size: 0.82rem; color: rgba(255, 255, 255, 0.35); margin-bottom: 14px; }
 
-.announcement-content {
-  color: #444;
+.card-content {
+  color: rgba(255, 255, 255, 0.7);
   line-height: 1.6;
   white-space: pre-wrap;
+  font-size: 0.92rem;
 }
 
-.announcement-actions {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #eee;
-}
+.card-actions { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.04); }
 
 .btn-delete {
-  padding: 6px 14px;
-  background: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 6px;
+  padding: 6px 16px;
+  background: rgba(220, 53, 69, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(220, 53, 69, 0.25);
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 0.85em;
-  transition: background 0.3s;
+  font-family: 'MapleMono CN Regular', monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: all 0.25s ease;
 }
 
-.btn-delete:hover {
-  background: #c82333;
-}
+.btn-delete:hover { background: #dc3545; color: white; border-color: #dc3545; }
 </style>

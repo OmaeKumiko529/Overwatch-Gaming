@@ -2,7 +2,15 @@
   <div class="notification-page">
     <div class="notification-container">
       <div class="notification-header">
-        <h1>🔔 通知</h1>
+        <h1 class="page-title">
+          <span class="title-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+          </span>
+          通知
+        </h1>
         <button v-if="unreadCount > 0" class="mark-all-btn" @click="handleMarkAllRead">
           全部标记已读
         </button>
@@ -10,7 +18,12 @@
 
       <div class="notification-content">
         <div v-if="notifications.length === 0" class="empty-state">
-          <div class="empty-icon">🔔</div>
+          <div class="empty-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+          </div>
           <h3>暂无通知</h3>
           <p>当有人评论、点赞或 @提及 您时，通知会显示在这里。</p>
         </div>
@@ -27,7 +40,8 @@
             <div class="notif-body">
               <div class="notif-message">
                 <template v-if="notif.type === 'announcement'">
-                  📢 <strong>{{ notif.title || '系统公告' }}</strong>
+                  <span class="notif-icon">📢</span>
+                  <strong>{{ notif.title || '系统公告' }}</strong>
                 </template>
                 <template v-else-if="notif.type === 'like'">
                   <strong>{{ authorName(notif.Author) }}</strong> 赞了您的帖子
@@ -44,7 +58,7 @@
               </div>
               <div class="notif-time">{{ formatTime(notif.createdAt) }}</div>
             </div>
-            <div v-if="notif.Root" class="notif-goto">→</div>
+            <div v-if="notif.Root" class="notif-arrow">→</div>
           </div>
         </div>
       </div>
@@ -67,7 +81,6 @@ const notifications = computed(() => notifStore.notifications)
 const unreadCount = computed(() => notifStore.unreadCount)
 const userCache = ref({})
 
-// 预加载用户列表到本地缓存，实现 authorName 同步查找
 async function preloadUsers() {
   const users = await userService.getAllUsers()
   const map = {}
@@ -82,12 +95,8 @@ function authorName(uid) {
   if (!uid) return '未知用户'
   const user = userCache.value[String(uid)]
   if (user) return user.username
-  // 触发懒加载（不阻塞渲染），但返回 uid 作为临时显示
   userService.getUserById(uid).then(u => {
-    if (u) {
-      userCache.value[String(u.id)] = u
-      if (u.uid) userCache.value[u.uid] = u
-    }
+    if (u) { userCache.value[String(u.id)] = u; if (u.uid) userCache.value[u.uid] = u }
   })
   return uid || '未知用户'
 }
@@ -96,49 +105,36 @@ function formatTime(dateString) {
   if (!dateString) return ''
   try {
     const d = new Date(dateString)
-    const now = Date.now()
-    const diff = now - d.getTime()
+    const diff = Date.now() - d.getTime()
     if (diff < 60000) return '刚刚'
     if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前'
     if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前'
     return d.toLocaleDateString('zh-CN')
-  } catch {
-    return ''
-  }
+  } catch { return '' }
 }
 
 function handleClick(notif) {
-  if (!notif.IsRead) {
-    notifStore.markRead(notif.id)
-  }
+  if (!notif.IsRead) notifStore.markRead(notif.id)
   if (notif.Root) {
-    if (notif.type === 'announcement') {
-      router.push('/announcements')
-    } else {
-      router.push('/post/' + encodeURIComponent(notif.Root))
-    }
+    if (notif.type === 'announcement') router.push('/announcements')
+    else router.push('/post/' + encodeURIComponent(notif.Root))
   }
 }
 
-function handleMarkAllRead() {
-  notifStore.markAllRead()
-}
+function handleMarkAllRead() { notifStore.markAllRead() }
 
 onMounted(async () => {
   const cu = authStore.currentUser
-  if (cu && cu.id) {
-    notifStore.load(String(cu.id))
-  }
-  // 预加载用户列表以正确显示通知中的用户名
+  if (cu && cu.id) notifStore.load(String(cu.id))
   await preloadUsers()
 })
 </script>
 
 <style scoped>
 .notification-page {
-  padding-top: 80px;
+  padding-top: 76px;
   min-height: 100vh;
-  background: #f0f2f5;
+  background: #0f0f1a;
 }
 
 .notification-container {
@@ -154,37 +150,47 @@ onMounted(async () => {
   margin-bottom: 20px;
 }
 
-.notification-header h1 {
+.page-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #333;
+  color: #e0e0e0;
   font-family: 'SmileySans Oblique', sans-serif;
   margin: 0;
 }
 
-.mark-all-btn {
-  padding: 8px 16px;
-  border: 2px solid #4facfe;
-  border-radius: 8px;
-  background: white;
+.title-icon {
+  display: flex;
   color: #4facfe;
+}
+
+.mark-all-btn {
+  padding: 8px 18px;
+  border: 1.5px solid rgba(79, 172, 254, 0.3);
+  border-radius: 8px;
+  background: rgba(79, 172, 254, 0.08);
+  color: rgba(79, 172, 254, 0.8);
   font-family: 'MapleMono CN Regular', monospace;
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
 }
 
 .mark-all-btn:hover {
-  background: #4facfe;
-  color: white;
+  background: rgba(79, 172, 254, 0.15);
+  color: #4facfe;
+  border-color: #4facfe;
 }
 
 .notification-content {
-  background: white;
-  border-radius: 12px;
-  border: 1px solid #e9ecef;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  background: rgba(20, 25, 45, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
   overflow: hidden;
 }
 
@@ -194,20 +200,21 @@ onMounted(async () => {
 }
 
 .empty-icon {
-  font-size: 3rem;
   margin-bottom: 16px;
-  opacity: 0.4;
+  color: rgba(255, 255, 255, 0.15);
+  display: flex;
+  justify-content: center;
 }
 
 .empty-state h3 {
   font-size: 1.3rem;
-  color: #495057;
+  color: rgba(255, 255, 255, 0.6);
   margin-bottom: 8px;
 }
 
 .empty-state p {
-  font-size: 0.95rem;
-  color: #6c757d;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.35);
   max-width: 360px;
   margin: 0 auto;
   line-height: 1.5;
@@ -223,9 +230,9 @@ onMounted(async () => {
   align-items: center;
   gap: 12px;
   padding: 16px 20px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s ease;
 }
 
 .notification-item:last-child {
@@ -233,15 +240,15 @@ onMounted(async () => {
 }
 
 .notification-item:hover {
-  background: #f8f9fa;
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .notification-item.unread {
-  background: #f0f7ff;
+  background: rgba(79, 172, 254, 0.04);
 }
 
 .notification-item.unread:hover {
-  background: #e6f0ff;
+  background: rgba(79, 172, 254, 0.07);
 }
 
 .notif-dot {
@@ -254,6 +261,7 @@ onMounted(async () => {
 
 .notif-dot.active {
   background: #4facfe;
+  box-shadow: 0 0 6px rgba(79, 172, 254, 0.5);
 }
 
 .notif-body {
@@ -262,20 +270,28 @@ onMounted(async () => {
 }
 
 .notif-message {
-  font-size: 0.95rem;
-  color: #333;
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.75);
   line-height: 1.4;
 }
 
+.notif-message strong {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.notif-icon {
+  margin-right: 4px;
+}
+
 .notif-time {
-  font-size: 0.8rem;
-  color: #adb5bd;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.3);
   margin-top: 4px;
 }
 
-.notif-goto {
-  color: #adb5bd;
-  font-size: 1.1rem;
+.notif-arrow {
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 1rem;
   flex-shrink: 0;
 }
 
