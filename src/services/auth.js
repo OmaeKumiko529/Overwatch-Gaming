@@ -9,55 +9,7 @@ const STORAGE_KEYS = {
   POSTS: 'posts'           // 存储帖子数据
 };
 
-// 守望先锋角色职责选项常量
-const ROLE_OPTIONS = {
-  HEAVY: 'heavy',      // 重装角色
-  DAMAGE: 'damage',    // 输出角色
-  SUPPORT: 'support',  // 支援角色
-  FLEXIBLE: 'flexible' // 灵活角色（全能）
-};
-
-// 所有有效职责的数组（从ROLE_OPTIONS对象的值生成）
-const ALL_VALID_ROLES = Object.values(ROLE_OPTIONS);
-
-// 验证角色数组是否有效的函数
-// @param {Array} roles - 要验证的角色数组
-// @returns {Object} - 验证结果对象，包含valid属性和可选的message属性
-const validateRoles = (roles) => {
-  // 检查输入是否为数组
-  if (!Array.isArray(roles)) {
-    return { valid: false, message: '职责必须是数组' };
-  }
-  
-  // 检查数组是否为空
-  if (roles.length === 0) {
-    return { valid: false, message: '至少选择一个职责' };
-  }
-  
-  // 检查是否包含无效角色
-  for (const role of roles) {
-    if (!ALL_VALID_ROLES.includes(role)) {
-      return { valid: false, message: `无效的职责选项: ${role}` };
-    }
-  }
-  
-  // 检查灵活与其他职责的互斥性
-  const hasFlexible = roles.includes(ROLE_OPTIONS.FLEXIBLE);
-  const hasOtherRoles = roles.some(role => role !== ROLE_OPTIONS.FLEXIBLE);
-  
-  // 灵活选项不能与其他职责同时选择
-  if (hasFlexible && hasOtherRoles) {
-    return { valid: false, message: '灵活选项不能与其他职责同时选择' };
-  }
-  
-  // 检查非灵活职责数量（最多2个）
-  if (!hasFlexible && roles.length > 2) {
-    return { valid: false, message: '最多只能选择2个职责' };
-  }
-  
-  // 所有验证通过
-  return { valid: true };
-};
+import { ROLE_OPTIONS, validateRoles } from '../constants/roles.js';
 
 // 用户管理工具对象（导出为auth）
 export const auth = {
