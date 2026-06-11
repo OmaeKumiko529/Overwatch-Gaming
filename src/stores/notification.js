@@ -7,7 +7,7 @@ export const useNotificationStore = defineStore('notification', () => {
   const currentUid = ref('')
 
   const unreadCount = computed(() => {
-    return notifications.value.filter(n => !n.IsRead).length
+    return notifications.value.filter(n => !n.isRead).length
   })
 
   async function load(uid) {
@@ -28,7 +28,7 @@ export const useNotificationStore = defineStore('notification', () => {
     const res = await notificationsApi.create(data)
     if (res.success) {
       const notif = res.notification
-      if (data.To === currentUid.value) {
+      if (data.to === currentUid.value) {
         notifications.value.unshift(notif)
       }
       return notif
@@ -39,13 +39,13 @@ export const useNotificationStore = defineStore('notification', () => {
   async function markRead(id) {
     await notificationsApi.markRead(id)
     const n = notifications.value.find(n => n.id === id)
-    if (n) n.IsRead = true
+    if (n) n.isRead = true
   }
 
   async function markAllRead() {
     if (!currentUid.value) return
     await notificationsApi.markAllRead()
-    notifications.value.forEach(n => { n.IsRead = true })
+    notifications.value.forEach(n => { n.isRead = true })
   }
 
   return {

@@ -139,20 +139,14 @@ const performSearch = async () => {
   loading.value = true
   updateUrl()
   
-  const query = searchQuery.value.toLowerCase().trim()
+  const query = searchQuery.value.trim()
   
   try {
     if (activeTab.value === 'posts') {
-      // 通过 API 搜索帖子
-      const allPosts = await postService.getAllPosts()
-      posts.value = allPosts.filter(post => {
-        const isMainPost = post.parentId === null || post.parentId === undefined
-        return isMainPost && (
-          (post.pid && post.pid.toLowerCase().includes(query)) ||
-          (post.title && post.title.toLowerCase().includes(query)) ||
-          (post.username && post.username.toLowerCase().includes(query)) ||
-          (post.content && post.content.toLowerCase().includes(query))
-        )
+      // 使用后端搜索 API（支持 search 参数，服务端过滤）
+      const searchResults = await postService.searchPosts(query)
+      posts.value = searchResults.filter(post => {
+        return post.parentId === null || post.parentId === undefined
       }).map(post => ({
         id: post.id,
         pid: post.pid,
@@ -163,14 +157,15 @@ const performSearch = async () => {
         rankInfo: { icon: getPostRankIcon(post.postrank) }
       }))
     } else {
-      // 通过 API 搜索用户
+      // 使用后端搜索 API 搜索用户
       const res = await authApi.getAllUsers()
       const allUsers = res.success ? res.users : []
+      const lowerQuery = query.toLowerCase()
       users.value = allUsers.filter(user => {
         return (
-          (user.uid && user.uid.toLowerCase().includes(query)) ||
-          user.username.toLowerCase().includes(query) ||
-          (user.email && user.email.toLowerCase().includes(query))
+          (user.uid && user.uid.toLowerCase().includes(lowerQuery)) ||
+          user.username.toLowerCase().includes(lowerQuery) ||
+          (user.email && user.email.toLowerCase().includes(lowerQuery))
         )
       }).map(user => ({
         id: user.id,

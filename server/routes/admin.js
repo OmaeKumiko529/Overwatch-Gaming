@@ -83,7 +83,9 @@ router.get('/table/:tableName', adminMiddleware, (req, res) => {
     const pageSize = Math.min(Math.max(1, parseInt(req.query.pageSize) || 50), 200)
     const offset = (page - 1) * pageSize
     const search = req.query.search || ''
-    const sortBy = req.query.sortBy || 'id'
+    // 白名单校验 sortBy，防止 SQL 注入
+    const allowedSortColumns = (getTableInfo(tableName) || []).map(c => c.name)
+    const sortBy = allowedSortColumns.includes(req.query.sortBy) ? req.query.sortBy : 'id'
     const sortOrder = req.query.sortOrder === 'asc' ? 'ASC' : 'DESC'
 
     // 获取总行数
@@ -286,11 +288,13 @@ router.post('/sql', adminMiddleware, (req, res) => {
       return res.json({ success: false, message: '仅允许执行 SELECT 或 PRAGMA 查询' })
     }
 
-    // 禁止危险关键字混入（防止 SELECT 语句中嵌入 DROP/INSERT/UPDATE/DELETE 等）
-    const dangerous = ['DROP', 'DELETE', 'INSERT', 'UPDATE', 'ALTER', 'CREATE', 'EXEC', 'ATTACH']
+    // 禁止危险关键字混入（使用正则匹配完整单词，防止误报和绕过）
+    const dangerous = ['DROP', 'DELETE', 'INSERT', 'UPDATE', 'ALTER', 'CREATE', 'EXEC', 'ATTACH', 'PRAGMA']
     const upperQuery = query.trim().toUpperCase()
     for (const keyword of dangerous) {
-      if (upperQuery.includes(keyword)) {
+      // 使用 \b 单词边界匹配，防止 "UPDATExxx" 误报，也防止 "SELDROPECT" 绕过
+      const regex = new RegExp(`\\b${keyword}\\b`)
+      if (regex.test(upperQuery)) {
         return res.json({ success: false, message: `查询中包含危险关键字: ${keyword}` })
       }
     }

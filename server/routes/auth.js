@@ -89,10 +89,14 @@ router.post('/register', registerLimiter, async (req, res) => {
     const passwordCheck = validatePassword(password)
     if (!passwordCheck.valid) return res.json(passwordCheck)
 
-    // 检查用户名是否存在
-    const existing = getOne('SELECT id FROM users WHERE username = ? OR email = ?', [username, email])
-    if (existing) {
-      return res.json({ success: false, message: '用户名或邮箱已存在' })
+    // 分开检查用户名和邮箱是否存在，提供更精确的错误提示
+    const existingUsername = getOne('SELECT id FROM users WHERE username = ?', [username])
+    if (existingUsername) {
+      return res.json({ success: false, message: '用户名已存在' })
+    }
+    const existingEmail = getOne('SELECT id FROM users WHERE email = ?', [email])
+    if (existingEmail) {
+      return res.json({ success: false, message: '邮箱已被注册' })
     }
 
     const passwordHash = await bcrypt.hash(password, 10)

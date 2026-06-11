@@ -20,31 +20,31 @@
             v-for="notif in notifications"
             :key="notif.id"
             class="notification-item"
-            :class="{ unread: !notif.IsRead }"
+            :class="{ unread: !notif.isRead }"
             @click="handleClick(notif)"
           >
-            <div class="notif-dot" :class="{ active: !notif.IsRead }"></div>
+            <div class="notif-dot" :class="{ active: !notif.isRead }"></div>
             <div class="notif-body">
               <div class="notif-message">
                 <template v-if="notif.type === 'announcement'">
                   📢 <strong>{{ notif.title || '系统公告' }}</strong>
                 </template>
                 <template v-else-if="notif.type === 'like'">
-                  <strong>{{ authorName(notif.Author) }}</strong> 赞了您的帖子
+                  <strong>{{ authorName(notif.author) }}</strong> 赞了您的帖子
                 </template>
                 <template v-else-if="notif.type === 'comment'">
-                  <strong>{{ authorName(notif.Author) }}</strong> 评论了您的帖子
+                  <strong>{{ authorName(notif.author) }}</strong> 评论了您的帖子
                 </template>
                 <template v-else-if="notif.type === 'mention'">
-                  <strong>{{ authorName(notif.Author) }}</strong> 在帖子中 @了您
+                  <strong>{{ authorName(notif.author) }}</strong> 在帖子中 @了您
                 </template>
                 <template v-else>
-                  <strong>{{ authorName(notif.Author) }}</strong> 与您互动
+                  <strong>{{ authorName(notif.author) }}</strong> 与您互动
                 </template>
               </div>
               <div class="notif-time">{{ formatTime(notif.createdAt) }}</div>
             </div>
-            <div v-if="notif.Root" class="notif-goto">→</div>
+            <div v-if="notif.root" class="notif-goto">→</div>
           </div>
         </div>
       </div>
@@ -108,14 +108,14 @@ function formatTime(dateString) {
 }
 
 function handleClick(notif) {
-  if (!notif.IsRead) {
+  if (!notif.isRead) {
     notifStore.markRead(notif.id)
   }
-  if (notif.Root) {
+  if (notif.root) {
     if (notif.type === 'announcement') {
       router.push('/announcements')
     } else {
-      router.push('/post/' + encodeURIComponent(notif.Root))
+      router.push('/post/' + encodeURIComponent(notif.root))
     }
   }
 }

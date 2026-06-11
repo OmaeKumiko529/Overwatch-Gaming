@@ -34,10 +34,10 @@ router.get('/', authMiddleware, (req, res) => {
       notifications: notifications.map(n => ({
         id: n.id,
         type: n.type,
-        Author: n.author,
-        Root: n.root,
-        To: n.to_user,
-        IsRead: !!n.is_read,
+        author: n.author,
+        root: n.root,
+        to: n.to_user,
+        isRead: !!n.is_read,
         title: n.title,
         createdAt: n.created_at
       }))
@@ -95,10 +95,10 @@ router.put('/read-all', authMiddleware, (req, res) => {
 // 创建通知（带限流和目标用户校验）
 router.post('/', authMiddleware, createNotifLimiter, (req, res) => {
   try {
-    const { type, Author, Root, To, title } = req.body
+    const { type, author, root, to, title } = req.body
 
     // 验证目标用户存在
-    const targetUserId = Number(To)
+    const targetUserId = Number(to)
     if (!targetUserId || isNaN(targetUserId)) {
       return res.json({ success: false, message: '无效的目标用户' })
     }
@@ -115,16 +115,16 @@ router.post('/', authMiddleware, createNotifLimiter, (req, res) => {
 
     const result = insert(
       'INSERT INTO notifications (type, author, root, to_user, title) VALUES (?, ?, ?, ?, ?)',
-      [type, String(Author), Root, String(targetUserId), title || null]
+      [type, String(author), root, String(targetUserId), title || null]
     )
 
     const notif = {
       id: result.lastInsertRowid,
       type,
-      Author: String(Author),
-      Root,
-      To: String(To),
-      IsRead: false,
+      author: String(author),
+      root,
+      to: String(to),
+      isRead: false,
       title: title || null,
       createdAt: new Date().toISOString()
     }

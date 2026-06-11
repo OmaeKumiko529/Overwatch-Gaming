@@ -26,8 +26,8 @@ function mapPost(p) {
     context: p.context,
     parentId: p.parent_id,
     postrank: p.postrank || '69',
-    mentions: p.mentions ? JSON.parse(typeof p.mentions === 'string' ? p.mentions : '[]') : [],
-    tags: p.tags ? JSON.parse(typeof p.tags === 'string' ? p.tags : '[]') : [],
+    mentions: p.mentions ? (() => { try { return JSON.parse(typeof p.mentions === 'string' ? p.mentions : '[]') } catch { return [] } })() : [],
+    tags: p.tags ? (() => { try { return JSON.parse(typeof p.tags === 'string' ? p.tags : '[]') } catch { return [] } })() : [],
     createdAt: p.created_at,
     updatedAt: p.updated_at
   }
@@ -102,9 +102,9 @@ router.get('/:pid', optionalAuth, (req, res) => {
     const post = getOne('SELECT p.*, u.nickname as user_nickname FROM posts p LEFT JOIN users u ON p.user_id = u.id WHERE p.pid = ?', [pid])
     if (!post) return res.json({ success: false, message: '帖子不存在' })
 
-    // 黑帖权限检查：content 对无权用户隐藏
+    // 黑帖权限检查：content 对无权用户隐藏（与 rankMap.js 对齐，userrank >= 3 为管理员）
     const mappedPost = mapPost(post)
-    if (post.postrank === '00' && userrank < 2) {
+    if (post.postrank === '00' && userrank < 3) {
       mappedPost.content = '[该帖子已被标记为黑帖，您没有权限查看内容]'
     }
 
@@ -355,10 +355,14 @@ router.delete('/:pid', authMiddleware, (req, res) => {
   try {
     const pid = req.params.pid
     const userId = req.user.id
+    const userrank = Number(req.user.userrank)
 
     const post = getOne('SELECT * FROM posts WHERE pid = ?', [pid])
     if (!post) return res.json({ success: false, message: '帖子不存在' })
-    if (post.user_id !== userId) return res.json({ success: false, message: '无权删除此帖子' })
+    // 允许帖主或管理员（userrank >= 3）删除
+    if (post.user_id !== userId && userrank < 3) {
+      return res.json({ success: false, message: '无权删除此帖子' })
+    }
 
     // 删除该帖子及其所有子帖（通过 context LIKE）
     run('DELETE FROM posts WHERE context = ? OR context LIKE ?', [post.context, `${post.context}/%`])

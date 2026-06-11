@@ -226,6 +226,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth.js';
 import teamService from '../services/team.js';
 import userService from '../services/user.js';
@@ -250,6 +251,7 @@ const joiningTeamId = ref(null);
 const showDetailsModal = ref(false);
 const teamMembers = ref([]);
 
+const router = useRouter();
 const authStore = useAuthStore();
 
 // 计算属性：用户是否已在战队中
@@ -265,12 +267,12 @@ watch(searchQuery, () => {
 });
 
 // 加载战队列表
-const loadTeams = () => {
+const loadTeams = async () => {
   loading.value = true;
   
   try {
     const allTeams = teamService.getAllTeams();
-    const users = userService.getAllUsers();
+    const users = await userService.getAllUsers();
     
     const processedTeams = allTeams.map(team => {
       const creator = users.find(user => user.id === team.creatorId);
@@ -419,7 +421,7 @@ const confirmJoinTeam = async () => {
       loadTeams();
       message.value = '已成功加入战队，正在返回用户面板...';
       isError.value = false;
-      window.location.hash = 'user';
+      router.push('/user');
     } else {
       joinMessage.value = result.message || '加入战队失败';
       isJoinError.value = true;
@@ -468,11 +470,11 @@ const showJoinConfirmFromDetails = () => {
 
 // 导航函数
 const goBack = () => {
-  window.location.hash = 'user';
+  router.push('/user');
 };
 
 const goToCreateTeam = () => {
-  window.location.hash = 'user';
+  router.push('/user');
 };
 
 // 初始化
@@ -481,7 +483,7 @@ onMounted(() => {
   if (!currentUser) {
     message.value = '请先登录';
     isError.value = true;
-    window.location.hash = '';
+    router.push('/');
     return;
   }
   
