@@ -80,8 +80,9 @@ router.post('/', authMiddleware, (req, res) => {
           memberIds: [userId]
         }
       })
-    } catch {
-      run('ROLLBACK')
+    } catch (e) {
+      console.error('创建战队事务失败:', e.message)
+      try { run('ROLLBACK') } catch (rbErr) { console.error('回滚失败:', rbErr.message) }
       res.json({ success: false, message: '创建战队失败，请重试' })
     }
   } catch (error) {
@@ -113,8 +114,9 @@ router.post('/join', authMiddleware, (req, res) => {
       run('COMMIT')
 
       res.json({ success: true, team: { id: team.id, name: team.name, displayName: team.display_name } })
-    } catch {
-      run('ROLLBACK')
+    } catch (e) {
+      console.error('加入战队事务失败:', e.message)
+      try { run('ROLLBACK') } catch (rbErr) { console.error('回滚失败:', rbErr.message) }
       res.json({ success: false, message: '加入战队失败' })
     }
   } catch (error) {
@@ -150,8 +152,9 @@ router.post('/leave', authMiddleware, (req, res) => {
         teamDeleted = true
       }
       run('COMMIT')
-    } catch {
-      run('ROLLBACK')
+    } catch (e) {
+      console.error('退出战队事务失败:', e.message)
+      try { run('ROLLBACK') } catch (rbErr) { console.error('回滚失败:', rbErr.message) }
       return res.json({ success: false, message: '退出战队失败' })
     }
 

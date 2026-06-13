@@ -314,8 +314,8 @@ export function run(sql, params = []) {
   db.run(sql, params)
   const changes = db.getRowsModified()
   console.log(`[DB] run: "${sql.substring(0, 60)}..." 影响行数: ${changes}`)
-  // 立即持久化到磁盘
-  saveDb()
+  // 立即持久化到磁盘（失败仅记录，不抛异常，避免中断事务）
+  try { saveDb() } catch (e) { console.error('[DB] saveDb 失败:', e.message) }
   return { changes }
 }
 
@@ -333,8 +333,8 @@ export function insert(sql, params = []) {
   }
 
   console.log(`[DB] insert: "${sql.substring(0, 60)}..." lastInsertRowid: ${lastId}`)
-  // 立即持久化到磁盘
-  saveDb()
+  // 立即持久化到磁盘（失败仅记录，不抛异常，避免中断事务）
+  try { saveDb() } catch (e) { console.error('[DB] saveDb 失败:', e.message) }
 
   return { lastInsertRowid: lastId, changes: db.getRowsModified() }
 }
