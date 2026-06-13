@@ -2,7 +2,7 @@
   <nav class="navbar">
     <router-link to="/" class="brand">
       <span class="brand-inner">
-        <img src="/ow_icon.svg" alt="OW" class="brand-logo">
+        <img src="/logo.svg" alt="OW" class="brand-logo">
         <span class="brand-text">E426</span>
       </span>
     </router-link>

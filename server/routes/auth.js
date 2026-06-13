@@ -55,7 +55,7 @@ function mapUser(user) {
     role: JSON.parse(user.role || '["flexible"]'),
     userrank: user.userrank !== undefined ? Number(user.userrank) : 0,
     isAdmin: Number(user.userrank || 0) >= 3,
-    avatar: user.avatar || '/Head.png',
+    avatar: user.avatar || '/default-avatar.png',
     teamId: user.team_id || null,
     createdAt: user.created_at,
     updatedAt: user.updated_at
@@ -115,7 +115,7 @@ router.post('/register', registerLimiter, async (req, res) => {
       username,
       email,
       role: '["flexible"]',
-      avatar: '/Head.png',
+      avatar: '/default-avatar.png',
       userrank: 0
     }
 
@@ -196,7 +196,7 @@ router.get('/users', async (req, res) => {
         role: JSON.parse(u.role || '["flexible"]'),
         userrank: Number(u.userrank || 0),
         isAdmin: Number(u.userrank || 0) >= 3,
-        avatar: u.avatar || '/Head.png',
+        avatar: u.avatar || '/default-avatar.png',
         teamId: u.team_id || null,
         createdAt: u.created_at,
         updatedAt: u.updated_at

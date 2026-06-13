@@ -6,12 +6,12 @@
       <div class="character-section">
         <div class="glow-orb glow-orb--1"></div>
         <div class="glow-orb glow-orb--2"></div>
-        <img src="/ow_icon.svg" alt="守望先锋标志" class="logo-bg">
+        <img src="/logo.svg" alt="守望先锋标志" class="logo-bg">
         <div class="char-wrapper char-wrapper--left" ref="charLeftRef">
-          <img src="/t/dc.png" alt="左侧重装角色" class="char-left">
+          <img src="/tank/tank-hero-left.png" alt="左侧重装角色" class="char-left">
         </div>
         <div class="char-wrapper char-wrapper--right" ref="charRightRef">
-          <img src="/t/lb.png" alt="右侧重装角色" class="char-right">
+          <img src="/tank/tank-hero-right.png" alt="右侧重装角色" class="char-right">
         </div>
         <div class="scan-line"></div>
       </div>
@@ -20,7 +20,7 @@
       <div class="info-section">
         <div class="info-content">
           <div class="english-title" ref="titleRef">
-            <img src="/96px-职责：重装_图标.webp">
+            <img src="/role-icon-tank.webp">
             <span>Tanks</span>
           </div>
           <div class="cn-title" ref="cnTitleRef">重装</div>
@@ -76,10 +76,10 @@ const tankHeroes = [
   { imageIndex: 14 }
 ]
 
-// ✅ 完全沿用你的路径规则
+// ✅ 路径规则：/tank/tank-hero-01.jpg ~ tank-hero-14.jpg
 function getHeroImage(hero) {
-  const fileName = `0wt (${hero.imageIndex}).jpg`
-  return `/t/${encodeURI(fileName)}`
+  const fileName = `tank-hero-${String(hero.imageIndex).padStart(2, '0')}.jpg`
+  return `/tank/${encodeURI(fileName)}`
 }
 
 // 简单兜底（避免破图）
@@ -376,7 +376,7 @@ onUnmounted(() => {
 /* 字体 */
 @font-face {
   font-family: "SmileySans-Oblique";
-  src: url("/SmileySans-Oblique.ttf") format("truetype");
+  src: url("/font-smiley-sans.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
 }

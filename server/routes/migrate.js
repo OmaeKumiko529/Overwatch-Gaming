@@ -34,7 +34,7 @@ router.post('/', authMiddleware, async (req, res) => {
           const passwordHash = await bcrypt.hash(oldUser.password, 10)
           insert(
             'INSERT INTO users (username, email, password_hash, role, avatar) VALUES (?, ?, ?, ?, ?)',
-            [oldUser.username, oldUser.email, passwordHash, JSON.stringify(oldUser.role || ['flexible']), oldUser.avatar || '/Head.png']
+            [oldUser.username, oldUser.email, passwordHash, JSON.stringify(oldUser.role || ['flexible']), oldUser.avatar || '/default-avatar.png']
           )
           result.users++
         } catch (e) {

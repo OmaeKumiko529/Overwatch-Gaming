@@ -6,12 +6,12 @@
       <div class="character-section">
         <div class="glow-orb glow-orb--1"></div>
         <div class="glow-orb glow-orb--2"></div>
-        <img src="/ow_icon.svg" alt="守望先锋标志" class="logo-bg">
+        <img src="/logo.svg" alt="守望先锋标志" class="logo-bg">
         <div class="char-wrapper char-wrapper--left" ref="charLeftRef">
-          <img src="/Nsc/hn.png" alt="左侧辅助角色" class="char-left">
+          <img src="/support/support-hero-left.png" alt="左侧辅助角色" class="char-left">
         </div>
         <div class="char-wrapper char-wrapper--right" ref="charRightRef">
-          <img src="/Nsc/ylr.png" alt="右侧辅助角色" class="char-right">
+          <img src="/support/support-hero-right.png" alt="右侧辅助角色" class="char-right">
         </div>
         <div class="scan-line"></div>
       </div>
@@ -20,7 +20,7 @@
       <div class="info-section">
         <div class="info-content">
           <div class="english-title" ref="titleRef">
-            <img src="/96px-职责：支援_图标.webp">
+            <img src="/role-icon-support.webp">
             <span>Supports</span>
           </div>
           <div class="cn-title" ref="cnTitleRef">辅助</div>
@@ -76,10 +76,10 @@ const supportHeroes = [
   { imageIndex: 14 }
 ]
 
-// ✅ 完全沿用你的路径规则
+// ✅ 路径规则：/support/support-hero-01.jpg ~ support-hero-14.jpg
 function getHeroImage(hero) {
-  const fileName = `0w+ (${hero.imageIndex}).jpg`
-  return `/Nsc/${encodeURI(fileName)}`
+  const fileName = `support-hero-${String(hero.imageIndex).padStart(2, '0')}.jpg`
+  return `/support/${encodeURI(fileName)}`
 }
 
 // 简单兜底（避免破图）
@@ -368,7 +368,7 @@ onUnmounted(() => {
 /* 字体 */
 @font-face {
   font-family: "SmileySans-Oblique";
-  src: url("/SmileySans-Oblique.ttf") format("truetype");
+  src: url("/font-smiley-sans.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
 }

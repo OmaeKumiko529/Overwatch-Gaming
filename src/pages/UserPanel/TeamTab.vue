@@ -28,7 +28,7 @@
             @click="handleMemberClick(member.id)"
           >
             <div class="member-avatar">
-              <img :src="member.avatar || '/Head.png'" :alt="member.username" @error="onAvatarError" />
+              <img :src="member.avatar || '/default-avatar.png'" :alt="member.username" @error="onAvatarError" />
             </div>
             <div class="member-name">{{ member.displayName || member.username }}</div>
             <div class="member-badges">
@@ -38,9 +38,9 @@
             <div class="member-roles">
               <template v-if="Array.isArray(member.role) && member.role.includes('flexible')">
                 <div class="flexible-icons-row">
-                  <img src="/96px-职责：重装_图标.webp" alt="重装" class="mini-icon" />
-                  <img src="/96px-职责：输出_图标.webp" alt="输出" class="mini-icon" />
-                  <img src="/96px-职责：支援_图标.webp" alt="支援" class="mini-icon" />
+                  <img src="/role-icon-tank.webp" alt="重装" class="mini-icon" />
+                  <img src="/role-icon-damage.webp" alt="输出" class="mini-icon" />
+                  <img src="/role-icon-support.webp" alt="支援" class="mini-icon" />
                 </div>
                 <span class="role-label">灵活</span>
               </template>
@@ -125,7 +125,7 @@ function handleMemberClick(id) {
 }
 
 function onAvatarError(e) {
-  e.target.src = '/Head.png'
+  e.target.src = '/default-avatar.png'
 }
 </script>
 

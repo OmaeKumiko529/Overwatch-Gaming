@@ -191,7 +191,7 @@ router.get('/:id', (req, res) => {
           nickname: m.nickname || null,
           displayName: m.nickname || m.username,
           role: JSON.parse(m.role || '["flexible"]'),
-          avatar: m.avatar || '/Head.png',
+          avatar: m.avatar || '/default-avatar.png',
           joinedAt: m.joined_at
         }))
       }

@@ -13,9 +13,9 @@
           @click="toggle(opt.key)"
         >
           <div v-if="opt.key === 'flexible'" class="flexible-icons-row">
-            <img src="/96px-职责：重装_图标.webp" alt="重装" class="role-img small" />
-            <img src="/96px-职责：输出_图标.webp" alt="输出" class="role-img small" />
-            <img src="/96px-职责：支援_图标.webp" alt="支援" class="role-img small" />
+            <img src="/role-icon-tank.webp" alt="重装" class="role-img small" />
+            <img src="/role-icon-damage.webp" alt="输出" class="role-img small" />
+            <img src="/role-icon-support.webp" alt="支援" class="role-img small" />
           </div>
           <img v-else :src="opt.icon" :alt="opt.label" class="role-img" />
           <span class="role-label">{{ opt.label }}</span>
@@ -51,9 +51,9 @@ const isError = ref(false)
 const labelMap = { 'heavy': '重装', 'damage': '输出', 'support': '支援', 'flexible': '灵活' }
 
 const roleOptions = [
-  { key: 'heavy', label: '重装', desc: '承受伤害，保护队友', icon: '/96px-职责：重装_图标.webp' },
-  { key: 'damage', label: '输出', desc: '造成伤害，击败敌人', icon: '/96px-职责：输出_图标.webp' },
-  { key: 'support', label: '支援', desc: '治疗辅助，提供支援', icon: '/96px-职责：支援_图标.webp' },
+  { key: 'heavy', label: '重装', desc: '承受伤害，保护队友', icon: '/role-icon-tank.webp' },
+  { key: 'damage', label: '输出', desc: '造成伤害，击败敌人', icon: '/role-icon-damage.webp' },
+  { key: 'support', label: '支援', desc: '治疗辅助，提供支援', icon: '/role-icon-support.webp' },
   { key: 'flexible', label: '灵活', desc: '根据情况切换职责', icon: '' }
 ]
 

@@ -13,7 +13,7 @@
         <!-- 输出卡片 -->
         <div class="role-card role-card--damage">
           <div class="role-icon role-icon--damage">
-            <img src="/96px-职责：输出_图标.webp" alt="输出角色">
+            <img src="/role-icon-damage.webp" alt="输出角色">
           </div>
           <h3 class="role-title">输出</h3>
           <p class="role-description">
@@ -25,7 +25,7 @@
         <!-- 支援卡片 -->
         <div class="role-card role-card--support">
           <div class="role-icon role-icon--support">
-            <img src="/96px-职责：支援_图标.webp" alt="支援角色">
+            <img src="/role-icon-support.webp" alt="支援角色">
           </div>
           <h3 class="role-title">支援</h3>
           <p class="role-description">
@@ -37,7 +37,7 @@
         <!-- 重装卡片 -->
         <div class="role-card role-card--tank">
           <div class="role-icon role-icon--tank">
-            <img src="/96px-职责：重装_图标.webp" alt="重装角色">
+            <img src="/role-icon-tank.webp" alt="重装角色">
           </div>
           <h3 class="role-title">重装</h3>
           <p class="role-description">

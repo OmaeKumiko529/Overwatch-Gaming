@@ -6,12 +6,12 @@
       <div class="character-section">
         <div class="glow-orb glow-orb--1"></div>
         <div class="glow-orb glow-orb--2"></div>
-        <img src="/ow_icon.svg" alt="守望先锋标志" class="logo-bg">
+        <img src="/logo.svg" alt="守望先锋标志" class="logo-bg">
         <div class="char-wrapper char-wrapper--left" ref="charLeftRef">
-          <img src="/c/mkl.png" alt="左侧输出角色" class="char-left">
+          <img src="/damage/damage-hero-left.png" alt="左侧输出角色" class="char-left">
         </div>
         <div class="char-wrapper char-wrapper--right" ref="charRightRef">
-          <img src="/c/sg.png" alt="右侧输出角色" class="char-right">
+          <img src="/damage/damage-hero-right.png" alt="右侧输出角色" class="char-right">
         </div>
         <div class="scan-line"></div>
       </div>
@@ -20,7 +20,7 @@
       <div class="info-section">
         <div class="info-content">
           <div class="english-title" ref="titleRef">
-            <img src="/96px-职责：输出_图标.webp">
+            <img src="/role-icon-damage.webp">
             <span>Damage</span>
           </div>
           <div class="cn-title" ref="cnTitleRef">输出</div>
@@ -84,10 +84,10 @@ const damageHeroes = [
   { imageIndex: 22 }
 ]
 
-// ✅ 路径规则：/c/0wc (1).jpg ~ /c/0wc (22).jpg
+// ✅ 路径规则：/damage/damage-hero-01.jpg ~ damage-hero-22.jpg
 function getHeroImage(hero) {
-  const fileName = `0wc (${hero.imageIndex}).jpg`
-  return `/c/${encodeURI(fileName)}`
+  const fileName = `damage-hero-${String(hero.imageIndex).padStart(2, '0')}.jpg`
+  return `/damage/${encodeURI(fileName)}`
 }
 
 // 简单兜底（避免破图）
@@ -376,7 +376,7 @@ onUnmounted(() => {
 /* 字体 */
 @font-face {
   font-family: "SmileySans-Oblique";
-  src: url("/SmileySans-Oblique.ttf") format("truetype");
+  src: url("/font-smiley-sans.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
 }

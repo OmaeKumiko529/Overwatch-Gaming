@@ -32,13 +32,13 @@ const hideNavBar = computed(() => route.meta && route.meta.hideNavBar)
 /* 自定义字体声明：导入SmileySans Oblique字体 */
 @font-face {
   font-family: 'SmileySans Oblique';
-  src: url('/SmileySans-Oblique.ttf') format('truetype');
+  src: url('/font-smiley-sans.ttf') format('truetype');
 }
 
 /* 自定义字体声明：导入MapleMono CN等宽字体 */
 @font-face {
   font-family: 'MapleMono CN Regular';
-  src: url('/MapleMono-CN-Regular.ttf') format('truetype');
+  src: url('/font-maple-mono.ttf') format('truetype');
 }
 
 /* 应用根容器样式 */

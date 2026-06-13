@@ -41,7 +41,7 @@
                 @click="goToUser(user.id)"
               >
                 <div class="dropdown-avatar">
-                  <img :src="user.avatar || '/Head.png'" :alt="user.username" />
+              <img :src="user.avatar || '/default-avatar.png'" :alt="user.username" />
                 </div>
                 <div class="dropdown-info">
                   <div class="dropdown-name">{{ user.username }}</div>
