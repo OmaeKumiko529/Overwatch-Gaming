@@ -4,6 +4,7 @@
       <video autoplay muted loop playsinline>
         <source src="/Amiya.mp4" type="video/mp4">
       </video>
+      <div class="video-mask"></div>
       <div class="video-overlay"></div>
     </div>
 
@@ -119,11 +120,23 @@ onMounted(() => {
   object-fit: cover;
 }
 
+/* 黑色遮罩，20%透明度 */
+.video-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1;
+}
+
 /* 渐变遮罩 */
 .video-overlay {
   position: absolute;
   width: 100%;
   height: 100%;
+  z-index: 2;
   background: linear-gradient(
     180deg,
     rgba(0, 0, 0, 0.3) 0%,
