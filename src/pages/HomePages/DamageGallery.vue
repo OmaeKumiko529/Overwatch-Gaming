@@ -8,10 +8,10 @@
         <div class="glow-orb glow-orb--2"></div>
         <img src="/logo.svg" alt="守望先锋标志" class="logo-bg">
         <div class="char-wrapper char-wrapper--left" ref="charLeftRef">
-          <img src="/damage/damage-hero-left.png" alt="左侧输出角色" class="char-left">
+          <img src="/damage/damage-hero-left.webp" alt="左侧输出角色" class="char-left">
         </div>
         <div class="char-wrapper char-wrapper--right" ref="charRightRef">
-          <img src="/damage/damage-hero-right.png" alt="右侧输出角色" class="char-right">
+          <img src="/damage/damage-hero-right.webp" alt="右侧输出角色" class="char-right">
         </div>
         <div class="scan-line"></div>
       </div>

@@ -5,7 +5,7 @@
       <div class="profile-header-content">
         <div class="profile-avatar">
           <img
-            :src="user.avatar || '/default-avatar.png'"
+            :src="user.avatar || '/default-avatar.webp'"
             :alt="user.username"
             class="avatar-image"
             @error="handleAvatarError"
@@ -46,7 +46,7 @@ const props = defineProps({
 })
 
 function handleAvatarError(e) {
-  e.target.src = '/default-avatar.png'
+  e.target.src = '/default-avatar.webp'
 }
 </script>
 

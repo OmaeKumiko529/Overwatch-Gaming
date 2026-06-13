@@ -69,7 +69,7 @@ function buildGitCard(attrs) {
   var shown = contributors.slice(0, maxShow)
   for (var i = 0; i < shown.length; i++) {
     var c = shown[i]
-    var av = c.avatar_url || '/default-avatar.png'
+    var av = c.avatar_url || '/default-avatar.webp'
     var lg = c.login || 'Unknown'
     ch += '<img src="' + av + '" alt="' + lg + '" class="git-ca" title="' + lg + '" />'
     ch += '<span class="git-cn">' + lg + '</span>'

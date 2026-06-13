@@ -192,9 +192,9 @@ const commentPlaceholder = computed(() => { if (!auth.isLoggedIn) return '请先
 const commentRestrictedHint = computed(() => { if (!auth.isLoggedIn) return '请先登录后评论。'; if (post.value?.postrank === 'FF') return '红帖仅允许玩家及以上等级的用户评论。'; if (post.value?.postrank === '00') return '黑帖仅允许管理员评论。'; return '' })
 
 const avatarCache = ref({});
-const getUserAvatar = (userId) => { if (!userId) return '/default-avatar.png'; if (avatarCache.value[userId]) return avatarCache.value[userId]; return '/default-avatar.png' }
+const getUserAvatar = (userId) => { if (!userId) return '/default-avatar.webp'; if (avatarCache.value[userId]) return avatarCache.value[userId]; return '/default-avatar.webp' }
 const loadUserAvatar = async (userId) => { if (!userId || avatarCache.value[userId]) return; try { const r = await authApi.getUserById(userId); if (r.success && r.user?.avatar) avatarCache.value[userId] = r.user.avatar } catch {} }
-const handleAvatarError = (e) => { e.target.src = '/default-avatar.png' }
+const handleAvatarError = (e) => { e.target.src = '/default-avatar.webp' }
 
 const likedComments = ref({});
 const commentLikes = ref({});

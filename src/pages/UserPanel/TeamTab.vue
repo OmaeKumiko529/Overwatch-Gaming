@@ -28,7 +28,7 @@
             @click="handleMemberClick(member.id)"
           >
             <div class="member-avatar">
-              <img :src="member.avatar || '/default-avatar.png'" :alt="member.username" @error="onAvatarError" />
+              <img :src="member.avatar || '/default-avatar.webp'" :alt="member.username" @error="onAvatarError" />
             </div>
             <div class="member-name">{{ member.displayName || member.username }}</div>
             <div class="member-badges">
@@ -125,7 +125,7 @@ function handleMemberClick(id) {
 }
 
 function onAvatarError(e) {
-  e.target.src = '/default-avatar.png'
+  e.target.src = '/default-avatar.webp'
 }
 </script>
 

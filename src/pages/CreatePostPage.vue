@@ -164,7 +164,7 @@ const handleMention = (user) => {
     mentionedUsers.value.push({
       id: user.id,
       username: user.username,
-      avatar: user.avatar || '/default-avatar.png'
+      avatar: user.avatar || '/default-avatar.webp'
     })
     pop.toast(`已提及用户 @${user.username}`, 'info')
   }
@@ -183,7 +183,7 @@ const updateMentionedUsers = (htmlContent) => {
     return {
       id: mention.id,
       username: mention.username,
-      avatar: user?.avatar || '/default-avatar.png'
+      avatar: user?.avatar || '/default-avatar.webp'
     }
   }).filter(user => user.id)
   
